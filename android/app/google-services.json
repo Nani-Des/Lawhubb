@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "495024454539",
+    "project_id": "lawhub-393ad",
+    "storage_bucket": "lawhub-393ad.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:495024454539:android:f1db140167863d78ddcd8e",
+        "android_client_info": {
+          "package_name": "com.lawapp.lawhubb"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "495024454539-ob3rq091srg7okmn1f7kvuv66oi9eh9p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2Jtot9fUm_rL4b58KJqXg4My_EGBWfyk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "495024454539-ob3rq091srg7okmn1f7kvuv66oi9eh9p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
