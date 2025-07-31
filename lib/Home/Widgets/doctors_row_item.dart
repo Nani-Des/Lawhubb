@@ -44,7 +44,7 @@ class _DoctorsRowItemState extends State<DoctorsRowItem> {
   /// Fetch the 2 closest hospitals
   Future<List<String>> _fetchClosestHospitals(Position userPosition) async {
     try {
-      QuerySnapshot snapshot = await _firestore.collection('Hospital').get();
+      QuerySnapshot snapshot = await _firestore.collection('Chamber').get();
       List<Map<String, dynamic>> hospitals = [];
 
       for (var doc in snapshot.docs) {
@@ -82,7 +82,7 @@ class _DoctorsRowItemState extends State<DoctorsRowItem> {
 
       QuerySnapshot snapshot = await _firestore
           .collection('Users')
-          .where('Hospital ID', whereIn: closestHospitals)
+          .where('Chamber ID', whereIn: closestHospitals)
           .where('Role', isEqualTo: true)
           .limit(10) // Fetch up to 10 doctors to rotate through
           .get();

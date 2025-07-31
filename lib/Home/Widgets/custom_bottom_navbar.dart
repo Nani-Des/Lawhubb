@@ -4,6 +4,7 @@ import 'package:nhap/Home/home_page.dart';
 import 'package:nhap/Login/login_screen1.dart';
 import '../../Auth/auth_screen.dart';
 import '../../ChatModule/chat_module.dart';
+import '../../Forums/Chat/HomeScreen.dart';
 import '../../Forums/Public/forum.dart';
 import '../../Hospital/general_hospital_page.dart';
 
@@ -62,7 +63,8 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
         _navigateBasedOnAuthStatus(context, (userId) => HomePage());
         break;
       case 2:
-        _navigateBasedOnAuthStatus(context, (userId) => Forum(userId: '',));
+        _navigateBasedOnAuthStatus(context, (userId) => HomeScreen());
+        // _navigateBasedOnAuthStatus(context, (userId) => Forum(userId: 'FyhGd0I6FMb3pKYfHMHxL9gemIq2',));
         break;
     }
   }

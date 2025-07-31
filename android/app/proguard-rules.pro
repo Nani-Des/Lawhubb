@@ -18,3 +18,6 @@
 # Prevent R8 from removing unused classes
 -dontoptimize
 -dontpreverify
+
+-keep class io.agora.** { *; }
+-dontwarn io.agora.**

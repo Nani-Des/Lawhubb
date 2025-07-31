@@ -91,11 +91,11 @@ class FirebaseService {
     }
 
     try {
-      DocumentSnapshot hospitalDoc = await _db.collection('Hospital').doc(hospitalId).get();
+      DocumentSnapshot hospitalDoc = await _db.collection('Chamber').doc(hospitalId).get();
       if (!hospitalDoc.exists) {
         throw Exception('Chamber not found');
       }
-      var name = hospitalDoc.get('Hospital Name');
+      var name = hospitalDoc.get('Chamber Name');
       var logo = hospitalDoc.get('Logo');
       final result = {
         'hospitalName': name is String ? name : 'Unknown Chamber',
@@ -116,7 +116,7 @@ class FirebaseService {
 
   // Fetch department names based on Hospital's Department IDs
   Future<List<Map<String, dynamic>>> getDepartmentsForHospital(String hospitalId) async {
-    final cacheKey = 'departments-$hospitalId';
+    final cacheKey = 'Practices-$hospitalId';
 
     if (_isOffline) {
       final cachedData = await _loadCachedData(cacheKey);
@@ -126,22 +126,22 @@ class FirebaseService {
     }
 
     try {
-      DocumentSnapshot hospitalDoc = await _db.collection('Hospital').doc(hospitalId).get();
+      DocumentSnapshot hospitalDoc = await _db.collection('Chamber').doc(hospitalId).get();
       if (!hospitalDoc.exists) {
         throw Exception('Chamber not found');
       }
-      List<dynamic> departmentIds = hospitalDoc.get('Hospital Department') as List<dynamic>;
+      List<dynamic> departmentIds = hospitalDoc.get('Chamber Practice') as List<dynamic>;
 
       List<Map<String, dynamic>> departments = [];
       for (String departmentId in departmentIds) {
-        DocumentSnapshot departmentDoc = await _db.collection('Department').doc(departmentId).get();
+        DocumentSnapshot departmentDoc = await _db.collection('Practice').doc(departmentId).get();
         if (!departmentDoc.exists) {
           continue;
         }
-        var departmentName = departmentDoc.get('Department Name');
+        var departmentName = departmentDoc.get('Practice Name');
         departments.add({
-          'Department ID': departmentId,
-          'Department Name': departmentName is String ? departmentName : 'Unknown Department',
+          'Practice ID': departmentId,
+          'Practice Name': departmentName is String ? departmentName : 'Unknown Practice',
         });
       }
 
@@ -171,8 +171,8 @@ class FirebaseService {
     try {
       final querySnapshot = await _db
           .collection('Users')
-          .where('Hospital ID', isEqualTo: hospitalId)
-          .where('Department ID', isEqualTo: departmentId)
+          .where('Chamber ID', isEqualTo: hospitalId)
+          .where('Practice ID', isEqualTo: departmentId)
           .where('Role', isEqualTo: true)
           .get();
 
@@ -235,8 +235,8 @@ class FirebaseService {
           'Mobile Number': _safeString(data['Mobile Number'], 'N/A'),
           'Experience': data['Experience']?.toString() ?? '0',
           'userPic': _safeString(data['User Pic'], ''),
-          'departmentId': _safeString(data['Department ID'], ''),
-          'hospitalId': _safeString(data['Hospital ID'], ''),
+          'departmentId': _safeString(data['Practice ID'], ''),
+          'hospitalId': _safeString(data['Chamber ID'], ''),
           'Status': _safeString(data['Status'], 'false'),
         };
 
@@ -278,12 +278,12 @@ class FirebaseService {
     }
 
     try {
-      DocumentSnapshot departmentDoc = await _db.collection('Department').doc(departmentId).get();
+      DocumentSnapshot departmentDoc = await _db.collection('Practice').doc(departmentId).get();
       if (!departmentDoc.exists) {
-        throw Exception('Department not found');
+        throw Exception('Practice not found');
       }
-      var name = departmentDoc.get('Department Name');
-      String departmentName = name is String ? name : 'Unknown Department';
+      var name = departmentDoc.get('Practice Name');
+      String departmentName = name is String ? name : 'Unknown Practice';
 
       // Cache the result
       await _cacheData(cacheKey, departmentName);
@@ -309,12 +309,12 @@ class FirebaseService {
     }
 
     try {
-      DocumentSnapshot hospitalDoc = await _db.collection('Hospital').doc(hospitalId).get();
+      DocumentSnapshot hospitalDoc = await _db.collection('Chamber').doc(hospitalId).get();
       if (!hospitalDoc.exists) {
-        throw Exception('Hospital not found');
+        throw Exception('Chamber not found');
       }
-      var name = hospitalDoc.get('Hospital Name');
-      String hospitalName = name is String ? name : 'Unknown Hospital';
+      var name = hospitalDoc.get('Chamber Name');
+      String hospitalName = name is String ? name : 'Unknown Chamber';
 
       // Cache the result
       await _cacheData(cacheKey, hospitalName);

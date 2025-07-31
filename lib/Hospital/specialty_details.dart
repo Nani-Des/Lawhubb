@@ -107,8 +107,8 @@ class _SpecialtyDetailsState extends State<SpecialtyDetails> with TickerProvider
     final bool hasSeenWalkthrough = prefs.getBool('hasSeenEmergencyWalkthrough_${widget.hospitalId}') ?? false;
 
     final cachedHospitalDetails = prefs.getString('hospital-details-${widget.hospitalId}');
-    final cachedDepartments = prefs.getString('departments-${widget.hospitalId}');
-    final cachedSelectedDepartmentId = prefs.getString('selected-department-${widget.hospitalId}');
+    final cachedDepartments = prefs.getString('Practices-${widget.hospitalId}');
+    final cachedSelectedDepartmentId = prefs.getString('selected-Practice-${widget.hospitalId}');
 
     setState(() {
       if (cachedHospitalDetails != null) {
@@ -174,10 +174,10 @@ class _SpecialtyDetailsState extends State<SpecialtyDetails> with TickerProvider
         _isLoading = false;
 
         if (_selectedDepartmentId == null && _departments.isNotEmpty) {
-          _selectedDepartmentId = _departments.first['Department ID'];
+          _selectedDepartmentId = _departments.first['Practice ID'];
         }
         if (_selectedDepartmentId != null &&
-            _departments.any((dept) => dept['Department ID'] == _selectedDepartmentId)) {
+            _departments.any((dept) => dept['Practice ID'] == _selectedDepartmentId)) {
           _loadDoctorsForDepartment(_selectedDepartmentId!);
         }
       });
@@ -297,7 +297,7 @@ class _SpecialtyDetailsState extends State<SpecialtyDetails> with TickerProvider
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,  // Black background
+      backgroundColor: Colors.white,  // Black background
       appBar: AppBar(
         backgroundColor: Colors.grey[900],  // Dark grey app bar
         elevation: 0,
@@ -366,13 +366,13 @@ class _SpecialtyDetailsState extends State<SpecialtyDetails> with TickerProvider
                   child: ListView.builder(
                     itemCount: _departments.length,
                     itemBuilder: (context, index) {
-                      String departmentId = _departments[index]['Department ID'];
+                      String departmentId = _departments[index]['Practice ID'];
                       return Column(
                         children: [
                           GestureDetector(
                             onTap: () => _loadDoctorsForDepartment(departmentId),
                             child: _specialtyLabel(
-                              _departments[index]['Department Name'],
+                              _departments[index]['Practice Name'],
                               departmentId == _selectedDepartmentId,
                             ),
                           ),

@@ -40,7 +40,7 @@ class GeneralHospitalPage extends StatelessWidget {
 
     // Safely access 'Hospital ID' field
     return userDoc.exists && userDoc.data() != null
-        ? (userDoc.data()!['Hospital ID'] as String?)
+        ? (userDoc.data()!['Chamber ID'] as String?)
         : null;
   }
 
@@ -59,7 +59,7 @@ class GeneralHospitalPage extends StatelessWidget {
     final String? hospitalId = await _getHospitalId();
     if (hospitalId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Hospital ID not found')),
+        SnackBar(content: Text('Chamber ID not found')),
       );
       return;
     }

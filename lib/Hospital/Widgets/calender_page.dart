@@ -64,7 +64,7 @@ class _CalenderPageState extends State<CalenderPage> with TickerProviderStateMix
       await _firebaseService.getDepartmentsForHospital(widget.hospitalId);
 
       if (departments.isNotEmpty) {
-        _selectedDepartmentId = departments.first['Department ID'];
+        _selectedDepartmentId = departments.first['Practice ID'];
         _loadDoctorsForDepartment(_selectedDepartmentId!);
       }
 
@@ -234,7 +234,7 @@ class _CalenderPageState extends State<CalenderPage> with TickerProviderStateMix
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'View Department Roster',
+                'View Practice Roster',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.teal,
@@ -253,8 +253,8 @@ class _CalenderPageState extends State<CalenderPage> with TickerProviderStateMix
                 itemCount: _departments.length,
                 itemBuilder: (context, index) {
                   final department = _departments[index];
-                  final departmentId = department['Department ID'];
-                  final departmentName = department['Department Name'] ?? 'Unnamed';
+                  final departmentId = department['Practice ID'];
+                  final departmentName = department['Practice Name'] ?? 'Unnamed';
                   return DepartmentCard(
                     departmentName: departmentName,
                     departmentIcon: _getDepartmentIcon(departmentName),

@@ -81,7 +81,7 @@ class _HospitalServiceScreenState extends State<HospitalServiceScreen> with Tick
       await _firebaseService.getDepartmentsForHospital(widget.hospitalId);
 
       if (departments.isNotEmpty) {
-        _selectedDepartmentId = departments.first['Department ID'];
+        _selectedDepartmentId = departments.first['Practice ID'];
       }
 
       setState(() {

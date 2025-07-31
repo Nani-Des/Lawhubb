@@ -70,7 +70,7 @@ class _ShiftScheduleScreenState extends State<ShiftScheduleScreen>
         _hospitalDetails = hospitalDetails;
         _departments = departments;
         if (departments.isNotEmpty) {
-          _selectedDepartmentId = departments.first['Department ID'];
+          _selectedDepartmentId = departments.first['Practice ID'];
         }
         _isLoading = false;
       });

@@ -6,6 +6,7 @@ import 'package:showcaseview/showcaseview.dart';
 import '../Auth/auth_screen.dart';
 import '../ChatModule/chat_module.dart';
 import '../Emergency/emergency_page.dart';
+import '../Forums/Public/forum.dart';
 import '../Login/login_screen1.dart';
 import 'Widgets/profile_drawer.dart';
 import 'Widgets/custom_bottom_navbar.dart';
@@ -230,7 +231,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               SizedBox(width: 8),
               FloatingActionButton(
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => EmergencyPage()));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => Forum(userId: 'FyhGd0I6FMb3pKYfHMHxL9gemIq2',)));
                 },
                 child: Icon(Icons.question_mark, color: Colors.black),  // Black icon for contrast
                 backgroundColor: Colors.white,  // White button for visibility

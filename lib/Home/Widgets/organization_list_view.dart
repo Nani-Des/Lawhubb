@@ -37,7 +37,7 @@ class _OrganizationListViewState extends State<OrganizationListView> {
   @override
   void initState() {
     super.initState();
-    _hospitalsStream = FirebaseFirestore.instance.collection('Hospital').snapshots();
+    _hospitalsStream = FirebaseFirestore.instance.collection('Chamber').snapshots();
     _scrollController = ScrollController();
     _checkConnectivity();
     _loadCachedData();
@@ -160,7 +160,7 @@ class _OrganizationListViewState extends State<OrganizationListView> {
                 final data = doc.data() as Map<String, dynamic>;
                 return {
                   'id': doc.id,
-                  'Hospital Name': data['Hospital Name'] ?? '',
+                  'Chamber Name': data['Chamber Name'] ?? '',
                   'City': data['City'] ?? 'Unknown City',
                   'Contact': data['Contact'] ?? 'No Contact Info',
                   'Background Image': data['Background Image']?.isNotEmpty == true
@@ -272,7 +272,7 @@ class _OrganizationListViewState extends State<OrganizationListView> {
     if (searchQuery.isEmpty) return docs;
     return docs.where((doc) {
       final data = doc.data() as Map<String, dynamic>;
-      final name = (data['Hospital Name'] as String?)?.toLowerCase() ?? '';
+      final name = (data['Chamber Name'] as String?)?.toLowerCase() ?? '';
       final city = (data['City'] as String?)?.toLowerCase() ?? '';
       return name.contains(searchQuery) || city.contains(searchQuery);
     }).toList();
@@ -281,7 +281,7 @@ class _OrganizationListViewState extends State<OrganizationListView> {
   List<Map<String, dynamic>> _filterCachedHospitals(List<Map<String, dynamic>> hospitals) {
     if (searchQuery.isEmpty) return hospitals;
     return hospitals.where((hospital) {
-      final name = (hospital['Hospital Name'] as String?)?.toLowerCase() ?? '';
+      final name = (hospital['Chamber Name'] as String?)?.toLowerCase() ?? '';
       final city = (hospital['City'] as String?)?.toLowerCase() ?? '';
       return name.contains(searchQuery) || city.contains(searchQuery);
     }).toList();
@@ -343,7 +343,7 @@ class HospitalCard extends StatelessWidget {
   Future<double> _getAverageRating() async {
     try {
       final ratingsSnapshot = await FirebaseFirestore.instance
-          .collection('Hospital')
+          .collection('Chamber')
           .doc(hospitalId)
           .collection('Ratings')
           .orderBy('timestamp', descending: true)
