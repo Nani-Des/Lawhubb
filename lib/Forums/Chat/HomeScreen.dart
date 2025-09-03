@@ -11,19 +11,21 @@ class HomeScreen extends StatelessWidget {
 
   Future<void> _startPublicConsultation(BuildContext context) async {
     try {
-      // Create a public consultation
       final currentUser = FirebaseAuth.instance.currentUser!;
-      final chatId = 'public_${currentUser.uid}_${DateTime.now().millisecondsSinceEpoch}';
-      final consultationRef = FirebaseFirestore.instance.collection('Consultations').doc(chatId);
+      final chatId =
+          'public_${currentUser.uid}_${DateTime.now().millisecondsSinceEpoch}';
+
+      final consultationRef =
+      FirebaseFirestore.instance.collection('Consultations').doc(chatId);
+
       await consultationRef.set({
         'chatId': chatId,
         'initiatorId': currentUser.uid,
-        'recipientId': 'public', // Indicates open to all
+        'recipientId': 'public', // open to all
         'status': 'active',
         'startTimestamp': FieldValue.serverTimestamp(),
       });
 
-      // Navigate to LiveConsultationScreen
       if (context.mounted) {
         Navigator.push(
           context,
@@ -48,6 +50,8 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = FirebaseAuth.instance.currentUser!;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chats'),
@@ -73,6 +77,8 @@ class HomeScreen extends StatelessWidget {
       body: Stack(
         children: [
           ChatList(),
+
+          /// 🔎 Public consultations listener
           StreamBuilder(
             stream: FirebaseFirestore.instance
                 .collection('Consultations')
@@ -81,43 +87,50 @@ class HomeScreen extends StatelessWidget {
                 .snapshots(),
             builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
               if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-                var consult = snapshot.data!.docs.first;
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Public Consultation Available'),
-                      content: const Text('A public consultation is active. Join now?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () async {
-                            var initiatorDoc = await FirebaseFirestore.instance
-                                .collection('Users')
-                                .doc(consult['initiatorId'])
-                                .get();
-                            var initiatorData = initiatorDoc.data() as Map<String, dynamic>;
-                            Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => LiveConsultationScreen(
-                                  channelName: consult['chatId'],
-                                  isInitiator: false,
-                                  chatId: consult['chatId'],
-                                ),
-                              ),
-                            );
-                          },
-                          child: const Text('Join'),
+                // 🔥 Filter out my own consultations
+                var consults = snapshot.data!.docs.where((doc) {
+                  return doc['initiatorId'] != currentUser.uid;
+                }).toList();
+
+                if (consults.isNotEmpty) {
+                  var consult = consults.first;
+
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (context.mounted) {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Public Consultation Available'),
+                          content: const Text(
+                              'A public consultation is active. Join now?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () async {
+                                Navigator.pop(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        LiveConsultationScreen(
+                                          channelName: consult['chatId'],
+                                          isInitiator: false,
+                                          chatId: consult['chatId'],
+                                        ),
+                                  ),
+                                );
+                              },
+                              child: const Text('Join'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Cancel'),
+                            ),
+                          ],
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Cancel'),
-                        ),
-                      ],
-                    ),
-                  );
-                });
+                      );
+                    }
+                  });
+                }
               }
               return const SizedBox.shrink();
             },

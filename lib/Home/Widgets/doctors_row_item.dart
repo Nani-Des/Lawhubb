@@ -61,7 +61,7 @@ class _DoctorsRowItemState extends State<DoctorsRowItem> {
       hospitals.sort((a, b) => a['distance'].compareTo(b['distance']));
       return hospitals.take(2).map((h) => h['id'] as String).toList();
     } catch (e) {
-      print('Error fetching closest hospitals: $e');
+      print('Error fetching closest Chmabers: $e');
       return [];
     }
   }
@@ -76,7 +76,7 @@ class _DoctorsRowItemState extends State<DoctorsRowItem> {
       List<String> closestHospitals = await _fetchClosestHospitals(position);
 
       if (closestHospitals.isEmpty) {
-        print('No hospitals found.');
+        print('No Chamber found.');
         return;
       }
 

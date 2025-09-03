@@ -18,7 +18,7 @@ class PostCard extends StatefulWidget {
 
 class _PostCardState extends State<PostCard> {
   final DeletePostService _deletePostService = DeletePostService();
-  final double _fontSize = 16.0;
+  final double _fontSize = 10.0;
   bool _isLiked = false;
 
   @override
@@ -117,7 +117,7 @@ class _PostCardState extends State<PostCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.all(8.0),
+      margin: EdgeInsets.all(4.0),
       color: Colors.black87, // Dark background color
       child: GestureDetector(
         onLongPress: _onLongPressPost, // Handle long press on the post to show delete dialog
@@ -165,7 +165,7 @@ class _PostCardState extends State<PostCard> {
                     ),
                     title: Text(
                       userDetails['fullName'] ?? 'Anonymous',
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: Colors.white, fontSize: _fontSize),
                     ),
                   ),
                 );
@@ -185,12 +185,12 @@ class _PostCardState extends State<PostCard> {
             // Post Image (if any)
             if (widget.postData['ImageURL'] != null)
               Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(4.0),
                 child: GestureDetector(
                   onTap: () => _viewImage(widget.postData['ImageURL']),
                   child: Container(
                     width: double.infinity,
-                    height: 200,
+                    height: 100,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(8.0),
                       color: Colors.grey[800],
@@ -207,7 +207,7 @@ class _PostCardState extends State<PostCard> {
               ),
             // Likes, Comments, and Other Icons Section
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -218,6 +218,7 @@ class _PostCardState extends State<PostCard> {
                         icon: Icon(
                           Icons.thumb_up,
                           color: _isLiked ? Colors.blue : Colors.white,
+                          size: 12,
                         ),
                         onPressed: _likePost,
                       ),
@@ -229,18 +230,18 @@ class _PostCardState extends State<PostCard> {
                   ),
                   // Comment Button
                   IconButton(
-                    icon: Icon(Icons.comment, color: Colors.white),
+                    icon: Icon(Icons.comment, color: Colors.white, size: 12,),
                     onPressed: _viewComments,
                   ),
                   // Additional Icons
                   IconButton(
-                    icon: Icon(Icons.share, color: Colors.white),
+                    icon: Icon(Icons.share, color: Colors.white, size: 12,),
                     onPressed: () {
                       // Share functionality here
                     },
                   ),
                   IconButton(
-                    icon: Icon(Icons.report, color: Colors.white),
+                    icon: Icon(Icons.report, color: Colors.white,size: 12,),
                     onPressed: () {
                       // Report functionality here
                     },

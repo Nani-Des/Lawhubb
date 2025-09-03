@@ -297,12 +297,12 @@ class _MapScreen1State extends State<MapScreen1> {
         );
       } else {
         setState(() {
-          _selectedPlaceName = 'No hospitals found nearby.';
+          _selectedPlaceName = 'No Chamber found nearby.';
         });
       }
     } catch (e) {
       setState(() {
-        _selectedPlaceName = 'Error finding nearest hospital: $e';
+        _selectedPlaceName = 'Error finding nearest Chamber: $e';
       });
     }
   }

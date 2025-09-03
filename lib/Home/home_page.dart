@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:nhap/ChatModule/constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 import '../Auth/auth_screen.dart';
@@ -231,7 +232,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               SizedBox(width: 8),
               FloatingActionButton(
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => Forum(userId: 'FyhGd0I6FMb3pKYfHMHxL9gemIq2',)));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => Forum(userId: loggedInUserId)));
                 },
                 child: Icon(Icons.question_mark, color: Colors.black),  // Black icon for contrast
                 backgroundColor: Colors.white,  // White button for visibility

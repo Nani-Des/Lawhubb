@@ -9,7 +9,7 @@ import 'Widgets/post_card.dart';
 class Forum extends StatefulWidget {
   final String userId;
 
-  const Forum({required this.userId});
+  const Forum({required this.userId, super.key});
 
   @override
   _ForumPageState createState() => _ForumPageState();
@@ -57,13 +57,16 @@ class _ForumPageState extends State<Forum> {
     showDialog(
       context: context,
       builder: (context) => CreatePostDialog(userId: widget.userId),
-    ).then((_) => _loadPosts()); // Reload posts after creating a new post
+    ).then((_) => _loadPosts());
   }
 
   void _navigateToProfile() async {
     if (widget.userId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('User ID is missing.')),
+        SnackBar(
+          content: const Text('User ID is missing.'),
+          backgroundColor: Colors.grey[800],
+        ),
       );
       return;
     }
@@ -83,7 +86,10 @@ class _ForumPageState extends State<Forum> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You are not authorized to view this profile.')),
+        SnackBar(
+          content: const Text('You are not authorized to view this profile.'),
+          backgroundColor: Colors.grey[800],
+        ),
       );
     }
   }
@@ -91,38 +97,84 @@ class _ForumPageState extends State<Forum> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100], // Light grey background for contrast
       appBar: AppBar(
-        title: Text('Home'),
+        title: const Text(
+          'Community Forum',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+          ),
+        ),
+        backgroundColor: Colors.black87, // Darker shade for app bar
+        elevation: 0,
         actions: [
           GestureDetector(
             onTap: _navigateToProfile,
             child: Padding(
               padding: const EdgeInsets.only(right: 16.0),
               child: CircleAvatar(
+                backgroundColor: Colors.grey[300], // Light grey avatar background
                 backgroundImage: _userProfileImageUrl != null && _userProfileImageUrl!.isNotEmpty
                     ? NetworkImage(_userProfileImageUrl!)
-                    : AssetImage('assets/Images/placeholder.png') as ImageProvider,
+                    : const AssetImage('assets/Images/placeholder.png') as ImageProvider,
                 radius: 20,
+                child: _userProfileImageUrl == null || _userProfileImageUrl!.isEmpty
+                    ? const Icon(Icons.person, color: Colors.black54)
+                    : null,
               ),
             ),
           ),
         ],
         automaticallyImplyLeading: false,
       ),
-      body: ListView.builder(
-        itemCount: _posts.length,
-        itemBuilder: (context, index) {
-          return PostCard(
-            postData: _posts[index],
-            refreshCallback: _loadPosts,
-          );
-        },
+      body: _posts.isEmpty
+          ? const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.forum_outlined, size: 60, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              'No posts yet. Be the first to share!',
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      )
+          : RefreshIndicator(
+        onRefresh: _loadPosts,
+        color: Colors.black87,
+        child: ListView.builder(
+          padding: const EdgeInsets.all(16.0),
+          itemCount: _posts.length,
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: PostCard(
+                postData: _posts[index],
+                refreshCallback: _loadPosts,
+              ),
+            );
+          },
+        ),
       ),
       bottomNavigationBar: CustomBottomNavBar(selectedIndex: 2),
       floatingActionButton: FloatingActionButton(
         onPressed: _createPost,
-        child: Icon(Icons.add),
+        backgroundColor: Colors.black87, // Dark button for contrast
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16), // Rounded square shape
+        ),
+        child: const Icon(Icons.add, color: Colors.white, size: 28),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

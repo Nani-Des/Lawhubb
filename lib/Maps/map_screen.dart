@@ -106,7 +106,7 @@ class _MapScreenState extends State<MapScreen> {
         final hospitalName = hospital['name'];
 
         setState(() {
-          _selectedPlaceName = 'Nearest Hospital: $hospitalName';
+          _selectedPlaceName = 'Nearest Chamber: $hospitalName';
           _destination = Marker(
             markerId: const MarkerId('nearest_hospital'),
             infoWindow: InfoWindow(title: hospitalName),
@@ -120,7 +120,7 @@ class _MapScreenState extends State<MapScreen> {
         );
       } else {
         setState(() {
-          _selectedPlaceName = 'No hospitals found nearby.';
+          _selectedPlaceName = 'No Chamber found nearby.';
         });
       }
     } catch (e) {

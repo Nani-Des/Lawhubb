@@ -64,7 +64,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
         break;
       case 2:
         _navigateBasedOnAuthStatus(context, (userId) => HomeScreen());
-        // _navigateBasedOnAuthStatus(context, (userId) => Forum(userId: 'FyhGd0I6FMb3pKYfHMHxL9gemIq2',));
+        // _navigateBasedOnAuthStatus(context, (userId) => Forum(userId: userId,));
         break;
     }
   }

@@ -152,7 +152,7 @@ class _OrganizationListViewState extends State<OrganizationListView> {
               }
 
               if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return const Center(child: Text("No hospitals found", style: TextStyle(color: Colors.white)));  // White text
+                return const Center(child: Text("No Chamber found", style: TextStyle(color: Colors.white)));  // White text
               }
 
               final hospitals = _filterHospitals(snapshot.data!.docs);

@@ -28,7 +28,7 @@ class _DoctorAvailabilityCalendarState
   DateTime shiftStart = DateTime.now();
   Set<DateTime> holidays = {};
   Map<String, dynamic> shiftTimings = {};
-  String doctorImage = ''; // To store the doctor's image URL.
+  String doctorImage = '';
 
   @override
   void initState() {
@@ -36,7 +36,7 @@ class _DoctorAvailabilityCalendarState
     _fetchDoctorSchedule();
     _fetchHospitalShiftTimings();
     _fetchGlobalHolidays();
-    _fetchDoctorImage(); // Fetch the doctor's image on initialization.
+    _fetchDoctorImage();
   }
 
   Future<void> _fetchDoctorSchedule() async {
@@ -59,7 +59,7 @@ class _DoctorAvailabilityCalendarState
 
   Future<void> _fetchHospitalShiftTimings() async {
     DocumentSnapshot hospitalSnapshot = await FirebaseFirestore.instance
-        .collection('Hospital')
+        .collection('Chamber')
         .doc(widget.hospitalId)
         .get();
 
@@ -131,12 +131,9 @@ class _DoctorAvailabilityCalendarState
       String start = timingMap['Start'] ?? "Unavailable";
       String end = timingMap['End'] ?? "Unavailable";
 
-      // Combine selected date and shift time into a DateTime object
       if (start != "Unavailable") {
-        // Parse the time using a DateFormat
-        DateFormat dateFormat = DateFormat("hh:mm a");  // Format for "00:00 AM"
+        DateFormat dateFormat = DateFormat("hh:mm a");
         try {
-          // Convert the start time to DateTime object
           DateTime parsedStartTime = dateFormat.parse(start);
           bookingDateTime = DateTime(
             day.year,
@@ -159,12 +156,22 @@ class _DoctorAvailabilityCalendarState
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: Colors.white, // White dialog background
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Shift Details'),
+              const Text(
+                'Shift Details',
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
               if (doctorImage.isNotEmpty)
                 CircleAvatar(
+                  backgroundColor: Colors.grey[300],
                   backgroundImage: NetworkImage(doctorImage),
                   radius: 20,
                 ),
@@ -175,49 +182,77 @@ class _DoctorAvailabilityCalendarState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Selected Date: ${DateFormat('yyyy-MM-dd').format(day)}',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.teal),
+                'Date: ${DateFormat('yyyy-MM-dd').format(day)}',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
               ),
-              SizedBox(height: 8),
-              Text(
-                'Working Period:',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.teal),
+              const SizedBox(height: 12),
+              const Text(
+                'Shift:',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
               ),
               Text(
                 timingText,
-                style: TextStyle(fontSize: 14, color: Colors.teal),
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.black54,
+                ),
               ),
-              SizedBox(height: 16),
-              Text(
+              const SizedBox(height: 16),
+              const Text(
                 'Guide:',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.teal),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
               ),
-              Text(
-                'Book an appointment now for convenience!',
-                style: TextStyle(fontSize: 14, color: Colors.black54),
+              const Text(
+                'Book an appointment for a seamless visit!',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.black54,
+                ),
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('Close'),
+              child: const Text(
+                'Close',
+                style: TextStyle(color: Colors.black54),
+              ),
             ),
             ElevatedButton(
               onPressed: () {
                 if (bookingDateTime != null) {
-                  // Pass the combined DateTime as a Timestamp
                   handleBookAppointment(
                     context,
                     doctorId: widget.doctorId,
                     hospitalId: widget.hospitalId,
-                    selectedDate: bookingDateTime, // Use the combined timestamp
+                    selectedDate: bookingDateTime,
                   );
                 }
               },
-              child: Text('Book Appointment'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
+                backgroundColor: Colors.black87, // Dark button
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+              child: const Text(
+                'Book Appointment',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
               ),
             ),
           ],
@@ -229,41 +264,50 @@ class _DoctorAvailabilityCalendarState
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      backgroundColor: Colors.white, // White dialog background
       child: Container(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Choose a Date',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            const Text(
+              'Choose a date',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 20),
             TableCalendar(
               firstDay: DateTime.now(),
-              lastDay: DateTime.now().add(Duration(days: 30)),
+              lastDay: DateTime.now().add(const Duration(days: 30)),
               focusedDay: DateTime.now(),
               calendarStyle: CalendarStyle(
-                todayDecoration: BoxDecoration(
-                  color: Colors.orangeAccent,
+                todayDecoration: const BoxDecoration(
+                  color: Colors.grey, // Grey for today
                   shape: BoxShape.circle,
                 ),
+                defaultTextStyle: const TextStyle(color: Colors.black87),
+                weekendTextStyle: const TextStyle(color: Colors.black54),
+                outsideTextStyle: const TextStyle(color: Colors.grey),
+                disabledTextStyle: const TextStyle(color: Colors.grey),
               ),
               calendarBuilders: CalendarBuilders(
                 defaultBuilder: (context, day, focusedDay) {
-                  if (holidays.contains(day)) {
+                  if (holidays.contains(DateTime(day.year, day.month, day.day))) {
                     return Center(
                       child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.red,
+                        decoration: const BoxDecoration(
+                          color: Colors.black54, // Dark grey for holidays
                           shape: BoxShape.circle,
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.all(6.0),
+                          padding: const EdgeInsets.all(8),
                           child: Text(
                             '${day.day}',
-                            style: TextStyle(color: Colors.white),
+                            style: const TextStyle(color: Colors.white),
                           ),
                         ),
                       ),
@@ -273,15 +317,15 @@ class _DoctorAvailabilityCalendarState
                       onTap: () => _showShiftDetails(context, day),
                       child: Center(
                         child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.green,
+                          decoration: const BoxDecoration(
+                            color: Colors.black87, // Dark for active days
                             shape: BoxShape.circle,
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(6.0),
+                            padding: const EdgeInsets.all(8),
                             child: Text(
                               '${day.day}',
-                              style: TextStyle(color: Colors.white),
+                              style: const TextStyle(color: Colors.white),
                             ),
                           ),
                         ),
@@ -289,15 +333,68 @@ class _DoctorAvailabilityCalendarState
                     );
                   }
                   return Center(
-                    child: Text('${day.day}', style: TextStyle(color: Colors.black87)),
+                    child: Text(
+                      '${day.day}',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
                   );
                 },
               ),
-              headerStyle: HeaderStyle(formatButtonVisible: false),
+              headerStyle: const HeaderStyle(
+                formatButtonVisible: false,
+                titleTextStyle: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+                leftChevronIcon: Icon(Icons.chevron_left, color: Colors.black87),
+                rightChevronIcon: Icon(Icons.chevron_right, color: Colors.black87),
+              ),
+              daysOfWeekStyle: const DaysOfWeekStyle(
+                weekdayStyle: TextStyle(color: Colors.black87),
+                weekendStyle: TextStyle(color: Colors.black54),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                LegendItem(color: Colors.black87, text: 'Available'),
+                LegendItem(color: Colors.black54, text: 'Holiday'),
+                LegendItem(color: Colors.grey, text: 'Today'),
+              ],
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class LegendItem extends StatelessWidget {
+  final Color color;
+  final String text;
+
+  const LegendItem({required this.color, required this.text, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: const TextStyle(color: Colors.black87, fontSize: 12),
+        ),
+      ],
     );
   }
 }
