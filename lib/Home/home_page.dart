@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:nhap/ChatModule/constants.dart';
+import 'package:nhap/news_stand.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 import '../Auth/auth_screen.dart';
@@ -9,6 +10,7 @@ import '../ChatModule/chat_module.dart';
 import '../Emergency/emergency_page.dart';
 import '../Forums/Public/forum.dart';
 import '../Login/login_screen1.dart';
+import '../bot/chat_bot.dart';
 import 'Widgets/profile_drawer.dart';
 import 'Widgets/custom_bottom_navbar.dart';
 import 'Widgets/homepage_content.dart';
@@ -197,7 +199,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         description: 'Tap to ask questions on various topics.',
         child: GestureDetector(
           onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => EmergencyPage()));
+            Navigator.push(context, MaterialPageRoute(builder: (context) => NewsStandApp()));
           },
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -220,7 +222,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 child: FadeTransition(
                   opacity: _textFadeAnimation,
                   child: Text(
-                    'Ask a Question >>',
+                    'News ',
                     style: TextStyle(
                       color: Colors.white,  // Changed to white for contrast
                       fontSize: 14,
@@ -232,12 +234,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               SizedBox(width: 8),
               FloatingActionButton(
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => Forum(userId: loggedInUserId)));
+                  // Navigator.push(context, MaterialPageRoute(builder: (context) => NewsStandApp()));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => ChatBotScreen()));
                 },
-                child: Icon(Icons.question_mark, color: Colors.black),  // Black icon for contrast
+                child: Icon(Icons.message, color: Colors.black),  // Black icon for contrast
                 backgroundColor: Colors.white,  // White button for visibility
                 elevation: 6,
-                tooltip: 'Emergency Assistance',
+                tooltip: 'Latest News',
               ),
             ],
           ),

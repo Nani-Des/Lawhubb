@@ -47,7 +47,7 @@ class SearchScreen extends StatelessWidget {
                       : null,
                 ),
                 title: Text('${user['Fname']} ${user['Lname']}'),
-                subtitle: Text(user['Role'] ? 'Doctor' : 'User'),
+                subtitle: Text(user['Role'] ? 'Lawyer' : 'User'),
                 onTap: () async {
                   String chatId = await _getOrCreateChat(
                     FirebaseAuth.instance.currentUser!.uid,

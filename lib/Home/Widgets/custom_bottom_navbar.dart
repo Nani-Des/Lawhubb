@@ -94,7 +94,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
             items: const [
               BottomNavigationBarItem(
                 icon: Icon(Icons.bar_chart),
-                label: 'Chambers',
+                label: 'Chambers/Lawyers',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.home_filled),
@@ -102,7 +102,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.forum_rounded),
-                label: 'Blog',
+                label: 'Community',
               ),
             ],
             currentIndex: _selectedIndex,

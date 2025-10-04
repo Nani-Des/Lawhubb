@@ -128,7 +128,7 @@ class _ReferralSummaryScreenState extends State<ReferralSummaryScreen> {
               Expanded(child: Text("Referral sent successfully")),
             ],
           ),
-          backgroundColor: Colors.green,
+          backgroundColor: Colors.grey,
           duration: Duration(seconds: 5),
           action: SnackBarAction(
             label: 'Print',
@@ -188,14 +188,14 @@ class _ReferralSummaryScreenState extends State<ReferralSummaryScreen> {
               alignment: pw.Alignment.center,
               padding: pw.EdgeInsets.all(10),
               decoration: pw.BoxDecoration(
-                border: pw.Border(bottom: pw.BorderSide(color: PdfColors.teal, width: 2)),
+                border: pw.Border(bottom: pw.BorderSide(color: PdfColors.black, width: 2)),
               ),
               child: pw.Text(
                 "Referral Receipt",
                 style: pw.TextStyle(
                   fontSize: 28,
                   fontWeight: pw.FontWeight.bold,
-                  color: PdfColors.teal,
+                  color: PdfColors.black,
                 ),
               ),
             ),
@@ -223,9 +223,9 @@ class _ReferralSummaryScreenState extends State<ReferralSummaryScreen> {
             ),
             pw.Divider(),
             pw.SizedBox(height: 10),
-            _buildPdfRow("Examination Findings", widget.examinationFindings),
-            _buildPdfRow("Treatment Administered", widget.treatmentAdministered),
-            _buildPdfRow("Diagnosis", widget.diagnosis ?? "N/A"),
+            _buildPdfRow("A brief on the legal matter", widget.examinationFindings),
+            _buildPdfRow("Key facts or context for understanding", widget.treatmentAdministered),
+            _buildPdfRow("Current status of case (e.g., pre-litigation, ongoing proceedings, awaiting mediation)", widget.diagnosis ?? "N/A"),
             _buildPdfRow("Reason for Referral", widget.reasonForReferral),
             pw.SizedBox(height: 20),
 
@@ -319,7 +319,7 @@ class _ReferralSummaryScreenState extends State<ReferralSummaryScreen> {
                 MaterialPageRoute(builder: (context) => HomePage()),
               );
             },
-            child: Text("Okay", style: TextStyle(color: Colors.teal)),
+            child: Text("Okay", style: TextStyle(color: Colors.black)),
           ),
         ],
       ),
@@ -351,7 +351,7 @@ class _ReferralSummaryScreenState extends State<ReferralSummaryScreen> {
                 onLayout: (PdfPageFormat format) async => pdf.save(),
               );
             },
-            child: Text("Print Receipt", style: TextStyle(color: Colors.teal)),
+            child: Text("Print Receipt", style: TextStyle(color: Colors.black)),
           ),
           TextButton(
             onPressed: () {
@@ -361,7 +361,7 @@ class _ReferralSummaryScreenState extends State<ReferralSummaryScreen> {
                 MaterialPageRoute(builder: (context) => HomePage()),
               );
             },
-            child: Text("Okay", style: TextStyle(color: Colors.teal)),
+            child: Text("Okay", style: TextStyle(color: Colors.black)),
           ),
         ],
       ),
@@ -373,7 +373,8 @@ class _ReferralSummaryScreenState extends State<ReferralSummaryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Referral Summary", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white)),
-        backgroundColor: Colors.teal,
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
         elevation: 0,
         actions: [
           if (widget.showConfirm)
@@ -383,7 +384,7 @@ class _ReferralSummaryScreenState extends State<ReferralSummaryScreen> {
                 onPressed: _isUploading ? null : () => saveReferralToFirestore(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
-                  foregroundColor: Colors.teal,
+                  foregroundColor: Colors.black,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: EdgeInsets.symmetric(horizontal: 16),
                 ),
@@ -422,7 +423,7 @@ class _ReferralSummaryScreenState extends State<ReferralSummaryScreen> {
       body: Stack(
         children: [
           Container(
-            color: Colors.grey[100],
+            color: Colors.grey[300],
             child: SingleChildScrollView(
               padding: EdgeInsets.all(16),
               child: Column(
@@ -445,9 +446,9 @@ class _ReferralSummaryScreenState extends State<ReferralSummaryScreen> {
                     context,
                     "Referee Notes",
                     [
-                      _buildInfoRow("Examination Findings", widget.examinationFindings),
-                      _buildInfoRow("Treatment Administered", widget.treatmentAdministered),
-                      _buildInfoRow("Diagnosis", widget.diagnosis ?? "N/A"),
+                      _buildInfoRow("A brief on the legal matter", widget.examinationFindings),
+                      _buildInfoRow("Current status of case (e.g., pre-litigation, ongoing proceedings, awaiting mediation)", widget.treatmentAdministered),
+                      _buildInfoRow("Key facts or context for understanding", widget.diagnosis ?? "N/A"),
                       _buildInfoRow("Reason for Referral", widget.reasonForReferral),
                     ],
                   ),
@@ -503,7 +504,7 @@ class _ReferralSummaryScreenState extends State<ReferralSummaryScreen> {
                     CircularProgressIndicator(
                       value: _uploadProgress,
                       backgroundColor: Colors.grey[300],
-                      color: Colors.teal,
+                      color: Colors.black,
                     ),
                     SizedBox(height: 16),
                     Text(
@@ -531,7 +532,7 @@ class _ReferralSummaryScreenState extends State<ReferralSummaryScreen> {
             Text(
               title,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: Colors.teal,
+                color: Colors.black,
                 fontWeight: FontWeight.bold,
               ),
             ),

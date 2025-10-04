@@ -164,7 +164,7 @@ class _EmergencyHomePageContentState extends State<EmergencyHomePageContent> wit
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Knowledge Packs',
+                          'Library',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,

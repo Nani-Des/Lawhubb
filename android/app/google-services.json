@@ -7,12 +7,20 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:495024454539:android:f1db140167863d78ddcd8e",
+        "mobilesdk_app_id": "1:495024454539:android:bb544ee99a118d2addcd8e",
         "android_client_info": {
-          "package_name": "com.lawapp.lawhubb"
+          "package_name": "com.example.lawhub"
         }
       },
       "oauth_client": [
+        {
+          "client_id": "495024454539-un7mpn7733qmajah5r4nfrkdf3a9efm5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.lawhub",
+            "certificate_hash": "936693a19083d2b459ae1342b26b382cb424d220"
+          }
+        },
         {
           "client_id": "495024454539-ob3rq091srg7okmn1f7kvuv66oi9eh9p.apps.googleusercontent.com",
           "client_type": 3
@@ -29,6 +37,57 @@
             {
               "client_id": "495024454539-ob3rq091srg7okmn1f7kvuv66oi9eh9p.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "495024454539-dj5pq6886k5fd5fljo835lr7h6l93lik.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.lawhub"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:495024454539:android:f1db140167863d78ddcd8e",
+        "android_client_info": {
+          "package_name": "com.lawapp.lawhubb"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "495024454539-qdk7kgde9522ihdeno9hd81ujo1phfld.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.lawapp.lawhubb",
+            "certificate_hash": "936693a19083d2b459ae1342b26b382cb424d220"
+          }
+        },
+        {
+          "client_id": "495024454539-ob3rq091srg7okmn1f7kvuv66oi9eh9p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2Jtot9fUm_rL4b58KJqXg4My_EGBWfyk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "495024454539-ob3rq091srg7okmn1f7kvuv66oi9eh9p.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "495024454539-dj5pq6886k5fd5fljo835lr7h6l93lik.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.lawhub"
+              }
             }
           ]
         }

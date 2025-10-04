@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:nhap/Forums/Public/Widgets/postcard_media.dart';
+import 'package:video_player/video_player.dart';
 import '../../../Hospital/doctor_profile.dart';
 import 'delete_post_service.dart';
 import 'full_screen.dart';
 import 'add_comment.dart';
 
 class PostCard extends StatefulWidget {
-  final Map<String, dynamic> postData; // Declare postData as a required field
-  final Function refreshCallback; // Callback to refresh the parent widget after deletion
+  final Map<String, dynamic> postData;
+  final Function refreshCallback;
 
-  // Constructor to receive the postData and refreshCallback
   PostCard({required this.postData, required this.refreshCallback});
 
   @override
@@ -27,11 +28,8 @@ class _PostCardState extends State<PostCard> {
     _checkIfLiked();
   }
 
-  // Function to check if the user has already liked the post
   void _checkIfLiked() async {
-    String userId = 'user_id'; // Replace this with the actual user ID (from Firebase Auth or similar)
-
-    // Check if the user's ID exists in the Likes subcollection for this post
+    String userId = 'user_id'; // replace with actual user id
     DocumentSnapshot postSnapshot = await FirebaseFirestore.instance
         .collection('Posts')
         .doc(widget.postData['id'])
@@ -40,45 +38,40 @@ class _PostCardState extends State<PostCard> {
         .get();
 
     setState(() {
-      _isLiked = postSnapshot.exists; // If document exists, the user has liked the post
+      _isLiked = postSnapshot.exists;
     });
   }
 
-  // Function to like the post and refresh the data
   void _likePost() async {
     if (!_isLiked) {
-      // Add the user's ID to the "Likes" subcollection for the post
-      String userId = 'user_id'; // Replace with the actual user ID
+      String userId = 'user_id'; // replace with actual user id
       await FirebaseFirestore.instance
           .collection('Posts')
           .doc(widget.postData['id'])
           .collection('Likes')
           .doc(userId)
-          .set({
-        'User ID': userId,
-      });
+          .set({'User ID': userId});
 
-      // Increment the "Likes" count for the post
-      await FirebaseFirestore.instance.collection('Posts').doc(widget.postData['id']).update({
-        'Likes': widget.postData['Likes'] + 1,
-      });
+      await FirebaseFirestore.instance
+          .collection('Posts')
+          .doc(widget.postData['id'])
+          .update({'Likes': widget.postData['Likes'] + 1});
 
       setState(() {
-        _isLiked = true; // Update local state to reflect the like
-        widget.postData['Likes'] += 1; // Update the likes count locally
+        _isLiked = true;
+        widget.postData['Likes'] += 1;
       });
     }
   }
 
-  // Fetch user profile image and full name from the Users collection
   Future<Map<String, String?>> _fetchUserDetails(String userId) async {
-    DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('Users').doc(userId).get();
+    DocumentSnapshot userDoc =
+    await FirebaseFirestore.instance.collection('Users').doc(userId).get();
     String? userImageUrl = userDoc['User Pic'];
     String? userFullName = '${userDoc['Fname']} ${userDoc['Lname']}';
     return {'imageUrl': userImageUrl, 'fullName': userFullName};
   }
 
-  // Function to open the image in full-screen view
   void _viewImage(String imageUrl) {
     Navigator.push(
       context,
@@ -88,20 +81,17 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
-  // Function to navigate to the AddCommentScreen
   void _viewComments() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddCommentScreen(postId: widget.postData['id']),
-      ),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => AddCommentScreen(postId: widget.postData['id']),
     );
   }
 
-  // Function to handle long press on the post to show the delete dialog
   void _onLongPressPost() {
     _deletePostService.deletePost(context, widget.postData['id']).then((_) {
-      // After the post is deleted, refresh the page
       widget.refreshCallback();
     });
   }
@@ -118,13 +108,13 @@ class _PostCardState extends State<PostCard> {
   Widget build(BuildContext context) {
     return Card(
       margin: EdgeInsets.all(4.0),
-      color: Colors.black87, // Dark background color
+      color: Colors.black87,
       child: GestureDetector(
-        onLongPress: _onLongPressPost, // Handle long press on the post to show delete dialog
+        onLongPress: _onLongPressPost,
+        onTap: _viewComments,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Row for Avatar Image and User's Full Name at the top-left corner
             FutureBuilder<Map<String, String?>>(
               future: _fetchUserDetails(widget.postData['User ID']),
               builder: (context, snapshot) {
@@ -138,7 +128,6 @@ class _PostCardState extends State<PostCard> {
                 var userDetails = snapshot.data!;
                 return GestureDetector(
                   onTap: () async {
-                    // Fetch the Role of the user
                     DocumentSnapshot userDoc = await FirebaseFirestore.instance
                         .collection('Users')
                         .doc(widget.postData['User ID'])
@@ -148,11 +137,12 @@ class _PostCardState extends State<PostCard> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => DoctorProfileScreen(userId: widget.postData['User ID'],isReferral: false),
+                          builder: (context) => DoctorProfileScreen(
+                              userId: widget.postData['User ID'],
+                              isReferral: false),
                         ),
                       );
                     } else {
-                      // Show a message if the user doesn't have the required Role
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('This user is not a doctor.')),
                       );
@@ -160,37 +150,59 @@ class _PostCardState extends State<PostCard> {
                   },
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundImage: NetworkImage(userDetails['imageUrl'] ?? ''),
+                      backgroundImage:
+                      NetworkImage(userDetails['imageUrl'] ?? ''),
                       radius: 20,
                     ),
                     title: Text(
                       userDetails['fullName'] ?? 'Anonymous',
-                      style: TextStyle(color: Colors.white, fontSize: _fontSize),
+                      style:
+                      TextStyle(color: Colors.white, fontSize: _fontSize),
                     ),
                   ),
                 );
               },
             ),
 
-            // Display truncated Content (Textual post data)
-            if (widget.postData['Content'] != null && widget.postData['Content'].isNotEmpty)
+            if (widget.postData['Content'] != null &&
+                widget.postData['Content'].isNotEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5.0),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5.0),
                 child: Text(
-                  _truncateContent(widget.postData['Content'], 15), // Limit content to 15 words
+                  _truncateContent(widget.postData['Content'], 15),
                   style: TextStyle(color: Colors.white, fontSize: _fontSize),
                 ),
               ),
 
-            // Post Image (if any)
-            if (widget.postData['ImageURL'] != null)
+            // Video
+            if (widget.postData['VideoURL'] != null)
+              Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8.0),
+                  child: Container(
+                    width: double.infinity, // take full width like images
+                    constraints: BoxConstraints(
+                      maxHeight: 250, // prevent overflow but allow flexibility
+                    ),
+                    color: Colors.black, // background for letterboxing
+                    child: Center(
+                      child: VideoPlayerWidget(videoUrl: widget.postData['VideoURL']),
+                    ),
+                  ),
+                ),
+              )
+
+// Image
+            else if (widget.postData['ImageURL'] != null)
               Padding(
                 padding: const EdgeInsets.all(4.0),
                 child: GestureDetector(
                   onTap: () => _viewImage(widget.postData['ImageURL']),
                   child: Container(
                     width: double.infinity,
-                    height: 100,
+                    height: 200,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(8.0),
                       color: Colors.grey[800],
@@ -205,13 +217,13 @@ class _PostCardState extends State<PostCard> {
                   ),
                 ),
               ),
-            // Likes, Comments, and Other Icons Section
+
+
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Like Button with the number of likes
                   Row(
                     children: [
                       IconButton(
@@ -224,27 +236,18 @@ class _PostCardState extends State<PostCard> {
                       ),
                       Text(
                         '${widget.postData['Likes']}',
-                        style: TextStyle(color: Colors.white, fontSize: _fontSize),
+                        style:
+                        TextStyle(color: Colors.white, fontSize: _fontSize),
                       ),
                     ],
                   ),
-                  // Comment Button
                   IconButton(
-                    icon: Icon(Icons.comment, color: Colors.white, size: 12,),
+                    icon: Icon(Icons.comment, color: Colors.white, size: 12),
                     onPressed: _viewComments,
                   ),
-                  // Additional Icons
                   IconButton(
-                    icon: Icon(Icons.share, color: Colors.white, size: 12,),
-                    onPressed: () {
-                      // Share functionality here
-                    },
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.report, color: Colors.white,size: 12,),
-                    onPressed: () {
-                      // Report functionality here
-                    },
+                    icon: Icon(Icons.report, color: Colors.white, size: 12),
+                    onPressed: () {},
                   ),
                 ],
               ),

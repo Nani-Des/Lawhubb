@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
 
 class AuthService with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -28,12 +29,46 @@ class AuthService with ChangeNotifier {
 
   // Validate email format
   static bool isValidEmail(String email) {
-    // Updated regex to be more permissive
-    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-        return emailRegex.hasMatch(email);
+    final emailRegex =
+    RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    return emailRegex.hasMatch(email);
   }
 
-  // Register user with email and password
+  // --- General error handler for user-friendly messages ---
+  String _handleAuthError(dynamic e) {
+    if (e is FirebaseAuthException) {
+      debugPrint('FirebaseAuthException: ${e.code} - ${e.message}');
+      switch (e.code) {
+        case 'invalid-email':
+          return 'The email address is not valid.';
+        case 'user-disabled':
+          return 'This account has been disabled. Contact support for help.';
+        case 'user-not-found':
+          return 'No account found with this email.';
+        case 'wrong-password':
+          return 'Incorrect password. Please try again.';
+        case 'email-already-in-use':
+          return 'This email is already registered. Try logging in instead.';
+        case 'weak-password':
+          return 'The password is too weak. Please choose a stronger one.';
+        case 'account-exists-with-different-credential':
+          return 'This account exists with another sign-in method.';
+        default:
+          return 'Something went wrong. Please try again later.';
+      }
+    } else if (e is PlatformException) {
+      debugPrint('PlatformException: ${e.code} - ${e.message}');
+      if (e.code == 'sign_in_failed') {
+        return 'Google sign-in failed. Please try again later.';
+      }
+      return 'An unexpected error occurred. Please try again.';
+    } else {
+      debugPrint('Unknown error: $e');
+      return 'An unknown error occurred. Please try again.';
+    }
+  }
+
+  // --- Register user with email and password ---
   Future<bool> registerUser({
     required BuildContext context,
     required String firstName,
@@ -44,7 +79,7 @@ class AuthService with ChangeNotifier {
     String region = '',
   }) async {
     if (!isValidEmail(email)) {
-      _errorMessage = 'Invalid email format';
+      _errorMessage = 'Please enter a valid email address.';
       notifyListeners();
       return false;
     }
@@ -54,7 +89,8 @@ class AuthService with ChangeNotifier {
     notifyListeners();
 
     try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+      await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -79,7 +115,7 @@ class AuthService with ChangeNotifier {
         return true;
       }
     } catch (e) {
-      _errorMessage = e.toString().replaceAll(RegExp(r'\[.*?\]'), '').trim();
+      _errorMessage = _handleAuthError(e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -87,14 +123,14 @@ class AuthService with ChangeNotifier {
     return false;
   }
 
-  // Sign in with email and password
+  // --- Sign in with email and password ---
   Future<bool> signInUser({
     required BuildContext context,
     required String email,
     required String password,
   }) async {
     if (!isValidEmail(email)) {
-      _errorMessage = 'Invalid email format';
+      _errorMessage = 'Please enter a valid email address.';
       notifyListeners();
       return false;
     }
@@ -104,25 +140,24 @@ class AuthService with ChangeNotifier {
     notifyListeners();
 
     try {
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      UserCredential userCredential =
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
 
       User? user = userCredential.user;
       if (user != null) {
-        DocumentSnapshot userDoc = await _firestore.collection('Users').doc(user.uid).get();
+        DocumentSnapshot userDoc =
+        await _firestore.collection('Users').doc(user.uid).get();
         if (userDoc.exists && userDoc['Status'] == true) {
           _currentUser = user;
           notifyListeners();
           return true;
         } else {
           await _auth.signOut();
-          _errorMessage = 'Account is deleted';
+          _errorMessage = 'This account is no longer active.';
         }
       }
     } catch (e) {
-      _errorMessage = e.toString().replaceAll(RegExp(r'\[.*?\]'), '').trim();
+      _errorMessage = _handleAuthError(e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -130,13 +165,13 @@ class AuthService with ChangeNotifier {
     return false;
   }
 
-  // Reset password
+  // --- Reset password ---
   Future<bool> resetPassword({
     required BuildContext context,
     required String email,
   }) async {
     if (!isValidEmail(email)) {
-      _errorMessage = 'Invalid email format';
+      _errorMessage = 'Please enter a valid email address.';
       notifyListeners();
       return false;
     }
@@ -148,16 +183,8 @@ class AuthService with ChangeNotifier {
     try {
       await _auth.sendPasswordResetEmail(email: email);
       return true;
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        _errorMessage = 'No account found with this email';
-      } else if (e.code == 'invalid-email') {
-        _errorMessage = 'Invalid email format';
-      } else {
-        _errorMessage = e.message ?? 'An error occurred';
-      }
     } catch (e) {
-      _errorMessage = e.toString().replaceAll(RegExp(r'\[.*?\]'), '').trim();
+      _errorMessage = _handleAuthError(e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -165,7 +192,7 @@ class AuthService with ChangeNotifier {
     return false;
   }
 
-  // Sign in with Google
+  // --- Sign in with Google ---
   Future<bool> signInWithGoogle(BuildContext context) async {
     _isLoading = true;
     _errorMessage = null;
@@ -173,24 +200,35 @@ class AuthService with ChangeNotifier {
 
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return false;
+      if (googleUser == null) {
+        _errorMessage = 'Google sign-in was cancelled.';
+        notifyListeners();
+        return false;
+      }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+      await googleUser.authentication;
       final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      UserCredential userCredential = await _auth.signInWithCredential(credential);
+      UserCredential userCredential =
+      await _auth.signInWithCredential(credential);
       User? user = userCredential.user;
 
       if (user != null) {
-        DocumentSnapshot userDoc = await _firestore.collection('Users').doc(user.uid).get();
-        if (!userDoc.exists) {
-          String displayName = user.displayName ?? '';
-          String firstName = displayName.isNotEmpty ? displayName.split(' ').first : 'User';
-          String lastName = displayName.contains(' ') ? displayName.split(' ').sublist(1).join(' ') : '';
+        DocumentSnapshot userDoc =
+        await _firestore.collection('Users').doc(user.uid).get();
 
+        String displayName = user.displayName ?? '';
+        String firstName =
+        displayName.isNotEmpty ? displayName.split(' ').first : 'User';
+        String lastName = displayName.contains(' ')
+            ? displayName.split(' ').sublist(1).join(' ')
+            : '';
+
+        if (!userDoc.exists) {
           await _firestore.collection('Users').doc(user.uid).set({
             'Role': false,
             'Fname': firstName,
@@ -204,10 +242,6 @@ class AuthService with ChangeNotifier {
             'CreatedAt': Timestamp.now(),
           });
         } else if (userDoc['Status'] != true) {
-          String displayName = user.displayName ?? '';
-          String firstName = displayName.isNotEmpty ? displayName.split(' ').first : 'User';
-          String lastName = displayName.contains(' ') ? displayName.split(' ').sublist(1).join(' ') : '';
-
           await _firestore.collection('Users').doc(user.uid).update({
             'Role': false,
             'Fname': firstName,
@@ -226,7 +260,7 @@ class AuthService with ChangeNotifier {
         return true;
       }
     } catch (e) {
-      _errorMessage = e.toString().replaceAll(RegExp(r'\[.*?\]'), '').trim();
+      _errorMessage = _handleAuthError(e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -234,7 +268,7 @@ class AuthService with ChangeNotifier {
     return false;
   }
 
-  // Sign out
+  // --- Sign out ---
   Future<void> signOut() async {
     await _googleSignIn.signOut();
     await _auth.signOut();

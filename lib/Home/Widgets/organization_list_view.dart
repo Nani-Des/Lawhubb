@@ -174,7 +174,7 @@ class _OrganizationListViewState extends State<OrganizationListView> {
 
               return Container(
                 decoration: BoxDecoration(
-                  color: Colors.grey[900],  // Dark grey background
+                  color: Colors.grey[600],  // Dark grey background
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
@@ -207,7 +207,7 @@ class _OrganizationListViewState extends State<OrganizationListView> {
 
                       return HospitalCard(
                         backgroundImage: backgroundImage,
-                        city: hospitalData['City'] ?? 'Unknown City',
+                        hospitalName: hospitalData['Chamber Name'] ?? 'Unknown Chamber',
                         contact: hospitalData['Contact'] ?? 'No Contact Info',
                         hospitalId: hospital.id,
                         onTap: () => _navigateToHospitalPage(context, hospital.id),
@@ -228,7 +228,7 @@ class _OrganizationListViewState extends State<OrganizationListView> {
     final filteredHospitals = _filterCachedHospitals(_cachedHospitals);
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[900],  // Dark grey background
+        color: Colors.grey[600],  // Dark grey background
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -256,7 +256,7 @@ class _OrganizationListViewState extends State<OrganizationListView> {
             final hospital = filteredHospitals[index];
             return HospitalCard(
               backgroundImage: hospital['Background Image'],
-              city: hospital['City'],
+              hospitalName: hospital['Chamber Name'],
               contact: hospital['Contact'],
               hospitalId: hospital['id'],
               onTap: () => _navigateToHospitalPage(context, hospital['id']),
@@ -324,7 +324,7 @@ class _OrganizationListViewState extends State<OrganizationListView> {
 
 class HospitalCard extends StatelessWidget {
   final String backgroundImage;
-  final String city;
+  final String hospitalName;
   final String contact;
   final String hospitalId;
   final VoidCallback onTap;
@@ -333,7 +333,7 @@ class HospitalCard extends StatelessWidget {
   const HospitalCard({
     super.key,
     required this.backgroundImage,
-    required this.city,
+    required this.hospitalName,
     required this.contact,
     required this.hospitalId,
     required this.onTap,
@@ -376,6 +376,9 @@ class HospitalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final displayName = hospitalName.length > 20
+        ? '${hospitalName.substring(0, 20)}...'
+        : hospitalName;
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 5.0),
       elevation: 8.0,
@@ -426,7 +429,7 @@ class HospitalCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
-                        city,
+                        displayName,
                         style: const TextStyle(
                           fontSize: 14.0,
                           color: Colors.white,  // White text

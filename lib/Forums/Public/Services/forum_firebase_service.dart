@@ -4,7 +4,12 @@ class ForumFirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   /// Creates a new post with the document ID set as the "Post ID"
-  Future<void> createPost(String userId, String content, String? imageUrl) async {
+  Future<void> createPost(
+      String userId,
+      String content,
+      String? imageUrl,
+      String? videoUrl,
+      ) async {
     // Create a new post document with an auto-generated document ID
     DocumentReference postRef = _firestore.collection('Posts').doc(); // Auto-generated ID
     String postId = postRef.id; // Capture the document ID
@@ -14,6 +19,7 @@ class ForumFirebaseService {
       'User ID': userId,
       'Content': content,
       'ImageURL': imageUrl,
+      'VideoURL': videoUrl,
       'Timestamp': FieldValue.serverTimestamp(),
       'Likes': 0,
     });

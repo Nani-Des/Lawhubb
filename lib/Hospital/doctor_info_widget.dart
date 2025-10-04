@@ -235,18 +235,18 @@ class DoctorInfoWidget extends StatelessWidget {
               elevation: 4,
             ),
             onPressed: () async {
-              if (userModel.userId == null || userModel.userId!.isEmpty) {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AuthScreen()),
-                );
-                if (result != null && result is String && result.isNotEmpty) {
-                  userModel.setUserId(result);
-                  _navigateToChat(context, userModel.userId!);
-                }
-              } else {
-                _navigateToChat(context, userModel.userId!);
-              }
+              // if (userModel.userId == null || userModel.userId!.isEmpty) {
+              //   final result = await Navigator.push(
+              //     context,
+              //     MaterialPageRoute(builder: (context) => AuthScreen()),
+              //   );
+              //   if (result != null && result is String && result.isNotEmpty) {
+              //     userModel.setUserId(result);
+              //     _navigateToChat(context, userModel.userId!);
+              //   }
+              // } else {
+              //   _navigateToChat(context, userModel.userId!);
+              // }
             },
           ),
         ),

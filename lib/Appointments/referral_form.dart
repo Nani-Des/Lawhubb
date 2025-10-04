@@ -64,7 +64,7 @@ class _ReferralFormState extends State<ReferralForm> {
       builder: (context, child) {
         return Theme(
           data: ThemeData.light().copyWith(
-            colorScheme: ColorScheme.light(primary: Colors.teal),
+            colorScheme: ColorScheme.light(primary: Colors.grey),
             buttonTheme: ButtonThemeData(textTheme: ButtonTextTheme.primary),
           ),
           child: child!,
@@ -180,7 +180,7 @@ class _ReferralFormState extends State<ReferralForm> {
       appBar: AppBar(
         title: Text("Referral Form", style: TextStyle(fontWeight: FontWeight.bold)),
         elevation: 0,
-        backgroundColor: Colors.teal,
+        backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
       body: Container(
@@ -220,7 +220,7 @@ class _ReferralFormState extends State<ReferralForm> {
       padding: EdgeInsets.symmetric(horizontal: 8),
       child: CircleAvatar(
         radius: 12,
-        backgroundColor: _currentPage >= index ? Colors.teal : Colors.grey[400],
+        backgroundColor: _currentPage >= index ? Colors.black : Colors.grey,
         child: Text(
           "${index + 1}",
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -241,7 +241,7 @@ class _ReferralFormState extends State<ReferralForm> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text("Client Information",
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.teal)),
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.black54)),
               SizedBox(height: 24),
               // Row with Patient Reg No and Serial Number
               Row(
@@ -257,13 +257,13 @@ class _ReferralFormState extends State<ReferralForm> {
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 16),
                       decoration: BoxDecoration(
-                        color: Colors.teal.withOpacity(0.1),
+                        color: Colors.black.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         "Serial: $_serialNumber",
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal),
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
                       ),
                     ),
                   ),
@@ -297,13 +297,13 @@ class _ReferralFormState extends State<ReferralForm> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text("Referee Notes",
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.teal)),
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.black)),
               SizedBox(height: 24),
-              _buildTextField(_examinationFindingsController, "Examination Findings", maxLines: 3),
+              _buildTextField(_examinationFindingsController, "A brief on the legal matter", maxLines: 3),
               SizedBox(height: 16),
-              _buildTextField(_treatmentAdministeredController, "Treatment Administered", maxLines: 3),
+              _buildTextField(_treatmentAdministeredController, "Current status of case (e.g., pre-litigation, ongoing proceedings, awaiting mediation)", maxLines: 3),
               SizedBox(height: 16),
-              _buildTextField(_diagnosisController, "Diagnosis (Optional)", maxLines: 2, isRequired: false),
+              _buildTextField(_diagnosisController, "Key facts or context for understanding", maxLines: 2, isRequired: false),
               SizedBox(height: 16),
               _buildTextField(_reasonForReferralController, "Reason for Referral", maxLines: 3),
               SizedBox(height: 24),
@@ -328,8 +328,8 @@ class _ReferralFormState extends State<ReferralForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Select Health Facility",
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.teal)),
+              Text("Select Chamber",
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.grey)),
               SizedBox(height: 32),
               _buildHealthFacilityButton(),
               Padding(
@@ -394,7 +394,7 @@ class _ReferralFormState extends State<ReferralForm> {
                 decoration: InputDecoration(
                   labelText: "Date of Birth",
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  suffixIcon: Icon(Icons.calendar_today, color: Colors.teal),
+                  suffixIcon: Icon(Icons.calendar_today, color: Colors.black),
                   filled: true,
                   fillColor: Colors.white,
                 ),
@@ -412,13 +412,13 @@ class _ReferralFormState extends State<ReferralForm> {
           child: Container(
             padding: EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(
-              color: Colors.teal.withOpacity(0.1),
+              color: Colors.black.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
               _age != null ? "Age: $_age" : "Age",
               textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal),
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
             ),
           ),
         ),
@@ -429,13 +429,13 @@ class _ReferralFormState extends State<ReferralForm> {
   Widget _buildUploadButton() {
     return OutlinedButton.icon(
       onPressed: _uploadMedicalRecords,
-      icon: Icon(Icons.upload_file, color: Colors.teal),
+      icon: Icon(Icons.upload_file, color: Colors.black54),
       label: Text(
-        _uploadedFileName == null ? "Upload Medical Records" : "Uploaded: $_uploadedFileName",
-        style: TextStyle(color: Colors.teal),
+        _uploadedFileName == null ? "Upload Attachments" : "Uploaded: $_uploadedFileName",
+        style: TextStyle(color: Colors.black),
       ),
       style: OutlinedButton.styleFrom(
-        side: BorderSide(color: Colors.teal),
+        side: BorderSide(color: Colors.black54),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       ),
@@ -448,12 +448,12 @@ class _ReferralFormState extends State<ReferralForm> {
       icon: Icon(Icons.local_hospital),
       label: Text(
         _selectedHealthFacility == null
-            ? "Select Health Facility"
+            ? "Select Chamber"
             : "Suggested: $_selectedHealthFacility",
         overflow: TextOverflow.ellipsis,
       ),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.teal,
+        backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
@@ -471,9 +471,9 @@ class _ReferralFormState extends State<ReferralForm> {
             onPressed: _previousPage,
             child: Row(
               children: [
-                Icon(Icons.arrow_back, color: Colors.teal),
+                Icon(Icons.arrow_back, color: Colors.black),
                 SizedBox(width: 8),
-                Text("Back", style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold)),
+                Text("Back", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -490,7 +490,7 @@ class _ReferralFormState extends State<ReferralForm> {
             ],
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.teal,
+            backgroundColor: Colors.black,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),

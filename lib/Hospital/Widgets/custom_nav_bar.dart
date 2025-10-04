@@ -214,11 +214,12 @@ class _CustomBottomNavBarHospitalState extends State<CustomBottomNavBarHospital>
             ],
           ),
           child: BottomNavigationBar(
-            items: <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person_add),
-                label: 'Refer',
-              ),
+            items: [
+              if (_isDoctor && _isActive) // Only show Refer for active doctors
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person_add),
+                  label: 'Refer',
+                ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.info),
                 label: 'About',
@@ -229,14 +230,28 @@ class _CustomBottomNavBarHospitalState extends State<CustomBottomNavBarHospital>
               ),
             ],
             currentIndex: _selectedIndex,
-            onTap: _onItemTapped,
-            selectedItemColor: Colors.white,  // White for selected items
-            unselectedItemColor: Colors.grey[400],  // Light grey for unselected
+            onTap: (index) {
+              // Adjust navigation handling because Refer may be missing
+              if (_isDoctor && _isActive) {
+                // Normal mapping (3 items)
+                _onItemTapped(index);
+              } else {
+                // No "Refer", so shift indices
+                if (index == 0) {
+                  _checkAndNavigate(context, 'About');
+                } else if (index == 1) {
+                  _checkAndNavigate(context, 'ReferralsOrBookings', hospitalId: widget.hospitalId);
+                }
+              }
+            },
+            selectedItemColor: Colors.white,
+            unselectedItemColor: Colors.grey[400],
             selectedLabelStyle: TextStyle(fontSize: 10.0, fontWeight: FontWeight.bold),
             unselectedLabelStyle: TextStyle(fontSize: 8.0),
             backgroundColor: Colors.transparent,
             elevation: 0,
           ),
+
         ),
       ),
     );

@@ -6,6 +6,7 @@ import 'chat_screen.dart';
 class ChatList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+
     final currentUser = FirebaseAuth.instance.currentUser;
     return StreamBuilder(
       stream: FirebaseFirestore.instance
@@ -39,7 +40,7 @@ class ChatList extends StatelessWidget {
                         (consultSnapshot.data!.data() as Map<String, dynamic>)['status'] ==
                             'active';
                     return Container(
-                      color: isActiveConsultation ? Colors.teal[50] : null,
+                      color: isActiveConsultation ? Colors.redAccent : null,
                       child: ListTile(
                         leading: CircleAvatar(
                           backgroundImage: userData['User Pic'] != null &&
@@ -51,7 +52,7 @@ class ChatList extends StatelessWidget {
                               ? Text(userData['Fname'][0])
                               : null,
                         ),
-                        title: Text('${userData['Fname']} ${userData['Lname']}'),
+                        title: Text('${userData['Fname']} ${userData['Lname']}',style: TextStyle(color: Colors.white)),
                         subtitle: StreamBuilder(
                           stream: FirebaseFirestore.instance
                               .collection('Chats')
@@ -62,11 +63,12 @@ class ChatList extends StatelessWidget {
                               .snapshots(),
                           builder: (context, AsyncSnapshot<QuerySnapshot> msgSnapshot) {
                             if (!msgSnapshot.hasData || msgSnapshot.data!.docs.isEmpty)
-                              return Text('No messages');
+                              return Text('No messages',style: TextStyle(color: Colors.grey));
                             var lastMessage = msgSnapshot.data!.docs.first;
                             return Text(
                               lastMessage['content'],
                               maxLines: 1,
+                              style: TextStyle(color: Colors.grey),
                               overflow: TextOverflow.ellipsis,
                             );
                           },

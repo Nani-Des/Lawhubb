@@ -40,7 +40,7 @@ class _CalenderPageState extends State<CalenderPage> with TickerProviderStateMix
 
     _textAnimationController = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
 
     _textFadeAnimation = Tween<double>(begin: 0.2, end: 1.0).animate(
@@ -52,7 +52,7 @@ class _CalenderPageState extends State<CalenderPage> with TickerProviderStateMix
 
     _progressAnimationController = AnimationController(
       vsync: this,
-      duration: Duration(seconds: 1),
+      duration: const Duration(seconds: 1),
     )..repeat();
     _progressAnimation = Tween<double>(begin: 0, end: 1).animate(_progressAnimationController);
   }
@@ -159,8 +159,8 @@ class _CalenderPageState extends State<CalenderPage> with TickerProviderStateMix
               child: CircularProgressIndicator(
                 value: _progressAnimation.value,
                 strokeWidth: 8,
-                backgroundColor: Colors.teal.withOpacity(0.2),
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.teal),
+                backgroundColor: Colors.grey.withOpacity(0.3),
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.black),
               ),
             ),
             Container(
@@ -169,23 +169,23 @@ class _CalenderPageState extends State<CalenderPage> with TickerProviderStateMix
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
-                  colors: [Colors.teal.shade100, Colors.teal.shade300],
+                  colors: [Colors.grey.shade200, Colors.grey.shade400],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.teal.withOpacity(0.3),
+                    color: Colors.black.withOpacity(0.2),
                     blurRadius: 10,
-                    offset: Offset(0, 4),
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
               child: Center(
                 child: Text(
                   '${(_progressAnimation.value * 100).toInt()}%',
-                  style: TextStyle(
-                    color: Colors.white,
+                  style: const TextStyle(
+                    color: Colors.black,
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
                   ),
@@ -201,8 +201,9 @@ class _CalenderPageState extends State<CalenderPage> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.teal,
+        backgroundColor: Colors.black,
         elevation: 0,
         title: Text(
           _hospitalDetails['hospitalName'] ?? 'Loading ..',
@@ -219,10 +220,10 @@ class _CalenderPageState extends State<CalenderPage> with TickerProviderStateMix
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _buildSophisticatedProgressIndicator(),
-            SizedBox(height: 16),
-            Text(
+            const SizedBox(height: 16),
+            const Text(
               "Loading Chamber Data...",
-              style: TextStyle(fontSize: 16, color: Colors.teal),
+              style: TextStyle(fontSize: 16, color: Colors.black87),
             ),
           ],
         ),
@@ -237,7 +238,7 @@ class _CalenderPageState extends State<CalenderPage> with TickerProviderStateMix
                 'View Practice Roster',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Colors.teal,
+                  color: Colors.black,
                 ),
               ),
               const SizedBox(height: 16),
@@ -267,10 +268,10 @@ class _CalenderPageState extends State<CalenderPage> with TickerProviderStateMix
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               _buildSophisticatedProgressIndicator(),
-                              SizedBox(height: 16),
-                              Text(
+                              const SizedBox(height: 16),
+                              const Text(
                                 "Loading Lawyers...",
-                                style: TextStyle(fontSize: 16, color: Colors.teal),
+                                style: TextStyle(fontSize: 16, color: Colors.black87),
                               ),
                             ],
                           ),
@@ -304,12 +305,12 @@ class _CalenderPageState extends State<CalenderPage> with TickerProviderStateMix
         children: [
           FadeTransition(
             opacity: _textFadeAnimation,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 8.0),
+            child: const Padding(
+              padding: EdgeInsets.only(right: 8.0),
               child: Text(
                 "Tap Here To Add Hospital",
                 style: TextStyle(
-                  color: Colors.teal,
+                  color: Colors.black,
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
@@ -324,14 +325,14 @@ class _CalenderPageState extends State<CalenderPage> with TickerProviderStateMix
               Navigator.pop(context, selectedHospitalName);
               Navigator.pop(context, selectedHospitalName);
 
-              Future.delayed(Duration(milliseconds: 300), () {
+              Future.delayed(const Duration(milliseconds: 300), () {
                 if (widget.selectHealthFacility != null) {
                   widget.selectHealthFacility!(selectedHospitalName);
                 }
               });
             },
-            child: Icon(Icons.add),
-            backgroundColor: Colors.teal,
+            child: const Icon(Icons.add, color: Colors.white),
+            backgroundColor: Colors.black,
           ),
         ],
       )
@@ -365,7 +366,7 @@ class DepartmentCard extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.white, Colors.grey[50]!],
+              colors: [Colors.white, Colors.grey.shade200],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -386,7 +387,7 @@ class DepartmentCard extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: Colors.black,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 2,

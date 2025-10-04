@@ -195,9 +195,10 @@ class _ShiftScheduleScreenState extends State<ShiftScheduleScreen>
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.teal,
+        foregroundColor: Colors.white,
         title: Row(
           children: [
-            const Icon(Icons.calendar_today, size: 20),
+            const Icon(Icons.calendar_today, size: 20, color: Colors.white),
             const SizedBox(width: 8),
             Text(
               DateFormat('MMMM yyyy').format(selectedMonth),
@@ -207,7 +208,7 @@ class _ShiftScheduleScreenState extends State<ShiftScheduleScreen>
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.date_range),
+            icon: const Icon(Icons.date_range, color: Colors.white),
             onPressed: _showMonthPicker,
           ),
         ],
@@ -216,7 +217,7 @@ class _ShiftScheduleScreenState extends State<ShiftScheduleScreen>
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Colors.teal, Colors.teal.shade700],
+              colors: [Colors.black, Colors.grey],
             ),
           ),
         ),
@@ -279,9 +280,9 @@ class _ShiftScheduleScreenState extends State<ShiftScheduleScreen>
             child: Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: Text(
-                _isLoading ? "Loading..." : "Tap Here To Add Hospital",
+                _isLoading ? "Loading..." : "Tap Here To Add Chamber",
                 style: TextStyle(
-                  color: Colors.teal,
+                  color: Colors.black,
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
@@ -349,7 +350,7 @@ class _ShiftScheduleScreenState extends State<ShiftScheduleScreen>
                   meaning,
                   style: TextStyle(
                     fontSize: 10,
-                    color: Colors.teal,
+                    color: Colors.grey[500],
                   ),
                 ),
               ],

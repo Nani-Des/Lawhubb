@@ -156,7 +156,7 @@ class _HospitalPageState extends State<HospitalPage>
                         const SizedBox(width: 20),
                         Flexible(
                           child: CardButton(
-                            title: 'Chamber Activities',
+                            title: 'Chamber Practices',
                             icon: Icons.calendar_today,
                             gradient: LinearGradient(
                               colors: [Colors.grey[800]!, Colors.grey[600]!],  // Grey gradient

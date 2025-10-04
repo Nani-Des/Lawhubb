@@ -8,259 +8,346 @@ class ConsultationScreen extends StatefulWidget {
   final String channelName;
   final bool isInitiator;
 
-  ConsultationScreen({
+  const ConsultationScreen({
     required this.channelName,
     required this.isInitiator,
-  });
+    Key? key,
+  }) : super(key: key);
 
   @override
   _ConsultationScreenState createState() => _ConsultationScreenState();
 }
 
 class _ConsultationScreenState extends State<ConsultationScreen> {
-  static const String _appId = '5b4b59f66dbb474cbcf39dd3ac19905a';
-  late final RtcEngine _engine;
+  static const String _appId = "873c3e4a81ca45cb92806d6362381790";
+  RtcEngine? _engine;
+
   bool _isJoined = false;
   int? _remoteUid;
-  bool _isMuted = false;
-  bool _isVideoEnabled = true;
+  bool _isScreenSharing = false;
   bool _isEngineInitialized = false;
+  bool _loading = true;
+
+  final TextEditingController _chatController = TextEditingController();
+  final userId = FirebaseAuth.instance.currentUser!.uid;
+
+  double previewX = 20, previewY = 80;
 
   @override
   void initState() {
     super.initState();
-    _initAgora();
+    _setup();
   }
 
-  Future<void> _initAgora() async {
-    // Check permissions
-    var cameraStatus = await Permission.camera.status;
-    var micStatus = await Permission.microphone.status;
-    if (!cameraStatus.isGranted || !micStatus.isGranted) {
-      await [Permission.camera, Permission.microphone].request();
-      cameraStatus = await Permission.camera.status;
-      micStatus = await Permission.microphone.status;
-      if (!cameraStatus.isGranted || !micStatus.isGranted) {
+  Future<void> _setup() async {
+    final statuses = await [Permission.camera, Permission.microphone].request();
+    if (statuses[Permission.camera] != PermissionStatus.granted ||
+        statuses[Permission.microphone] != PermissionStatus.granted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: const Text('Camera or microphone permission denied')),
+          const SnackBar(content: Text("Camera & microphone permissions required")),
         );
-        return;
       }
+      setState(() => _loading = false);
+      return;
     }
 
     try {
-      _engine = createAgoraRtcEngine();
-      await _engine.initialize(RtcEngineContext(
-        appId: _appId,
-        channelProfile: ChannelProfileType.channelProfileCommunication,
-      ));
+      final engine = createAgoraRtcEngine();
+      await engine.initialize(RtcEngineContext(appId: _appId));
+      _engine = engine;
       _isEngineInitialized = true;
-      print('Agora initialized successfully');
 
-      _engine.registerEventHandler(
+      engine.registerEventHandler(
         RtcEngineEventHandler(
           onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
-            setState(() {
-              _isJoined = true;
-            });
-            print('Joined channel: ${connection.channelId}');
+            setState(() => _isJoined = true);
           },
           onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
-            setState(() {
-              _remoteUid = remoteUid;
-            });
-            print('User $remoteUid joined');
+            setState(() => _remoteUid = remoteUid);
           },
           onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
-            setState(() {
-              _remoteUid = null;
-            });
-            print('User $remoteUid offline: $reason');
-            _endConsultation();
-          },
-          onError: (ErrorCodeType err, String msg) {
-            print('Agora error: $err, $msg');
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Agora error: $msg')),
-            );
-            if (err == ErrorCodeType.errInvalidToken) {
-              _retryJoinChannel();
-            }
+            setState(() => _remoteUid = null);
           },
         ),
       );
 
-      // Set video encoder configuration to avoid unrecognized profile warnings
-      await _engine.setVideoEncoderConfiguration(
-        const VideoEncoderConfiguration(
-          dimensions: VideoDimensions(width: 640, height: 360),
-          frameRate: 15,
-          bitrate: 400,
-          orientationMode: OrientationMode.orientationModeAdaptive,
-        ),
-      );
+      await engine.enableVideo();
+      await engine.startPreview();
 
-      await _engine.enableVideo();
-      await _engine.muteLocalVideoStream(false);
-      await _engine.muteLocalAudioStream(false);
-      await _engine.startPreview();
-      print('Video preview started');
-
-      // For testing, use empty token; for production, fetch from server
-      const String token = ''; // Replace with: await fetchAgoraToken(widget.channelName, FirebaseAuth.instance.currentUser!.uid);
-      print('Joining channel: ${widget.channelName}, token: $token');
-      await _engine.joinChannel(
-        token: token,
+      await engine.joinChannel(
+        token: "",
         channelId: widget.channelName,
         uid: 0,
         options: const ChannelMediaOptions(
           clientRoleType: ClientRoleType.clientRoleBroadcaster,
-          channelProfile: ChannelProfileType.channelProfileCommunication,
-          autoSubscribeAudio: true,
-          autoSubscribeVideo: true,
         ),
       );
     } catch (e) {
-      print('Agora initialization failed: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to initialize Agora: $e')),
-      );
+      print("⚠️ Agora init error: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to start consultation: $e")),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
-  Future<void> _retryJoinChannel() async {
-    if (!_isEngineInitialized) return;
+  Future<void> _toggleScreenShare() async {
+    if (!_isEngineInitialized || _engine == null) return;
     try {
-      print('Retrying channel join');
-      await _engine.leaveChannel();
-      const String token = ''; // Replace with: await fetchAgoraToken(widget.channelName, FirebaseAuth.instance.currentUser!.uid);
-      await _engine.joinChannel(
-        token: token,
-        channelId: widget.channelName,
-        uid: 0,
-        options: const ChannelMediaOptions(
-          clientRoleType: ClientRoleType.clientRoleBroadcaster,
-          channelProfile: ChannelProfileType.channelProfileCommunication,
-          autoSubscribeAudio: true,
-          autoSubscribeVideo: true,
-        ),
-      );
+      if (_isScreenSharing) {
+        await _engine!.stopScreenCapture();
+        setState(() => _isScreenSharing = false);
+      } else {
+        await _engine!.startScreenCapture(
+          const ScreenCaptureParameters2(
+            captureAudio: true,
+            captureVideo: true,
+            videoParams: ScreenVideoParameters(
+              dimensions: VideoDimensions(width: 1280, height: 720),
+              frameRate: 15,
+              bitrate: 800,
+            ),
+          ),
+        );
+        setState(() => _isScreenSharing = true);
+      }
     } catch (e) {
-      print('Retry failed: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Retry failed: $e')),
-      );
+      print("⚠️ Screen share error: $e");
     }
   }
 
   Future<void> _endConsultation() async {
     try {
       await FirebaseFirestore.instance
-          .collection('Consultations')
+          .collection("Consultations")
           .doc(widget.channelName)
           .update({
-        'status': 'ended',
-        'endTimestamp': FieldValue.serverTimestamp(),
+        "status": "ended",
+        "endTimestamp": FieldValue.serverTimestamp(),
       });
-      await _engine.stopPreview();
-      await _engine.leaveChannel();
-      print('Left channel');
-    } catch (e) {
-      print('Error ending consultation: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to end consultation: $e')),
-      );
-    } finally {
-      Navigator.pop(context);
-    }
+
+      await _engine?.stopPreview();
+      await _engine?.leaveChannel();
+      await _engine?.release();
+    } catch (_) {}
+    if (mounted) Navigator.pop(context);
   }
 
   @override
   void dispose() {
-    if (_isEngineInitialized) {
-      _engine.stopPreview();
-      _engine.leaveChannel();
-      _engine.release();
-      print('Agora engine released');
-    }
+    _chatController.dispose();
+    _endConsultation();
     super.dispose();
+  }
+
+  Widget _buildRemoteVideo() {
+    if (_remoteUid != null) {
+      return AgoraVideoView(
+        controller: VideoViewController.remote(
+          rtcEngine: _engine!,
+          canvas: VideoCanvas(uid: _remoteUid),
+          connection: RtcConnection(channelId: widget.channelName),
+        ),
+      );
+    }
+    return const Center(
+      child: Text("Waiting for participant...", style: TextStyle(color: Colors.white70)),
+    );
+  }
+
+  Widget _buildDraggablePreview() {
+    return Positioned(
+      left: previewX,
+      top: previewY,
+      child: Draggable(
+        feedback: _localPreviewBox(),
+        childWhenDragging: const SizedBox(),
+        onDragEnd: (details) {
+          setState(() {
+            previewX = details.offset.dx;
+            previewY = details.offset.dy;
+          });
+        },
+        child: _localPreviewBox(),
+      ),
+    );
+  }
+
+  Widget _localPreviewBox() {
+    return Container(
+      width: 130,
+      height: 180,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 8)],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: AgoraVideoView(
+          controller: VideoViewController(
+            rtcEngine: _engine!,
+            canvas: const VideoCanvas(uid: 0),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChatSheet() {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.25,
+      minChildSize: 0.2,
+      maxChildSize: 0.7,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.black87,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                height: 4,
+                width: 40,
+                decoration: BoxDecoration(
+                  color: Colors.grey[700],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Expanded(
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection("Consultations")
+                      .doc(widget.channelName)
+                      .collection("messages")
+                      .orderBy("timestamp", descending: true)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) return const SizedBox();
+                    final messages = snapshot.data!.docs;
+                    return ListView.builder(
+                      reverse: true,
+                      controller: scrollController,
+                      itemCount: messages.length,
+                      itemBuilder: (ctx, i) {
+                        final msg = messages[i];
+                        final isMe = msg["senderId"] == userId;
+                        return Align(
+                          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                            decoration: BoxDecoration(
+                              color: isMe ? Colors.blueGrey[800] : Colors.grey[300],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              msg["text"],
+                              style: TextStyle(
+                                color: isMe ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _chatController,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: "Type a message...",
+                          hintStyle: const TextStyle(color: Colors.white54),
+                          filled: true,
+                          fillColor: Colors.grey[800],
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(25),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    CircleAvatar(
+                      backgroundColor: Colors.blueGrey[700],
+                      child: IconButton(
+                        icon: const Icon(Icons.send, color: Colors.white),
+                        onPressed: () async {
+                          if (_chatController.text.trim().isEmpty) return;
+                          await FirebaseFirestore.instance
+                              .collection("Consultations")
+                              .doc(widget.channelName)
+                              .collection("messages")
+                              .add({
+                            "senderId": userId,
+                            "text": _chatController.text.trim(),
+                            "timestamp": FieldValue.serverTimestamp(),
+                          });
+                          _chatController.clear();
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(child: CircularProgressIndicator(color: Colors.white)),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Live Consultation'),
-      ),
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
-          _isJoined && _remoteUid != null
-              ? AgoraVideoView(
-            controller: VideoViewController.remote(
-              rtcEngine: _engine,
-              canvas: const VideoCanvas(uid: null),
-              connection: RtcConnection(channelId: widget.channelName),
-              useAndroidSurfaceView: true, // Use SurfaceView for Android
-            ),
-          )
-              : const Center(child: Text('Waiting for participant...')),
-          if (_isJoined)
-            Align(
-              alignment: Alignment.topLeft,
-              child: Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black, width: 1),
-                ),
-                child: AgoraVideoView(
-                  controller: VideoViewController(
-                    rtcEngine: _engine,
-                    canvas: const VideoCanvas(uid: 0),
-                    useAndroidSurfaceView: true, // Use SurfaceView for Android
+          Positioned.fill(child: _buildRemoteVideo()),
+          if (_isEngineInitialized) _buildDraggablePreview(),
+          _buildChatSheet(),
+          Positioned(
+            bottom: 100,
+            right: 20,
+            child: Column(
+              children: [
+                FloatingActionButton(
+                  heroTag: "share",
+                  backgroundColor: Colors.blueGrey[800],
+                  onPressed: _toggleScreenShare,
+                  child: Icon(
+                    _isScreenSharing ? Icons.stop_screen_share : Icons.screen_share,
+                    color: Colors.white,
                   ),
                 ),
-              ),
-            ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: Icon(_isMuted ? Icons.mic_off : Icons.mic),
-                    onPressed: () {
-                      setState(() {
-                        _isMuted = !_isMuted;
-                      });
-                      _engine.muteLocalAudioStream(_isMuted);
-                    },
-                  ),
-                  IconButton(
-                    icon: Icon(_isVideoEnabled ? Icons.videocam : Icons.videocam_off),
-                    onPressed: () {
-                      setState(() {
-                        _isVideoEnabled = !_isVideoEnabled;
-                      });
-                      _engine.muteLocalVideoStream(!_isVideoEnabled);
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.refresh),
-                    onPressed: () async {
-                      await _engine.stopPreview();
-                      await _engine.startPreview();
-                      setState(() {});
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.call_end, color: Colors.red),
-                    onPressed: _endConsultation,
-                  ),
-                ],
-              ),
+                const SizedBox(height: 16),
+                FloatingActionButton(
+                  heroTag: "end",
+                  backgroundColor: Colors.redAccent,
+                  onPressed: _endConsultation,
+                  child: const Icon(Icons.call_end, color: Colors.white),
+                ),
+              ],
             ),
           ),
         ],

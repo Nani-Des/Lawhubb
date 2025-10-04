@@ -50,21 +50,38 @@ class _DoctorsRowItemState extends State<DoctorsRowItem> {
       for (var doc in snapshot.docs) {
         var data = doc.data() as Map<String, dynamic>;
         if (data.containsKey('Lat') && data.containsKey('Lng')) {
-          double hospitalLat = (data['Lat'] as num).toDouble();
-          double hospitalLng = (data['Lng'] as num).toDouble();
-          double distance = _calculateDistance(
-              userPosition.latitude, userPosition.longitude, hospitalLat, hospitalLng);
-          hospitals.add({'id': doc.id, 'distance': distance});
+          double? hospitalLat;
+          double? hospitalLng;
+
+          // Handle both num and String cases
+          if (data['Lat'] is num) {
+            hospitalLat = (data['Lat'] as num).toDouble();
+          } else if (data['Lat'] is String) {
+            hospitalLat = double.tryParse(data['Lat']);
+          }
+
+          if (data['Lng'] is num) {
+            hospitalLng = (data['Lng'] as num).toDouble();
+          } else if (data['Lng'] is String) {
+            hospitalLng = double.tryParse(data['Lng']);
+          }
+
+          if (hospitalLat != null && hospitalLng != null) {
+            double distance = _calculateDistance(
+                userPosition.latitude, userPosition.longitude, hospitalLat, hospitalLng);
+            hospitals.add({'id': doc.id, 'distance': distance});
+          }
         }
       }
 
       hospitals.sort((a, b) => a['distance'].compareTo(b['distance']));
       return hospitals.take(2).map((h) => h['id'] as String).toList();
     } catch (e) {
-      print('Error fetching closest Chmabers: $e');
+      print('Error fetching closest Chambers: $e');
       return [];
     }
   }
+
 
   /// Fetch doctors from the closest 2 hospitals
   Future<void> _fetchDoctorsFromClosestHospitals() async {
@@ -141,7 +158,7 @@ class _DoctorsRowItemState extends State<DoctorsRowItem> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 120.0,
+      height: 100.0,
       child: AnimatedSwitcher(
         duration: Duration(milliseconds: 500),
         child: Row(
@@ -162,8 +179,8 @@ class _DoctorsRowItemState extends State<DoctorsRowItem> {
                       imageUrl: user['User Pic']!,
                       placeholder: (context, url) => SizedBox.shrink(), // Removed CircularProgressIndicator
                       errorWidget: (context, url, error) => Icon(Icons.error),
-                      width: 80.0,
-                      height: 80.0,
+                      width: 65.0,
+                      height: 65.0,
                       fit: BoxFit.cover,
                     ),
                   ),

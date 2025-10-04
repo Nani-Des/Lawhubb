@@ -43,7 +43,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
     if (_currentUserId == null) return;
 
     final ratingDoc = await FirebaseFirestore.instance
-        .collection('Hospital')
+        .collection('Chamber')
         .doc(widget.hospitalId)
         .collection('Ratings')
         .doc(_currentUserId)
@@ -61,7 +61,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
   Future<void> _fetchRatingData() async {
     // Get the most recent 20 ratings
     final ratingsSnapshot = await FirebaseFirestore.instance
-        .collection('Hospital')
+        .collection('Chamber')
         .doc(widget.hospitalId)
         .collection('Ratings')
         .orderBy('timestamp', descending: true) // Most recent first
@@ -81,7 +81,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
 
     // Get the total rating count from the parent document
     final hospitalRef =
-    FirebaseFirestore.instance.collection('Hospital').doc(widget.hospitalId);
+    FirebaseFirestore.instance.collection('Chamber').doc(widget.hospitalId);
     final hospitalDoc = await hospitalRef.get();
 
     if (hospitalDoc.exists) {
@@ -104,28 +104,28 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
   Future<void> _submitRating(double rating) async {
     if (_currentUserId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please log in to rate this hospital')),
+        const SnackBar(content: Text('Please log in to rate this Chamber')),
       );
       return;
     }
 
     if (_hasRated) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('You have already rated this hospital')),
+        const SnackBar(content: Text('You have already rated this Chamber')),
       );
       return;
     }
 
     // Reference to the Ratings subcollection
     final ratingsRef = FirebaseFirestore.instance
-        .collection('Hospital')
+        .collection('Chamber')
         .doc(widget.hospitalId)
         .collection('Ratings')
         .doc(_currentUserId);
 
     // Reference to the parent Hospital document
     final hospitalRef =
-    FirebaseFirestore.instance.collection('Hospital').doc(widget.hospitalId);
+    FirebaseFirestore.instance.collection('Chamber').doc(widget.hospitalId);
 
     // Submit the rating
     await ratingsRef.set({
@@ -197,7 +197,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
 
   Widget _buildSliverAppBar() {
     return StreamBuilder<DocumentSnapshot>(
-      stream: _firestore.collection('Hospital').doc(widget.hospitalId).snapshots(),
+      stream: _firestore.collection('Chamber').doc(widget.hospitalId).snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const SliverAppBar();
         final data = snapshot.data!.data() as Map<String, dynamic>;
@@ -212,7 +212,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                 color: Colors.black54,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Text(data['Hospital Name'], style: const TextStyle(fontSize: 18)),
+              child: Text(data['Chamber Name'], style: const TextStyle(fontSize: 18)),
             ),
             background: Stack(
               fit: StackFit.expand,
@@ -242,7 +242,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
 
   Widget _buildHospitalInfo() {
     return StreamBuilder<DocumentSnapshot>(
-      stream: _firestore.collection('Hospital').doc(widget.hospitalId).snapshots(),
+      stream: _firestore.collection('Chamber').doc(widget.hospitalId).snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const CircularProgressIndicator();
         final data = snapshot.data!.data() as Map<String, dynamic>;
@@ -269,7 +269,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      data['Hospital Name'],
+                      data['Chamber Name'],
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
@@ -281,7 +281,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                         Icon(Icons.location_on, size: 18, color: Colors.grey[600]),
                         const SizedBox(width: 5),
                         Text(
-                          '${data['City']}, ${data['Region']}',
+                          data['City'],
                           style: TextStyle(color: Colors.grey[600]),
                         ),
                       ],
@@ -419,12 +419,12 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            backgroundColor: Colors.teal,
+            backgroundColor: Colors.grey[800],
             elevation: 2,
           ),
           child: const Text(
             'Submit Review',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
           ),
         ),
       ],
@@ -434,7 +434,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
   Widget _buildReviewsList() {
     return StreamBuilder<QuerySnapshot>(
       stream: _firestore
-          .collection('Hospital')
+          .collection('Chamber')
           .doc(widget.hospitalId)
           .collection('Reviews')
           .orderBy('timestamp', descending: true)
@@ -534,20 +534,20 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                       (review['likes'] as List?)?.contains(_currentUserId) ?? false
                           ? Icons.thumb_up
                           : Icons.thumb_up_outlined,
-                      color: Colors.blue,
+                      color: Colors.teal,
                     ),
                     onPressed: () => _toggleLike(reviewId, review['likes']),
                   ),
                   Text(
                     '${(review['likes'] as List?)?.length ?? 0}',
-                    style: const TextStyle(color: Colors.blue),
+                    style: const TextStyle(color: Colors.teal),
                   ),
                   const SizedBox(width: 16),
                   TextButton(
                     onPressed: () => _showReplyDialog(context, reviewId),
                     child: const Text(
                       'Reply',
-                      style: TextStyle(color: Colors.teal),
+                      style: TextStyle(color: Colors.black),
                     ),
                   ),
                 ],
@@ -563,7 +563,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
   Widget _buildReplies(String reviewId) {
     return StreamBuilder<QuerySnapshot>(
       stream: _firestore
-          .collection('Hospital')
+          .collection('Chamber')
           .doc(widget.hospitalId)
           .collection('Reviews')
           .doc(reviewId)
@@ -643,7 +643,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
 
     try {
       await _firestore
-          .collection('Hospital')
+          .collection('Chamber')
           .doc(widget.hospitalId)
           .collection('Reviews')
           .add({
@@ -670,7 +670,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
     if (_currentUserId == null) return;
 
     final reviewRef = _firestore
-        .collection('Hospital')
+        .collection('Chamber')
         .doc(widget.hospitalId)
         .collection('Reviews')
         .doc(reviewId);
@@ -734,7 +734,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                       if (replyController.text.isNotEmpty && _currentUserId != null) {
                         try {
                           await _firestore
-                              .collection('Hospital')
+                              .collection('Chamber')
                               .doc(widget.hospitalId)
                               .collection('Reviews')
                               .doc(reviewId)

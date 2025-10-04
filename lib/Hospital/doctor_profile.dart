@@ -72,7 +72,8 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
             ),
           ),
         ),
-        backgroundColor: Colors.grey[900],  // Dark grey app bar
+        backgroundColor: Colors.grey[900],
+        foregroundColor: Colors.white,// Dark grey app bar
         elevation: 0,
       ),
       backgroundColor: Colors.black,  // Black background

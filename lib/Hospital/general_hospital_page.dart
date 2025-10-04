@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../Appointments/Referral screens/referral_details_page.dart';
 import '../Appointments/referral_form.dart';
 import '../Auth/auth_screen.dart';
+import '../Emergency/knowledge_packs_page.dart';
 import '../Home/Widgets/custom_bottom_navbar.dart';
 import '../Home/Widgets/organization_list_view.dart';
 import '../Login/login_screen1.dart';
@@ -14,10 +15,8 @@ class GeneralHospitalPage extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return false;
 
-    final userDoc = await FirebaseFirestore.instance
-        .collection('Users')
-        .doc(user.uid)
-        .get();
+    final userDoc =
+    await FirebaseFirestore.instance.collection('Users').doc(user.uid).get();
 
     if (!userDoc.exists) return false;
 
@@ -33,86 +32,16 @@ class GeneralHospitalPage extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return null;
 
-    final userDoc = await FirebaseFirestore.instance
-        .collection('Users')
-        .doc(user.uid)
-        .get();
+    final userDoc =
+    await FirebaseFirestore.instance.collection('Users').doc(user.uid).get();
 
-    // Safely access 'Hospital ID' field
+    // Safely access 'Chamber ID' field
     return userDoc.exists && userDoc.data() != null
         ? (userDoc.data()!['Chamber ID'] as String?)
         : null;
   }
 
-  // Function to show the redesigned dropdown menu
-  void _showDoctorMenu(BuildContext context) async {
-    final bool isActiveDoctor = await _isActiveDoctor();
-    if (!isActiveDoctor) {
-      // Navigate to login screen if not an active doctor
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => AuthScreen()),
-      );
-      return;
-    }
 
-    final String? hospitalId = await _getHospitalId();
-    if (hospitalId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Chamber ID not found')),
-      );
-      return;
-    }
-
-    // Get screen dimensions for top-right positioning
-    final screenSize = MediaQuery.of(context).size;
-    final position = RelativeRect.fromLTRB(
-      screenSize.width - 160, // Adjust for menu width (~150px) from right edge
-      0, // Top edge of the screen (below status bar)
-      0, // Right edge of the screen
-      screenSize.height, // Allow menu to extend downward
-    );
-
-    await showMenu(
-      context: context,
-      position: position,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.0),
-      ),
-      color: Colors.white,
-      elevation: 8.0,
-      items: [
-        PopupMenuItem(
-          value: 'refer',
-          child: _MenuItem(
-            icon: Icons.send,
-            label: 'Refer',
-          ),
-        ),
-        PopupMenuItem(
-          value: 'referrals',
-          child: _MenuItem(
-            icon: Icons.list_alt,
-            label: 'Referrals',
-          ),
-        ),
-      ],
-    ).then((value) {
-      if (value == 'refer') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => ReferralForm()),
-        );
-      } else if (value == 'referrals') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ReferralDetailsPage(hospitalId: hospitalId),
-          ),
-        );
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -127,7 +56,7 @@ class GeneralHospitalPage extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Colors.teal.shade100, Colors.teal.shade50],
+                colors: [Colors.black, Colors.grey],
               ),
             ),
             child: CustomScrollView(
@@ -137,18 +66,29 @@ class GeneralHospitalPage extends StatelessWidget {
                   floating: false,
                   pinned: true,
                   flexibleSpace: FlexibleSpaceBar(
-                    title: Text(
-                      'Chambers',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 4.0,
-                            color: Colors.black26,
-                            offset: Offset(2.0, 2.0),
-                          ),
-                        ],
+                    titlePadding:
+                    EdgeInsets.only(left: 56, bottom: 16), // shift title
+                    title: Container(
+                      padding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Chambers',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.1,
+                          shadows: [
+                            Shadow(
+                              blurRadius: 6.0,
+                              color: Colors.black54,
+                              offset: Offset(2, 2),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     background: Stack(
@@ -164,8 +104,8 @@ class GeneralHospitalPage extends StatelessWidget {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                Colors.black.withOpacity(0.3),
-                                Colors.black.withOpacity(0.5),
+                                Colors.black.withOpacity(0.2),
+                                Colors.black.withOpacity(0.6),
                               ],
                             ),
                           ),
@@ -174,16 +114,47 @@ class GeneralHospitalPage extends StatelessWidget {
                     ),
                   ),
                   backgroundColor: Colors.teal,
-                  elevation: 4.0,
+                  elevation: 6.0,
                   automaticallyImplyLeading: false,
-                  actions: [
-                    if (isActiveDoctor)
-                      IconButton(
-                        icon: Icon(Icons.filter_list, color: Colors.white),
-                        onPressed: () => _showDoctorMenu(context),
-                        tooltip: 'Doctor Options',
+                  leadingWidth: 120, // give more space for the button
+                  leading: Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: SizedBox(
+                      width: 100, // constrain button width
+                      child: TextButton.icon(
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        ),
+                        icon: Icon(Icons.library_books,
+                            color: Colors.black, size: 18),
+                        label: Flexible(
+                          child: Text(
+                            "Library",
+                            overflow: TextOverflow.ellipsis, // prevent overflow
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => KnowledgePacksPage(),
+                            ),
+                          );
+                        },
                       ),
-                  ],
+                    ),
+                  ),
+
+
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
@@ -218,7 +189,8 @@ class _MenuItem extends StatefulWidget {
   __MenuItemState createState() => __MenuItemState();
 }
 
-class __MenuItemState extends State<_MenuItem> with SingleTickerProviderStateMixin {
+class __MenuItemState extends State<_MenuItem>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 

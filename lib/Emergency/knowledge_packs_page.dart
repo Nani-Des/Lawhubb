@@ -18,6 +18,8 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
   late Map<String, List<Map<String, dynamic>>> localArticles;
   bool showArchived = false;
 
+  String searchQuery = "";
+
   late AnimationController _progressAnimationController;
   late Animation<double> _progressAnimation;
 
@@ -97,7 +99,7 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text("Downloaded: $title", style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.teal,
+        backgroundColor: Colors.black,
       ),
     );
   }
@@ -130,7 +132,7 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Archived: $title", style: TextStyle(color: Colors.white)),
-          backgroundColor: Colors.teal,
+          backgroundColor: Colors.redAccent,
         ),
       );
     }
@@ -138,19 +140,21 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
   }
 
   Map<String, List<Map<String, dynamic>>> getFilteredArticles() {
-    if (!showArchived) {
-      return categorizedArticles;
-    }
-    final Map<String, List<Map<String, dynamic>>> archived = {};
-    for (var category in categorizedArticles.keys) {
-      final articles = categorizedArticles[category]!
-          .where((article) => archivedArticlesBox.containsKey(article['title']))
-          .toList();
-      if (articles.isNotEmpty) {
-        archived[category] = articles;
-      }
-    }
-    return archived;
+    final source = showArchived
+        ? categorizedArticles.map((key, value) => MapEntry(
+      key,
+      value.where((a) => archivedArticlesBox.containsKey(a['title'])).toList(),
+    ))
+        : categorizedArticles;
+
+    if (searchQuery.isEmpty) return source;
+
+    final Map<String, List<Map<String, dynamic>>> filtered = {};
+    source.forEach((category, articles) {
+      final matches = articles.where((a) => a['title'].toLowerCase().contains(searchQuery.toLowerCase())).toList();
+      if (matches.isNotEmpty) filtered[category] = matches;
+    });
+    return filtered;
   }
 
   @override
@@ -174,8 +178,8 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
               child: CircularProgressIndicator(
                 value: _progressAnimation.value,
                 strokeWidth: 8,
-                backgroundColor: Colors.teal.withOpacity(0.2),
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.teal),
+                backgroundColor: Colors.redAccent.withOpacity(0.2),
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
               ),
             ),
             Container(
@@ -184,26 +188,15 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
-                  colors: [Colors.teal.shade100, Colors.teal.shade300],
+                  colors: [Colors.black, Colors.grey],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.teal.withOpacity(0.3),
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
-                  ),
-                ],
               ),
               child: Center(
                 child: Text(
                   '${(_progressAnimation.value * 100).toInt()}%',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
             ),
@@ -222,74 +215,57 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
     }
 
     final filteredArticles = getFilteredArticles();
-    final archivedCount = archivedArticlesBox.length;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        elevation: 2,
-        backgroundColor: Colors.teal,
-        title: Row(
-          children: [
-            Icon(Icons.book, color: Colors.white),
-            SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  showArchived ? "Archived Packs" : "Knowledge Packs",
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 14),
-                ),
-                if (archivedCount > 0)
-                  Text(
-                    "$archivedCount archived",
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-              ],
-            ),
-          ],
-        ),
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Colors.teal.shade700, Colors.teal.shade400],
-            ),
-          ),
+        elevation: 0,
+        backgroundColor: Colors.black,
+        centerTitle: true,
+        title: Text(
+          showArchived ? "Archived Library" : "Knowledge Library",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),
         ),
         actions: [
           IconButton(
-            icon: Icon(showArchived ? Icons.view_list : Icons.archive, color: Colors.white),
+            icon: Icon(showArchived ? Icons.library_books : Icons.archive, color: Colors.white),
             onPressed: () => setState(() => showArchived = !showArchived),
-            tooltip: showArchived ? "Show All" : "Show Archived",
           ),
         ],
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.teal.shade50, Colors.white],
+      body: Column(
+        children: [
+          // 🔍 Search Bar
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Colors.grey[100],
+            child: TextField(
+              onChanged: (val) => setState(() => searchQuery = val),
+              decoration: InputDecoration(
+                hintText: "Search books...",
+                hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
+                prefixIcon: Icon(Icons.search, color: Colors.black),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
           ),
-        ),
-        child: filteredArticles.isEmpty
-            ? _buildEmptyState()
-            : ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: filteredArticles.keys.length,
-          itemBuilder: (context, index) {
-            final category = filteredArticles.keys.elementAt(index);
-            final articles = filteredArticles[category]!;
-            return _buildCategorySection(category, articles);
-          },
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => setState(() => showArchived = !showArchived),
-        backgroundColor: Colors.teal,
-        child: Icon(showArchived ? Icons.view_list : Icons.archive),
-        tooltip: showArchived ? "Show All" : "Show Archived",
+          Expanded(
+            child: filteredArticles.isEmpty
+                ? _buildEmptyState()
+                : ListView(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              children: filteredArticles.entries.map((entry) {
+                return _buildCategoryShelf(entry.key, entry.value);
+              }).toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -303,7 +279,7 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
           const SizedBox(height: 16),
           Text(
             "Loading Knowledge Packs...",
-            style: TextStyle(color: Colors.teal.shade700, fontSize: 14, fontWeight: FontWeight.w500),
+            style: TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -315,11 +291,11 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.book_outlined, size: 80, color: Colors.teal.shade200),
+          Icon(Icons.menu_book, size: 80, color: Colors.black26),
           const SizedBox(height: 16),
           Text(
-            showArchived ? "No Archived Packs" : "No Knowledge Packs Available",
-            style: TextStyle(fontSize: 14, color: Colors.teal.shade700, fontWeight: FontWeight.bold),
+            showArchived ? "No Archived Packs" : "No Books Available",
+            style: TextStyle(fontSize: 16, color: Colors.black, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
@@ -331,60 +307,32 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
     );
   }
 
-  Widget _buildCategorySection(String category, List<Map<String, dynamic>> articles) {
+  Widget _buildCategoryShelf(String category, List<Map<String, dynamic>> articles) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Card(
-        elevation: 6,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: ExpansionTile(
-          leading: Icon(Icons.folder_open, color: Colors.teal.shade600),
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                category,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.teal.shade800,
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.teal.shade100,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  "${articles.length}",
-                  style: TextStyle(color: Colors.teal.shade800, fontSize: 12),
-                ),
-              ),
-            ],
-          ),
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 0.85,
-                ),
-                itemCount: articles.length,
-                itemBuilder: (context, articleIndex) {
-                  final article = articles[articleIndex];
-                  return _buildArticleCard(article);
-                },
-              ),
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              category,
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 230,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: articles.length,
+              itemBuilder: (context, index) {
+                return _buildArticleCard(articles[index]);
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -408,131 +356,67 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
         builder: (context, snapshot) {
           final isOffline = snapshot.hasData && snapshot.data != null;
           final isArchived = archivedArticlesBox.containsKey(article['title']);
-          return AnimatedScale(
-            scale: 1.0,
-            duration: Duration(milliseconds: 200),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.teal.shade100.withOpacity(0.3),
-                    spreadRadius: 2,
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
+          return Container(
+            width: 160,
+            margin: EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Container(
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                   ),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.teal.shade50,
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                        ),
-                        child: Icon(
-                          Icons.article,
-                          size: 40,
-                          color: Colors.teal.shade600,
-                        ),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Text(
-                            article['title'],
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.teal.shade900,
-                            ),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Row(
-                      children: [
-                        if (isOffline)
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.green.shade400,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(Icons.offline_pin, color: Colors.white, size: 16),
-                          ),
-                        if (!isOffline)
-                          Tooltip(
-                            message: "Download for offline use",
-                            child: GestureDetector(
-                              onTap: () async {
-                                await saveArticleOffline(article['title'], article['content']);
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: Colors.redAccent.shade400,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.redAccent.withOpacity(0.3),
-                                      spreadRadius: 1,
-                                      blurRadius: 4,
-                                    ),
-                                  ],
-                                ),
-                                child: Icon(Icons.download, color: Colors.white, size: 20),
-                              ),
-                            ),
-                          ),
-                      ],
+                  child: Icon(Icons.menu_book, size: 40, color: Colors.black),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(
+                      article['title'],
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  Positioned(
-                    bottom: 8,
-                    left: 8,
-                    child: Tooltip(
-                      message: isArchived ? "Unarchive" : "Archive",
-                      child: GestureDetector(
-                        onTap: () async {
-                          await toggleArchiveArticle(article['title'], article['content']);
+                ),
+                Divider(height: 1, color: Colors.grey[300]),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    if (isOffline)
+                      Icon(Icons.offline_pin, color: Colors.teal, size: 20)
+                    else
+                      IconButton(
+                        icon: Icon(Icons.download, color: Colors.redAccent),
+                        onPressed: () async {
+                          await saveArticleOffline(article['title'], article['content']);
                         },
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: isArchived ? Colors.orange.shade600 : Colors.grey.shade600,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: (isArchived ? Colors.orange : Colors.grey).withOpacity(0.3),
-                                spreadRadius: 1,
-                                blurRadius: 4,
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            isArchived ? Icons.unarchive : Icons.archive,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
                       ),
+                    IconButton(
+                      icon: Icon(
+                        isArchived ? Icons.unarchive : Icons.archive,
+                        color: isArchived ? Colors.orange : Colors.grey,
+                      ),
+                      onPressed: () async {
+                        await toggleArchiveArticle(article['title'], article['content']);
+                      },
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ),
           );
         },
