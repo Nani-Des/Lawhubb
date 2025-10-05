@@ -10,6 +10,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:nhap/try.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'Appointments/referral_form.dart';
 import 'Auth/auth_screen.dart';
@@ -31,6 +32,11 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final appDir = await getApplicationDocumentsDirectory();
+  Hive.init(appDir.path);
+  await Hive.openBox('reading_archive');
+  await Hive.openBox('notes_box');
+  await Hive.openBox('achievements_box');
   await Hive.initFlutter();
   await Hive.openBox('translations');
   await dotenv.load();

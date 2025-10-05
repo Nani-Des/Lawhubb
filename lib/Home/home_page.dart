@@ -222,7 +222,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 child: FadeTransition(
                   opacity: _textFadeAnimation,
                   child: Text(
-                    'News ',
+                    'Ask?',
                     style: TextStyle(
                       color: Colors.white,  // Changed to white for contrast
                       fontSize: 14,
@@ -234,13 +234,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               SizedBox(width: 8),
               FloatingActionButton(
                 onPressed: () {
-                  // Navigator.push(context, MaterialPageRoute(builder: (context) => NewsStandApp()));
+                  // Navigator.push(context, MaterialPageRoute(builder: (context) => EmergencyPage()));
                   Navigator.push(context, MaterialPageRoute(builder: (context) => ChatBotScreen()));
                 },
                 child: Icon(Icons.message, color: Colors.black),  // Black icon for contrast
                 backgroundColor: Colors.white,  // White button for visibility
                 elevation: 6,
-                tooltip: 'Latest News',
+                tooltip: 'Chat Bot',
               ),
             ],
           ),

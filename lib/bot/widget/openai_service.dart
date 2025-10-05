@@ -1,36 +1,47 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class OpenAIService {
   static const String _baseUrl = "https://api.openai.com/v1/chat/completions";
-  static const String _apiKey = ""; // 🔴 Replace securely
 
   static Future<String> sendMessage(String message) async {
     try {
-      final response = await http.post(
-        Uri.parse(_baseUrl),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $_apiKey",
-        },
-        body: jsonEncode({
-          "model": "gpt-3.5-turbo",
-          "messages": [
-            {"role": "system", "content": "You are LawHub Assistant, a legal guide for users in Ghana. Always provide clear, accurate and safe guidance without giving definitive legal advice."},
-            {"role": "user", "content": message}
-          ],
-          "max_tokens": 200,
+      final String apiKey = dotenv.env['OPENAI_API_KEY1'] ?? '';
+      final String projectId = dotenv.env['OPENAI_PROJECT_ID'] ?? '';
+
+      if (apiKey.isEmpty || projectId.isEmpty) {
+        return "⚠️ API key or Project ID is missing. Please check your .env file.";
+      }
+
+      final response = await Dio().post(
+        _baseUrl,
+        options: Options(headers: {
+          'Authorization': 'Bearer $apiKey',
+          'OpenAI-Project': projectId,  // ✅ Must be your proj_... ID
+          'Content-Type': 'application/json',
         }),
+        data: {
+          'model': 'gpt-4o-mini',
+          'messages': [
+            {
+              'role': 'system',
+              'content':
+              'You are LawHub Assistant, a legal guide for users in Ghana. Always provide clear, accurate and safe guidance without giving definitive legal advice.'
+            },
+            {'role': 'user', 'content': message}
+          ],
+          'max_tokens': 200,
+        },
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data["choices"][0]["message"]["content"].trim();
-      } else {
-        return "⚠️ Sorry, I couldn’t process your request right now.";
-      }
+      return response.data['choices'][0]['message']['content'];
+    } on DioError catch (dioError) {
+      print("❌ DioError: ${dioError.response?.data ?? dioError.message}");
+      return "⚠️ Failed: ${dioError.response?.data?['error']?['message'] ?? 'Unknown Dio error'}";
     } catch (e) {
-      return "⚠️ Something went wrong. Please try again later.";
+      print("❌ Exception: $e");
+      return "⚠️ Something went wrong: $e";
     }
   }
 }

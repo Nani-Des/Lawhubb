@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 import '../../Hospital/doctor_profile.dart';
-import '../../Maps/map_screen1.dart';
+import '../../bot/widget/openai_service.dart';
 
 class SearchBar1 extends StatefulWidget {
   const SearchBar1({Key? key}) : super(key: key);
@@ -18,22 +14,9 @@ class SearchBar1 extends StatefulWidget {
 class _SearchBar1State extends State<SearchBar1> {
   final TextEditingController _controller = TextEditingController();
   bool _isLoading = false;
-  List<Map<String, dynamic>> _doctorSuggestions = [];
-  List<Map<String, dynamic>> _placeSuggestions = [];
-  late String googleApiKey;
 
-  @override
-  void initState() {
-    super.initState();
-    dotenv.load().then((_) {
-      googleApiKey = dotenv.env['GOOGLE_API_KEY'] ?? '';
-      if (googleApiKey.isEmpty) {
-        print('Error: GOOGLE_API_KEY not found in .env file');
-      }
-    }).catchError((e) {
-      print('Error loading .env file: $e');
-    });
-  }
+  List<Map<String, dynamic>> _lawyerSuggestions = [];
+  String? _botResponse; // AI-matched practice name
 
   @override
   void dispose() {
@@ -41,17 +24,15 @@ class _SearchBar1State extends State<SearchBar1> {
     super.dispose();
   }
 
-  Future<void> _fetchDoctorSuggestions(String query) async {
+  // 🔍 Fetch direct lawyer matches by name or region (while typing)
+  Future<void> _fetchLawyerSuggestions(String query) async {
     if (query.isEmpty) {
       setState(() {
-        _doctorSuggestions = [];
+        _lawyerSuggestions = [];
+        _botResponse = null;
       });
       return;
     }
-
-    setState(() {
-      _isLoading = true;
-    });
 
     try {
       final snapshot = await FirebaseFirestore.instance
@@ -60,122 +41,204 @@ class _SearchBar1State extends State<SearchBar1> {
           .where('Status', isEqualTo: true)
           .get();
 
-      final doctors = snapshot.docs
+      final queryLower = query.toLowerCase();
+      final lawyers = snapshot.docs
           .map((doc) => {
         ...doc.data(),
-        'userId': doc.id, // Include document ID as userId
+        'userId': doc.id,
       })
-          .where((doctor) {
-        final queryLower = query.toLowerCase();
-        return (doctor['Fname']?.toLowerCase()?.contains(queryLower) ?? false) ||
-            (doctor['Lname']?.toLowerCase()?.contains(queryLower) ?? false) ||
-            (doctor['Region']?.toLowerCase()?.contains(queryLower) ?? false);
+          .where((lawyer) =>
+      (lawyer['Fname']?.toLowerCase().contains(queryLower) ?? false) ||
+          (lawyer['Lname']?.toLowerCase().contains(queryLower) ?? false) ||
+          (lawyer['Region']?.toLowerCase().contains(queryLower) ?? false))
+          .toList();
+
+      setState(() {
+        _lawyerSuggestions = lawyers;
+        _botResponse = null;
+      });
+    } catch (e) {
+      print('Error fetching lawyers: $e');
+    }
+  }
+
+  // 🧠 Use AI to classify query into one of the practices (on Send)
+  Future<void> _handleNoMatchWithAI(String query) async {
+    if (query.isEmpty) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Fetch available practice names
+      final practiceSnapshot =
+      await FirebaseFirestore.instance.collection('Practice').get();
+      final practices =
+      practiceSnapshot.docs.map((e) => e['Practice Name'] as String).toList();
+
+      if (practices.isEmpty) {
+        print('⚠️ No practices found in database.');
+        setState(() {
+          _isLoading = false;
+          _lawyerSuggestions = [];
+          _botResponse = null;
+        });
+        return;
+      }
+
+      // AI prompt
+      final prompt =
+          "Classify the following legal issue into one of these practices: ${practices.join(', ')}. "
+          "Respond ONLY with the exact name of the matching practice. "
+          "Query: $query";
+
+      final aiResponse = await OpenAIService.sendMessage(prompt);
+      final cleanedResponse = aiResponse.trim();
+
+      // Find matching practice
+      QueryDocumentSnapshot<Map<String, dynamic>>? matchedPractice;
+      for (var doc in practiceSnapshot.docs) {
+        final name = (doc['Practice Name'] as String?)?.toLowerCase();
+        if (name == cleanedResponse.toLowerCase()) {
+          matchedPractice = doc;
+          break;
+        }
+      }
+
+      if (matchedPractice == null) {
+        print('⚠️ AI response "$cleanedResponse" did not match any known practice.');
+        setState(() {
+          _isLoading = false;
+          _lawyerSuggestions = [];
+          _botResponse = null;
+        });
+        return;
+      }
+
+      final practiceId = matchedPractice['Practice ID'];
+      await _fetchLawyersByPractice(practiceId, cleanedResponse);
+    } catch (e) {
+      print('Error in AI handling: $e');
+      setState(() => _isLoading = false);
+    }
+  }
+
+  // 👩🏾‍⚖️ Fetch lawyers whose Practice ID matches AI result
+  Future<void> _fetchLawyersByPractice(
+      String practiceId, String practiceName) async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('Users')
+          .where('Role', isEqualTo: true)
+          .where('Status', isEqualTo: true)
+          .where('Practice ID', isEqualTo: practiceId)
+          .get();
+
+      final lawyers = snapshot.docs
+          .map((doc) => {
+        ...doc.data(),
+        'userId': doc.id,
       })
           .toList();
 
       setState(() {
-        _doctorSuggestions = doctors;
+        _lawyerSuggestions = lawyers;
+        _botResponse = practiceName;
         _isLoading = false;
       });
     } catch (e) {
-      print('Error fetching Lawyers: $e');
-      setState(() {
-        _isLoading = false;
-      });
+      print('Error fetching lawyers by practice: $e');
+      setState(() => _isLoading = false);
     }
   }
 
-  Future<void> _fetchPlaceSuggestions(String query) async {
-    if (query.isEmpty) {
-      setState(() {
-        _placeSuggestions = [];
-      });
+  // 📨 Called when user taps Send
+  void _onSendPressed() async {
+    final query = _controller.text.trim();
+    if (query.isEmpty) return;
+
+    // If there are already matching lawyers, don't call AI
+    if (_lawyerSuggestions.isNotEmpty) {
+      print('✅ Direct match found. No AI needed.');
       return;
     }
 
-    final url =
-        'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$googleApiKey&components=country:gh';
-
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        setState(() {
-          _placeSuggestions = List<Map<String, dynamic>>.from(data['predictions']);
-        });
-      }
-    } catch (e) {
-      print('Error fetching places: $e');
-    }
+    await _handleNoMatchWithAI(query);
   }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // 🔍 Search Bar
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey[900],  // Dark grey background
+            color: Colors.grey[900],
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black54,  // Darker shadow for contrast
+                color: Colors.black54,
                 spreadRadius: 2,
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
             ],
           ),
-          child: TextField(
-            controller: _controller,
-            decoration: InputDecoration(
-              hintText: 'Search Attorneys in various Bar Associations...',
-              hintStyle: TextStyle(color: Colors.grey[400], fontSize: 12),  // Light grey hint text
-              prefixIcon: const Icon(Icons.search, color: Colors.white),  // White icon for contrast
-              suffixIcon: _isLoading
-                  ? const Padding(
-                padding: EdgeInsets.all(12.0),
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  decoration: InputDecoration(
+                    hintText:
+                    'Find a lawyer? or describe you legal issue...',
+                    hintStyle:
+                    TextStyle(color: Colors.grey[400], fontSize: 12),
+                    prefixIcon:
+                    const Icon(Icons.search, color: Colors.white),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding:
+                    const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                  onChanged: (value) => _fetchLawyerSuggestions(value),
                 ),
-              )
-                  : _controller.text.isNotEmpty
-                  ? IconButton(
-                icon: Icon(Icons.clear, color: Colors.grey[400]),  // Light grey clear icon
-                onPressed: () {
-                  setState(() {
-                    _controller.clear();
-                    _doctorSuggestions = [];
-                    _placeSuggestions = [];
-                  });
-                },
-              )
-                  : null,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
               ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-            style: TextStyle(color: Colors.white),  // White text for input
-            onChanged: (value) {
-              _fetchDoctorSuggestions(value);
-              _fetchPlaceSuggestions(value);
-            },
+              if (_controller.text.isNotEmpty && !_isLoading)
+                IconButton(
+                  icon: const Icon(Icons.send, color: Colors.white),
+                  onPressed: _onSendPressed,
+                ),
+              if (_isLoading)
+                const Padding(
+                  padding: EdgeInsets.only(right: 12),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor:
+                      AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
-        if (_doctorSuggestions.isNotEmpty || _placeSuggestions.isNotEmpty)
+
+        // 📜 Suggestions Section
+        if (_lawyerSuggestions.isNotEmpty)
           Container(
             margin: const EdgeInsets.only(top: 8),
             constraints: const BoxConstraints(maxHeight: 300),
             decoration: BoxDecoration(
-              color: Colors.grey[900],  // Dark grey background
+              color: Colors.grey[900],
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black54,  // Darker shadow for contrast
+                  color: Colors.black54,
                   spreadRadius: 2,
                   blurRadius: 8,
                   offset: const Offset(0, 2),
@@ -186,92 +249,66 @@ class _SearchBar1State extends State<SearchBar1> {
               shrinkWrap: true,
               physics: const ClampingScrollPhysics(),
               children: [
-                if (_doctorSuggestions.isNotEmpty) ...[
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      'Lawyers',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[300],  // Light grey for visibility
-                      ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    _botResponse != null
+                        ? 'Suggested Lawyers for your issue ($_botResponse)'
+                        : 'Lawyers',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[300],
                     ),
                   ),
-                  SizedBox(
-                    height: 100,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _doctorSuggestions.length,
-                      itemBuilder: (context, index) {
-                        final doctor = _doctorSuggestions[index];
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => DoctorProfileScreen(
-                                  userId: doctor['userId'],
-                                  isReferral: false,
-                                ),
+                ),
+                SizedBox(
+                  height: 100,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _lawyerSuggestions.length,
+                    itemBuilder: (context, index) {
+                      final lawyer = _lawyerSuggestions[index];
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DoctorProfileScreen(
+                                userId: lawyer['userId'],
+                                isReferral: false,
                               ),
-                            );
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                            child: Column(
-                              children: [
-                                CircleAvatar(
-                                  radius: 30,
-                                  backgroundImage: doctor['User Pic'] != null
-                                      ? CachedNetworkImageProvider(doctor['User Pic'])
-                                      : null,
-                                  child: doctor['User Pic'] == null
-                                      ? const Icon(Icons.person, size: 30, color: Colors.white)  // White icon
-                                      : null,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${doctor['Title']} ${doctor['Lname']}',
-                                  style: const TextStyle(fontSize: 12, color: Colors.white),  // White text
-                                ),
-                              ],
                             ),
+                          );
+                        },
+                        child: Padding(
+                          padding:
+                          const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Column(
+                            children: [
+                              CircleAvatar(
+                                radius: 30,
+                                backgroundImage: lawyer['User Pic'] != null
+                                    ? CachedNetworkImageProvider(
+                                    lawyer['User Pic'])
+                                    : null,
+                                child: lawyer['User Pic'] == null
+                                    ? const Icon(Icons.person,
+                                    size: 30, color: Colors.white)
+                                    : null,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${lawyer['Title'] ?? ''} ${lawyer['Lname'] ?? ''}',
+                                style: const TextStyle(
+                                    fontSize: 12, color: Colors.white),
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   ),
-                ],
-                if (_placeSuggestions.isNotEmpty) ...[
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      'Places',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[300],  // Light grey for visibility
-                      ),
-                    ),
-                  ),
-                  ..._placeSuggestions.map((place) {
-                    return ListTile(
-                      title: Text(
-                        place['description'],
-                        style: TextStyle(color: Colors.white),  // White text
-                      ),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => MapScreen1(
-                              initialPlace: place['description'],
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  }).toList(),
-                ],
+                ),
               ],
             ),
           ),

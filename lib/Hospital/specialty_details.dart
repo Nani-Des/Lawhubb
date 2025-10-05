@@ -480,7 +480,7 @@ class _SpecialtyDetailsState extends State<SpecialtyDetails> with TickerProvider
     return Container(
       padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       decoration: BoxDecoration(
-        color: isSelected ? Colors.grey[800] : Colors.transparent,
+        color: isSelected ? Colors.redAccent : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
@@ -488,7 +488,7 @@ class _SpecialtyDetailsState extends State<SpecialtyDetails> with TickerProvider
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w600,
-          color: isSelected ? Colors.white : Colors.grey[300],
+          color: isSelected ? Colors.white : Colors.black,
         ),
       ),
     );

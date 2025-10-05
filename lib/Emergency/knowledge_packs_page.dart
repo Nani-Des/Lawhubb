@@ -17,9 +17,7 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
   late Box<String> archivedArticlesBox;
   late Map<String, List<Map<String, dynamic>>> localArticles;
   bool showArchived = false;
-
   String searchQuery = "";
-
   late AnimationController _progressAnimationController;
   late Animation<double> _progressAnimation;
 
@@ -27,12 +25,13 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
   void initState() {
     super.initState();
     _initializeData();
-
     _progressAnimationController = AnimationController(
       vsync: this,
       duration: Duration(seconds: 2),
     )..repeat();
-    _progressAnimation = Tween<double>(begin: 0, end: 1).animate(_progressAnimationController);
+    _progressAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _progressAnimationController, curve: Curves.easeInOut),
+    );
   }
 
   Future<void> _initializeData() async {
@@ -49,13 +48,11 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
     setState(() => isLoading = true);
     localArticles = await loadLocalData();
     final remoteData = await fetchRemoteData();
-
     final combinedData = {...localArticles};
     remoteData.forEach((category, articles) {
       combinedData.putIfAbsent(category, () => []);
       combinedData[category]!.addAll(articles);
     });
-
     setState(() {
       categorizedArticles = combinedData;
       isLoading = false;
@@ -65,7 +62,6 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
   Future<Map<String, List<Map<String, dynamic>>>> loadLocalData() async {
     final String response = await rootBundle.loadString('assets/knowledge_packs.json');
     final List<dynamic> data = json.decode(response);
-
     final Map<String, List<Map<String, dynamic>>> categorized = {};
     for (final categoryData in data) {
       final category = categoryData['category'];
@@ -82,7 +78,6 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
       final data = doc.data();
       final category = data['Category'];
       final articles = List<Map<String, dynamic>>.from(data['articles']);
-
       categorized.putIfAbsent(category, () => []);
       for (final article in articles) {
         if (article['title'] != null && article['content'] != null) {
@@ -98,8 +93,10 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
     setState(() {});
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text("Downloaded: $title", style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.black,
+        content: Text("Downloaded: $title"),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -123,16 +120,20 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
       await archivedArticlesBox.delete(title);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Unarchived: $title", style: TextStyle(color: Colors.white)),
-          backgroundColor: Colors.orange,
+          content: Text("Unarchived: $title"),
+          backgroundColor: Colors.blue,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       );
     } else {
       await archivedArticlesBox.put(title, content);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Archived: $title", style: TextStyle(color: Colors.white)),
-          backgroundColor: Colors.redAccent,
+          content: Text("Archived: $title"),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       );
     }
@@ -146,12 +147,12 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
       value.where((a) => archivedArticlesBox.containsKey(a['title'])).toList(),
     ))
         : categorizedArticles;
-
     if (searchQuery.isEmpty) return source;
-
     final Map<String, List<Map<String, dynamic>>> filtered = {};
     source.forEach((category, articles) {
-      final matches = articles.where((a) => a['title'].toLowerCase().contains(searchQuery.toLowerCase())).toList();
+      final matches = articles
+          .where((a) => a['title'].toLowerCase().contains(searchQuery.toLowerCase()))
+          .toList();
       if (matches.isNotEmpty) filtered[category] = matches;
     });
     return filtered;
@@ -169,38 +170,21 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
     return AnimatedBuilder(
       animation: _progressAnimationController,
       builder: (context, child) {
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            SizedBox(
-              width: 80,
-              height: 80,
-              child: CircularProgressIndicator(
+        return Container(
+          width: 80,
+          height: 80,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              CircularProgressIndicator(
                 value: _progressAnimation.value,
-                strokeWidth: 8,
-                backgroundColor: Colors.redAccent.withOpacity(0.2),
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                strokeWidth: 4,
+                backgroundColor: Colors.grey[200],
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
               ),
-            ),
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [Colors.black, Colors.grey],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  '${(_progressAnimation.value * 100).toInt()}%',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-              ),
-            ),
-          ],
+              Icon(Icons.book, color: Colors.blueAccent, size: 32),
+            ],
+          ),
         );
       },
     );
@@ -210,6 +194,7 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
   Widget build(BuildContext context) {
     if (isLoading) {
       return Scaffold(
+        backgroundColor: Colors.grey[100],
         body: _buildLoadingState(),
       );
     }
@@ -217,49 +202,37 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
     final filteredArticles = getFilteredArticles();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
+        backgroundColor: Colors.white,
         elevation: 0,
-        backgroundColor: Colors.black,
-        centerTitle: true,
         title: Text(
           showArchived ? "Archived Library" : "Knowledge Library",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+            fontSize: 18,
+          ),
         ),
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(showArchived ? Icons.library_books : Icons.archive, color: Colors.white),
+            icon: Icon(
+              showArchived ? Icons.library_books : Icons.archive,
+              color: Colors.black87,
+            ),
             onPressed: () => setState(() => showArchived = !showArchived),
           ),
         ],
       ),
       body: Column(
         children: [
-          // 🔍 Search Bar
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Colors.grey[100],
-            child: TextField(
-              onChanged: (val) => setState(() => searchQuery = val),
-              decoration: InputDecoration(
-                hintText: "Search books...",
-                hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
-                prefixIcon: Icon(Icons.search, color: Colors.black),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-          ),
+          _buildSearchBar(),
           Expanded(
             child: filteredArticles.isEmpty
                 ? _buildEmptyState()
                 : ListView(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: EdgeInsets.symmetric(vertical: 12),
               children: filteredArticles.entries.map((entry) {
                 return _buildCategoryShelf(entry.key, entry.value);
               }).toList(),
@@ -270,16 +243,47 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
     );
   }
 
+  Widget _buildSearchBar() {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextField(
+        onChanged: (val) => setState(() => searchQuery = val),
+        decoration: InputDecoration(
+          hintText: "Search knowledge packs...",
+          hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14),
+          prefixIcon: Icon(Icons.search, color: Colors.grey[600], size: 20),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        ),
+      ),
+    );
+  }
+
   Widget _buildLoadingState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _buildSophisticatedProgressIndicator(),
-          const SizedBox(height: 16),
+          SizedBox(height: 12),
           Text(
             "Loading Knowledge Packs...",
-            style: TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              color: Colors.black87,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -291,16 +295,25 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.menu_book, size: 80, color: Colors.black26),
-          const SizedBox(height: 16),
+          Icon(Icons.book_outlined, size: 60, color: Colors.grey[400]),
+          SizedBox(height: 12),
           Text(
-            showArchived ? "No Archived Packs" : "No Books Available",
-            style: TextStyle(fontSize: 16, color: Colors.black, fontWeight: FontWeight.bold),
+            showArchived ? "No Archived Packs" : "No Knowledge Packs",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 6),
           Text(
-            showArchived ? "Archive some packs to see them here!" : "Check back later for new content.",
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+            showArchived
+                ? "Archive some packs to see them here!"
+                : "Check back later for new content.",
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+            ),
           ),
         ],
       ),
@@ -309,23 +322,27 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
 
   Widget _buildCategoryShelf(String category, List<Map<String, dynamic>> articles) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: EdgeInsets.only(bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: 12),
             child: Text(
               category,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+              ),
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           SizedBox(
-            height: 230,
+            height: 160, // Reduced height for compact cards
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(horizontal: 12),
               itemCount: articles.length,
               itemBuilder: (context, index) {
                 return _buildArticleCard(articles[index]);
@@ -357,64 +374,98 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
           final isOffline = snapshot.hasData && snapshot.data != null;
           final isArchived = archivedArticlesBox.containsKey(article['title']);
           return Container(
-            width: 160,
-            margin: EdgeInsets.only(right: 12),
+            width: 120, // Reduced width for smaller, sophisticated cards
+            margin: EdgeInsets.only(right: 10),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
-                  blurRadius: 8,
-                  offset: Offset(0, 4),
+                  color: Colors.black12,
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
                 ),
               ],
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  height: 100,
+                  height: 80, // Reduced height for compact header
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                    gradient: LinearGradient(
+                      colors: [Colors.blueGrey[700]!, Colors.blueGrey[400]!],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                   ),
-                  child: Icon(Icons.menu_book, size: 40, color: Colors.black),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Text(
-                      article['title'],
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
+                  child: Center(
+                    child: Icon(
+                      Icons.book,
+                      color: Colors.white,
+                      size: 28, // Smaller icon
                     ),
                   ),
                 ),
-                Divider(height: 1, color: Colors.grey[300]),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    if (isOffline)
-                      Icon(Icons.offline_pin, color: Colors.teal, size: 20)
-                    else
-                      IconButton(
-                        icon: Icon(Icons.download, color: Colors.redAccent),
-                        onPressed: () async {
-                          await saveArticleOffline(article['title'], article['content']);
+                Padding(
+                  padding: EdgeInsets.fromLTRB(8, 8, 8, 4),
+                  child: Text(
+                    article['title'],
+                    style: TextStyle(
+                      fontSize: 12, // Smaller font size
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: true,
+                  ),
+                ),
+                Spacer(),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      GestureDetector(
+                        onTap: () async {
+                          if (!isOffline) {
+                            await saveArticleOffline(article['title'], article['content']);
+                          }
                         },
+                        child: Container(
+                          padding: EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: isOffline ? Colors.green[50] : Colors.grey[100],
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            isOffline ? Icons.check_circle : Icons.download,
+                            color: isOffline ? Colors.green[600] : Colors.grey[600],
+                            size: 18, // Smaller icon
+                          ),
+                        ),
                       ),
-                    IconButton(
-                      icon: Icon(
-                        isArchived ? Icons.unarchive : Icons.archive,
-                        color: isArchived ? Colors.orange : Colors.grey,
+                      GestureDetector(
+                        onTap: () async {
+                          await toggleArchiveArticle(article['title'], article['content']);
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: isArchived ? Colors.orange[50] : Colors.grey[100],
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            isArchived ? Icons.unarchive : Icons.archive,
+                            color: isArchived ? Colors.orange[600] : Colors.grey[600],
+                            size: 18, // Smaller icon
+                          ),
+                        ),
                       ),
-                      onPressed: () async {
-                        await toggleArchiveArticle(article['title'], article['content']);
-                      },
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),

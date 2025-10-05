@@ -9,6 +9,9 @@ class ChatService {
 
   static String? get _userId => _auth.currentUser?.uid;
 
+  /// Public getter for userId
+  static String? get userId => _auth.currentUser?.uid;
+
   /// Save a message
   static Future<void> saveMessage(String role, String text) async {
     if (_userId != null) {

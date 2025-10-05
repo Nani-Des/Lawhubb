@@ -229,7 +229,7 @@ class _PostCardState extends State<PostCard> {
                       IconButton(
                         icon: Icon(
                           Icons.thumb_up,
-                          color: _isLiked ? Colors.blue : Colors.white,
+                          color: _isLiked ? Colors.redAccent : Colors.white,
                           size: 12,
                         ),
                         onPressed: _likePost,

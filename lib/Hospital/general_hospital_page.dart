@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:nhap/news_stand.dart';
 import '../Appointments/Referral screens/referral_details_page.dart';
 import '../Appointments/referral_form.dart';
 import '../Auth/auth_screen.dart';
 import '../Emergency/knowledge_packs_page.dart';
 import '../Home/Widgets/custom_bottom_navbar.dart';
 import '../Home/Widgets/organization_list_view.dart';
+import '../Library/library_page.dart';
 import '../Login/login_screen1.dart';
 
 class GeneralHospitalPage extends StatelessWidget {
@@ -35,13 +37,10 @@ class GeneralHospitalPage extends StatelessWidget {
     final userDoc =
     await FirebaseFirestore.instance.collection('Users').doc(user.uid).get();
 
-    // Safely access 'Chamber ID' field
     return userDoc.exists && userDoc.data() != null
         ? (userDoc.data()!['Chamber ID'] as String?)
         : null;
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -66,8 +65,7 @@ class GeneralHospitalPage extends StatelessWidget {
                   floating: false,
                   pinned: true,
                   flexibleSpace: FlexibleSpaceBar(
-                    titlePadding:
-                    EdgeInsets.only(left: 56, bottom: 16), // shift title
+                    titlePadding: EdgeInsets.only(left: 56, bottom: 16),
                     title: Container(
                       padding:
                       EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -116,45 +114,83 @@ class GeneralHospitalPage extends StatelessWidget {
                   backgroundColor: Colors.teal,
                   elevation: 6.0,
                   automaticallyImplyLeading: false,
-                  leadingWidth: 120, // give more space for the button
+                  leadingWidth: 220, // expand width to fit 2 buttons
                   leading: Padding(
                     padding: const EdgeInsets.only(left: 8.0),
-                    child: SizedBox(
-                      width: 100, // constrain button width
-                      child: TextButton.icon(
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                        ),
-                        icon: Icon(Icons.library_books,
-                            color: Colors.black, size: 18),
-                        label: Flexible(
-                          child: Text(
-                            "Library",
-                            overflow: TextOverflow.ellipsis, // prevent overflow
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 100,
+                          child: TextButton.icon(
+                            style: TextButton.styleFrom(
+                              backgroundColor: Colors.redAccent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 6),
                             ),
+                            icon: Icon(Icons.library_books,
+                                color: Colors.black, size: 18),
+                            label: Flexible(
+                              child: Text(
+                                "Library",
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => LibraryPage(),
+                                ),
+                              );
+                            },
                           ),
                         ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => KnowledgePacksPage(),
+                        SizedBox(width: 6),
+                        SizedBox(
+                          width: 100,
+                          child: TextButton.icon(
+                            style: TextButton.styleFrom(
+                              backgroundColor: Colors.orangeAccent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 6),
                             ),
-                          );
-                        },
-                      ),
+                            icon: Icon(Icons.newspaper,
+                                color: Colors.black, size: 18),
+                            label: Flexible(
+                              child: Text(
+                                "News",
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => NewsStandApp(),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-
-
                 ),
                 SliverToBoxAdapter(
                   child: Padding(

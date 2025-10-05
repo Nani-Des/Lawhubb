@@ -185,7 +185,7 @@ class FirebaseService {
         doctors.add({
           'userId': userId,
           'name': lname is String ? 'Esq. $lname ' : 'Unknown Esq.',
-          'experience': experience != null ? '$experience Yrs' : '0 Yrs',
+          'experience': experience != null ? 'Year of Call: $experience' : 'Year of Call',
           'userPic': userPic is String ? userPic : '',
         });
       }
