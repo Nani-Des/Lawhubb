@@ -144,7 +144,7 @@ class _PostCardState extends State<PostCard> {
                       );
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('This user is not a doctor.')),
+                        SnackBar(content: Text('This user is not a lawyer.')),
                       );
                     }
                   },

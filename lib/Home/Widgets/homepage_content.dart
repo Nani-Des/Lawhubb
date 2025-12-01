@@ -58,7 +58,7 @@ class _HomePageContentState extends State<HomePageContent> with SingleTickerProv
                     const SearchBar1(),
                     SpeechBubble(
                       onPressed: () {
-                        print("See Doctor now! tapped");
+                        print("See Lawyer now! tapped");
                       },
                       textStyle: const TextStyle(
                         fontSize: 15.0,

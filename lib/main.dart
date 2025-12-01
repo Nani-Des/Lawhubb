@@ -22,6 +22,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'Services/config_service.dart';
 import 'booking_page.dart';
 
 // Background message handler
@@ -50,6 +51,10 @@ void main() async {
     ),
   );
   FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: true);
+
+  // Initialize Remote Config
+  final configService = ConfigService();
+  await configService.init();
 
   // Initialize FCM
   try {

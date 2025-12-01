@@ -42,7 +42,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
       print('Error loading doctor details: $error');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to load doctor details. Please check your network.'),
+          content: Text('Failed to load lawyer details. Please check your network.'),
           backgroundColor: Colors.grey[800],
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

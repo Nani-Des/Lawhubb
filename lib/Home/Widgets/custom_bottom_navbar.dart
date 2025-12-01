@@ -3,16 +3,19 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nhap/Home/home_page.dart';
 import 'package:nhap/Login/login_screen1.dart';
 import '../../Auth/auth_screen.dart';
-import '../../ChatModule/chat_module.dart';
 import '../../Forums/Chat/HomeScreen.dart';
-import '../../Forums/Public/forum.dart';
 import '../../Hospital/general_hospital_page.dart';
+import '../../Library/library_page.dart';
 
 class CustomBottomNavBar extends StatefulWidget {
   final int selectedIndex;
+  final int setup; // Added parameter to control which setup to use
 
-  // Constructor to accept selectedIndex
-  CustomBottomNavBar({Key? key, required this.selectedIndex}) : super(key: key);
+  const CustomBottomNavBar({
+    Key? key,
+    required this.selectedIndex,
+    required this.setup,
+  }) : super(key: key);
 
   @override
   _CustomBottomNavBarState createState() => _CustomBottomNavBarState();
@@ -25,47 +28,125 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
   @override
   void initState() {
     super.initState();
-    _selectedIndex = widget.selectedIndex; // Initialize with passed index
+    _selectedIndex = widget.selectedIndex;
   }
 
-  // Check if user is signed in
-  Future<void> _navigateBasedOnAuthStatus(BuildContext context, Widget Function(String) targetScreen) async {
+  // 🔹 Authentication check before navigation
+  Future<void> _navigateBasedOnAuthStatus(
+      BuildContext context, Widget targetScreen) async {
     User? currentUser = _auth.currentUser;
-    String? userId;
 
     if (currentUser != null) {
-      userId = currentUser.uid;
-    } else {
-      userId = await Navigator.push<String>(
-        context,
-        MaterialPageRoute(builder: (context) => AuthScreen()),
-      );
-    }
-
-    if (userId != null) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => targetScreen(userId!)),
+        MaterialPageRoute(builder: (context) => targetScreen),
       );
+    } else {
+      final userId = await Navigator.push<String>(
+        context,
+        MaterialPageRoute(builder: (context) => const AuthScreen()),
+      );
+
+      if (userId != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => targetScreen),
+        );
+      }
     }
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+  // 🔹 Action handlers for setup 4
+  void _onSearchPressed() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Search feature coming soon!')),
+    );
+  }
 
-    switch (index) {
-      case 0:
-        _navigateBasedOnAuthStatus(context, (userId) => GeneralHospitalPage());
+  void _onCreatePostPressed() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Create Post feature coming soon!')),
+    );
+  }
+
+  void _onLivePressed() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Live feature coming soon!')),
+    );
+  }
+
+  // 🔹 Navigation logic for each item
+  void _onItemTapped(int index) {
+    setState(() => _selectedIndex = index);
+
+    switch (widget.setup) {
+      case 1: // Home
+        if (index == 0) _navigateBasedOnAuthStatus(context,  GeneralHospitalPage());
+        else if (index == 1) _navigateBasedOnAuthStatus(context,  LibraryPage());
+        else if (index == 2) _navigateBasedOnAuthStatus(context, const HomeScreen(initialTabIndex: 0));
         break;
+
+      case 2: // Chambers
+        if (index == 0) _navigateBasedOnAuthStatus(context,  HomePage());
+        else if (index == 1) _navigateBasedOnAuthStatus(context,  LibraryPage());
+        else if (index == 2) _navigateBasedOnAuthStatus(context, const HomeScreen(initialTabIndex: 1));
+        break;
+
+      case 3: // Social
+        if (index == 0) _navigateBasedOnAuthStatus(context,  HomePage());
+        else if (index == 1) _navigateBasedOnAuthStatus(context,  LibraryPage());
+        else if (index == 2) _navigateBasedOnAuthStatus(context,  GeneralHospitalPage());
+        break;
+
+      case 4: // Forum
+        if (index == 0) _onSearchPressed();
+        else if (index == 1) _onCreatePostPressed();
+        else if (index == 2) _onLivePressed();
+        break;
+
+      case 5: // Law insights
+        if (index == 0) _navigateBasedOnAuthStatus(context,  HomePage());
+        else if (index == 1) _navigateBasedOnAuthStatus(context,  GeneralHospitalPage());
+        else if (index == 2) _navigateBasedOnAuthStatus(context, const HomeScreen(initialTabIndex: 1));
+        break;
+    }
+  }
+
+  // 🔹 Builds items dynamically based on setup
+  List<BottomNavigationBarItem> _buildNavItems() {
+    switch (widget.setup) {
       case 1:
-        _navigateBasedOnAuthStatus(context, (userId) => HomePage());
-        break;
+        return const [
+          BottomNavigationBarItem(icon: Icon(Icons.balance), label: 'Chambers'),
+          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Law Insights'),
+          BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'SocialHubb'),
+        ];
       case 2:
-        _navigateBasedOnAuthStatus(context, (userId) => HomeScreen());
-        // _navigateBasedOnAuthStatus(context, (userId) => Forum(userId: userId,));
-        break;
+        return const [
+          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Law Insights'),
+          BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'SocialHubb'),
+        ];
+      case 3:
+        return const [
+          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Law Insights'),
+          BottomNavigationBarItem(icon: Icon(Icons.balance), label: 'Chambers'),
+        ];
+      case 4:
+        return const [
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
+          BottomNavigationBarItem(icon: Icon(Icons.create), label: 'Create Post'),
+          BottomNavigationBarItem(icon: Icon(Icons.videocam), label: 'Live'),
+        ];
+      case 5:
+        return const [
+          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.balance), label: 'Chambers'),
+          BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'SocialHubb'),
+        ];
+      default:
+        return const [];
     }
   }
 
@@ -73,45 +154,32 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: BottomAppBar(
-        shape: CircularNotchedRectangle(),
+        shape: const CircularNotchedRectangle(),
         notchMargin: 8.0,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.grey[900],  // Dark grey background
-            borderRadius: BorderRadius.only(
+            color: Colors.grey[900],
+            borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(16.0),
               topRight: Radius.circular(16.0),
             ),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
-                color: Colors.black54,  // Darker shadow for contrast
+                color: Colors.black54,
                 blurRadius: 10,
                 offset: Offset(0, -1),
               ),
             ],
           ),
           child: BottomNavigationBar(
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.bar_chart),
-                label: 'Chambers/Lawyers',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_filled),
-                label: 'Home',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.forum_rounded),
-                label: 'Community',
-              ),
-            ],
+            items: _buildNavItems(),
             currentIndex: _selectedIndex,
             onTap: _onItemTapped,
-            selectedItemColor: Colors.white,  // White for selected items
-            unselectedItemColor: Colors.grey[400],  // Light grey for unselected
+            selectedItemColor: Colors.white,
+            unselectedItemColor: Colors.grey[400],
             selectedLabelStyle:
-            TextStyle(fontSize: 10.0, fontWeight: FontWeight.bold),
-            unselectedLabelStyle: TextStyle(fontSize: 8.0),
+            const TextStyle(fontSize: 10.0, fontWeight: FontWeight.bold),
+            unselectedLabelStyle: const TextStyle(fontSize: 8.0),
             backgroundColor: Colors.transparent,
             elevation: 0,
           ),

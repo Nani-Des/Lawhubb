@@ -159,7 +159,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   ? NetworkImage(userImageUrl!)
                   : null,
               child: userImageUrl == null || userImageUrl!.isEmpty
-                  ? Icon(Icons.person, color: Colors.white)  // Changed to white
+                  ? Icon(Icons.person, color: Colors.black)  // Changed to white
                   : null,
             ),
           ),
@@ -193,59 +193,34 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ],
         ),
       ),
-      bottomNavigationBar: CustomBottomNavBar(selectedIndex: 1),
+      bottomNavigationBar: CustomBottomNavBar(selectedIndex:1, setup: 1),
       floatingActionButton: Showcase(
         key: _fabKey,
         description: 'Tap to ask questions on various topics.',
         child: GestureDetector(
           onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => NewsStandApp()));
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ChatBotScreen()),
+            );
           },
           child: Row(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: Colors.grey[800],  // Dark grey for container
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black54,  // Darker shadow for contrast
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                  border: Border.all(color: Colors.white.withOpacity(0.5)),  // White border for visibility
-                ),
-                child: FadeTransition(
-                  opacity: _textFadeAnimation,
-                  child: Text(
-                    'Ask?',
-                    style: TextStyle(
-                      color: Colors.white,  // Changed to white for contrast
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: 8),
               FloatingActionButton(
-                onPressed: () {
-                  // Navigator.push(context, MaterialPageRoute(builder: (context) => EmergencyPage()));
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => ChatBotScreen()));
-                },
-                child: Icon(Icons.message, color: Colors.black),  // Black icon for contrast
-                backgroundColor: Colors.white,  // White button for visibility
-                elevation: 6,
+                onPressed: null, // Disable since the whole row is tappable
+                child: Icon(Icons.question_mark, color: Colors.black),
+                backgroundColor: Colors.white,
+                elevation: 20,
                 tooltip: 'Chat Bot',
               ),
+
             ],
           ),
         ),
       ),
+
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }

@@ -207,7 +207,7 @@ class GeneralHospitalPage extends StatelessWidget {
               ],
             ),
           ),
-          bottomNavigationBar: CustomBottomNavBar(selectedIndex: 0),
+          bottomNavigationBar: CustomBottomNavBar(selectedIndex: 0, setup: 2),
         );
       },
     );

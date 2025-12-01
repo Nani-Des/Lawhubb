@@ -1,14 +1,18 @@
-import 'dart:convert';
+import 'dart:convert'                                              ;
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+import '../../Services/config_service.dart';
 
 class OpenAIService {
   static const String _baseUrl = "https://api.openai.com/v1/chat/completions";
 
+
   static Future<String> sendMessage(String message) async {
     try {
-      final String apiKey = dotenv.env['OPENAI_API_KEY1'] ?? '';
-      final String projectId = dotenv.env['OPENAI_PROJECT_ID'] ?? '';
+      final config = ConfigService();
+      final String apiKey = config.openAiApiKey1;
+      final String projectId = config.openAiProjectId;
 
       if (apiKey.isEmpty || projectId.isEmpty) {
         return "⚠️ API key or Project ID is missing. Please check your .env file.";

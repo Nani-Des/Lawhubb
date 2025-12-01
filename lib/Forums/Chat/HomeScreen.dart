@@ -9,7 +9,9 @@ import 'chat_list.dart';
 import 'live_stream.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  final int initialTabIndex; // 👈 New parameter (0 = Chats, 1 = Social Hubb)
+
+  const HomeScreen({Key? key, this.initialTabIndex = 0}) : super(key: key);
 
   Future<void> _startPublicConsultation(BuildContext context) async {
     try {
@@ -48,8 +50,8 @@ class HomeScreen extends StatelessWidget {
             builder: (context) => LiveConsultationScreen(
               channelName: chatId,
               isInitiator: true,
-              chatId: chatId, initiatorId: currentUser.uid,
-
+              chatId: chatId,
+              initiatorId: currentUser.uid,
             ),
           ),
         );
@@ -71,9 +73,9 @@ class HomeScreen extends StatelessWidget {
 
     return DefaultTabController(
       length: 2,
+      initialIndex: initialTabIndex, // 👈 Set the starting tab dynamically
       child: Scaffold(
         backgroundColor: Colors.black,
-
         appBar: AppBar(
           backgroundColor: Colors.black,
           elevation: 0,
@@ -82,7 +84,7 @@ class HomeScreen extends StatelessWidget {
             indicatorColor: Colors.white,
             tabs: [
               Tab(icon: Icon(Icons.chat, color: Colors.white), text: "Chats"),
-              Tab(icon: Icon(Icons.forum, color: Colors.white), text: "Chat Room"),
+              Tab(icon: Icon(Icons.forum, color: Colors.white), text: "Social Hubb"),
             ],
           ),
           actions: [
@@ -93,8 +95,10 @@ class HomeScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          DoctorProfileScreen(userId: loggedInUserId, isReferral: false),
+                      builder: (context) => DoctorProfileScreen(
+                        userId: loggedInUserId,
+                        isReferral: false,
+                      ),
                     ),
                   );
                 },
@@ -121,177 +125,48 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
             ),
-            IconButton(onPressed: (){
-              Navigator.push(context, MaterialPageRoute(builder: (context) => SearchScreen()));
-            }, icon: Icon(Icons.search, color: Colors.white))
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>  SearchScreen()));
+              },
+              icon: const Icon(Icons.search, color: Colors.white),
+            ),
           ],
         ),
-
         body: TabBarView(
           children: [
             Column(
               children: [
-                SizedBox(
-                  height: 120,
-                  child: StreamBuilder(
-                    stream: FirebaseFirestore.instance
-                        .collection('Consultations')
-                        .where('status', isEqualTo: 'active')
-                        .where('recipientId', isEqualTo: 'public')
-                        .snapshots(),
-                    builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                      if (!snapshot.hasData) {
-                        return const Center(
-                            child: CircularProgressIndicator(color: Colors.white));
-                      }
-
-                      final consults = snapshot.data!.docs;
-
-                      if (consults.isEmpty) {
-                        return const Center(
-                          child: Text(
-                            "No live consultations",
-                            style: TextStyle(color: Colors.white70),
-                          ),
-                        );
-                      }
-
-                      return ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: consults.length,
-                        itemBuilder: (context, index) {
-                          final consult = consults[index];
-                          final initiatorId = consult['initiatorId'];
-
-                          return FutureBuilder<DocumentSnapshot>(
-                            future: FirebaseFirestore.instance
-                                .collection('Users')
-                                .doc(initiatorId)
-                                .get(),
-                            builder: (context, userSnap) {
-                              if (userSnap.connectionState ==
-                                  ConnectionState.waiting) {
-                                return const SizedBox(
-                                  width: 80,
-                                  child: Center(
-                                    child: CircularProgressIndicator(
-                                        color: Colors.white),
-                                  ),
-                                );
-                              }
-
-                              if (!userSnap.hasData || !userSnap.data!.exists) {
-                                return const SizedBox(
-                                  width: 80,
-                                  child: Center(
-                                    child: Icon(Icons.person_off,
-                                        size: 35, color: Colors.white70),
-                                  ),
-                                );
-                              }
-
-                              final userData = userSnap.data!.data()
-                              as Map<String, dynamic>? ??
-                                  {};
-                              final fullName =
-                              "${userData['Fname'] ?? ''} ${userData['Lname'] ?? ''}"
-                                  .trim();
-                              final userPic = userData['User Pic'] ?? '';
-                              final isHost = initiatorId == currentUser.uid;
-
-                              return GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          LiveConsultationScreen(
-                                            channelName: consult['chatId'],
-                                            isInitiator: isHost,
-                                            chatId: consult['chatId'],
-                                            initiatorId: initiatorId,
-                                          ),
-                                    ),
-                                  );
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                                  child: Column(
-                                    children: [
-                                      Stack(
-                                        alignment: Alignment.bottomCenter,
-                                        children: [
-                                          CircleAvatar(
-                                            radius: 35,
-                                            backgroundImage: userPic.isNotEmpty
-                                                ? NetworkImage(userPic)
-                                                : null,
-                                            backgroundColor: Colors.grey[300],
-                                            child: userPic.isEmpty
-                                                ? const Icon(Icons.person,
-                                                size: 35, color: Colors.white)
-                                                : null,
-                                          ),
-                                          Container(
-                                            margin:
-                                            const EdgeInsets.only(bottom: 2),
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 6, vertical: 2),
-                                            decoration: BoxDecoration(
-                                              color: isHost
-                                                  ? Colors.tealAccent[700]
-                                                  : Colors.redAccent,
-                                              borderRadius:
-                                              BorderRadius.circular(10),
-                                            ),
-                                            child: Text(
-                                              isHost ? "YOU" : "LIVE",
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        fullName.isNotEmpty
-                                            ? fullName.length > 24
-                                            ? '${fullName.substring(0, 21)}...'
-                                            : fullName
-                                            : (isHost ? "You" : "Host"),
-                                        style: const TextStyle(
-                                            fontSize: 12, color: Colors.white),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      );
-                    },
+                const SizedBox(height: 12),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(
+                    "🗣️ Chats",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
+                const SizedBox(height: 6),
+                const Divider(thickness: 1.2),
                 Expanded(child: ChatList()),
               ],
             ),
             Forum(userId: loggedInUserId),
           ],
         ),
-
         floatingActionButton: FloatingActionButton(
           backgroundColor: Colors.redAccent,
           onPressed: () => _startPublicConsultation(context),
           child: const Icon(Icons.videocam, color: Colors.white),
           tooltip: 'Start Public Consultation',
         ),
-
-        bottomNavigationBar: CustomBottomNavBar(selectedIndex: 2),
+        bottomNavigationBar: CustomBottomNavBar(selectedIndex: 2, setup:3),
       ),
     );
   }
