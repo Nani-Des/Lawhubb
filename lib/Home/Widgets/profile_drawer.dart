@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import '../../Auth/auth_screen.dart';
 import '../../Auth/auth_service.dart';
 import '../../booking_page.dart';
 import '../../main.dart';
+import '../../Settings/blocked_users_page.dart';
 import '../home_page.dart';
 import 'package:provider/provider.dart';
 
@@ -39,6 +41,9 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
+  
+  DocumentSnapshot? _cachedUserData;
+  bool _isCacheValid = false;
 
   @override
   void initState() {
@@ -49,23 +54,59 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
   void _refreshUserData() {
     final User? currentUser = FirebaseAuth.instance.currentUser;
     setState(() {
+      _isCacheValid = false;
       _userDataFuture = currentUser != null ? _fetchUserData() : null;
     });
   }
 
   Future<DocumentSnapshot> _fetchUserData() async {
+    // Return cached data if valid
+    if (_isCacheValid && _cachedUserData != null) {
+      return _cachedUserData!;
+    }
+    
+    // #region agent log
+    final logFile = File(r'c:\Users\HP\PROJECTS\flutter_projects\lawhubb\Lawhubb\.cursor\debug.log');
+    void debugLog(String hypothesisId, String message, Map<String, dynamic> data) {
+      try {
+        final entry = jsonEncode({'hypothesisId': hypothesisId, 'location': 'profile_drawer.dart:_fetchUserData', 'message': message, 'data': data, 'timestamp': DateTime.now().millisecondsSinceEpoch, 'sessionId': 'debug-session'}) + '\n';
+        logFile.writeAsStringSync(entry, mode: FileMode.append);
+      } catch (_) {}
+    }
+    // #endregion
     final User? currentUser = FirebaseAuth.instance.currentUser;
+    // #region agent log
+    debugLog('A', 'Auth check in profile drawer', {'userIsNull': currentUser == null, 'userId': currentUser?.uid ?? 'null'});
+    // #endregion
     if (currentUser == null) {
       throw Exception('User not logged in');
     }
-    final DocumentSnapshot userDoc = await FirebaseFirestore.instance
-        .collection('Users')
-        .doc(currentUser.uid)
-        .get();
-    if (!userDoc.exists || userDoc['Status'] != true) {
-      throw Exception('User data is deleted or does not exist');
+    // #region agent log
+    debugLog('A', 'Before Firestore query profile drawer', {'userId': currentUser.uid, 'collection': 'Users'});
+    // #endregion
+    try {
+      final DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(currentUser.uid)
+          .get();
+      // #region agent log
+      debugLog('C', 'Firestore query result profile drawer', {'docExists': userDoc.exists, 'userId': currentUser.uid});
+      // #endregion
+      if (!userDoc.exists || userDoc['Status'] != true) {
+        throw Exception('User data is deleted or does not exist');
+      }
+      
+      // Cache the data
+      _cachedUserData = userDoc;
+      _isCacheValid = true;
+      
+      return userDoc;
+    } catch (e) {
+      // #region agent log
+      debugLog('A', 'Firestore query FAILED profile drawer', {'error': e.toString(), 'userId': currentUser.uid});
+      // #endregion
+      rethrow;
     }
-    return userDoc;
   }
 
   Future<void> _pickImage() async {
@@ -564,7 +605,41 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                 ],
                               ),
                             ),
-                          SizedBox(height: 10),
+                          SizedBox(height: 16),
+                          Container(
+                            margin: EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[850],
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey[800]!),
+                            ),
+                            child: ListTile(
+                              leading: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[800],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(Icons.block, color: Colors.white, size: 20),
+                              ),
+                              title: const Text(
+                                'Blocked Users',
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15),
+                              ),
+                              subtitle: Text(
+                                'Manage blocked users',
+                                style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                              ),
+                              trailing: Icon(Icons.arrow_forward_ios, color: Colors.grey[600], size: 16),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const BlockedUsersPage()),
+                                );
+                              },
+                            ),
+                          ),
+                          SizedBox(height: 16),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
@@ -572,7 +647,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                 label: 'Delete Account',
                                 child: ElevatedButton.icon(
                                   onPressed: () => _deleteUserAccount(context),
-                                  icon: Icon(Icons.block, size: 18, color: Colors.white),
+                                  icon: Icon(Icons.delete_forever, size: 18, color: Colors.white),
                                   label: Text('Delete', style: TextStyle(color: Colors.white)),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.red,
