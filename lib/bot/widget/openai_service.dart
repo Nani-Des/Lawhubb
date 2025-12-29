@@ -42,7 +42,7 @@ class OpenAIService {
       return response.data['choices'][0]['message']['content'];
     } on DioError catch (dioError) {
       print("❌ DioError: ${dioError.response?.data ?? dioError.message}");
-      return "⚠️ Failed: ${dioError.response?.data?['error']?['message'] ?? 'Unknown Dio error'}";
+      return "⚠️ Try again later";
     } catch (e) {
       print("❌ Exception: $e");
       return "⚠️ Something went wrong: $e";

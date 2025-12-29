@@ -1,14 +1,16 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LiveConsultationScreen extends StatefulWidget {
   final String channelName;
   final bool isInitiator;
   final String chatId;
-  final String initiatorId; // added to fetch user info
+  final String initiatorId;
 
   const LiveConsultationScreen({
     Key? key,
@@ -23,16 +25,24 @@ class LiveConsultationScreen extends StatefulWidget {
 }
 
 class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
-  late RtcEngine _engine;
+  static const String _appId = "873c3e4a81ca45cb92806d6362381790";
+  RtcEngine? _engine;
+  
   bool _localUserJoined = false;
   int? _remoteUid;
+  bool _isEngineInitialized = false;
+  bool _loading = true;
+  bool _isDisposing = false;
+  bool _isMuted = false;
+  bool _isVideoEnabled = true;
 
   final TextEditingController _commentController = TextEditingController();
-  final List<String> _comments = [];
+  final List<Map<String, dynamic>> _comments = [];
   bool _showEmojiPicker = false;
 
   int _likes = 0;
   int _viewerCount = 1;
+  Timer? _viewerCountTimer;
 
   String initiatorName = "";
   String initiatorPic = "";
@@ -40,8 +50,8 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
   @override
   void initState() {
     super.initState();
-    _initSetup();
     _loadInitiatorDetails();
+    _setup();
   }
 
   Future<void> _loadInitiatorDetails() async {
@@ -50,11 +60,10 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
           .collection("Users")
           .doc(widget.initiatorId)
           .get();
-      if (doc.exists) {
+      if (doc.exists && mounted && !_isDisposing) {
         final data = doc.data() ?? {};
         setState(() {
-          initiatorName =
-              "${data['Fname'] ?? ''} ${data['Lname'] ?? ''}".trim();
+          initiatorName = "${data['Fname'] ?? ''} ${data['Lname'] ?? ''}".trim();
           initiatorPic = data['User Pic'] ?? '';
         });
       }
@@ -63,122 +72,343 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
     }
   }
 
-  Future<void> _initSetup() async {
-    await _initAgora();
-    await _handlePermissions();
+  Future<void> _setup() async {
+    try {
+      // Request permissions
+      final statuses = await [Permission.camera, Permission.microphone].request();
+      if (statuses[Permission.camera] != PermissionStatus.granted ||
+          statuses[Permission.microphone] != PermissionStatus.granted) {
+        if (mounted && !_isDisposing) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Camera & microphone permissions required"),
+              backgroundColor: Colors.red,
+            ),
+          );
+          Future.delayed(const Duration(seconds: 1), () {
+            if (mounted) Navigator.pop(context);
+          });
+        }
+        return;
+      }
+
+      // Initialize Agora Engine
+      final engine = createAgoraRtcEngine();
+      await engine.initialize(RtcEngineContext(appId: _appId));
+      
+      if (_isDisposing) {
+        await engine.release();
+        return;
+      }
+
+      _engine = engine;
+      _isEngineInitialized = true;
+
+      // Register event handlers
+      engine.registerEventHandler(
+        RtcEngineEventHandler(
+          onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
+            if (!mounted || _isDisposing) return;
+            setState(() => _localUserJoined = true);
+            if (widget.isInitiator) {
+              _startViewerCountSync();
+            }
+          },
+          onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
+            if (!mounted || _isDisposing) return;
+            setState(() {
+              _remoteUid = remoteUid;
+              _viewerCount++;
+            });
+            _updateViewerCount();
+          },
+          onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
+            if (!mounted || _isDisposing) return;
+            setState(() {
+              _remoteUid = null;
+              _viewerCount = (_viewerCount > 1) ? _viewerCount - 1 : 1;
+            });
+            _updateViewerCount();
+          },
+          onError: (ErrorCodeType err, String msg) {
+            debugPrint("⚠️ Agora error: $err - $msg");
+            if (mounted && !_isDisposing) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Error: $msg"), backgroundColor: Colors.red),
+              );
+            }
+          },
+        ),
+      );
+
+      // Enable video and audio
+      await engine.enableVideo();
+      await engine.enableAudio();
+
+      // Set client role
+      await engine.setClientRole(
+        role: widget.isInitiator
+            ? ClientRoleType.clientRoleBroadcaster
+            : ClientRoleType.clientRoleAudience,
+      );
+
+      // Start preview only for broadcaster
+      if (widget.isInitiator) {
+        await engine.startPreview();
+      }
+
+      // Join channel
+      await engine.joinChannel(
+        token: "",
+        channelId: widget.channelName,
+        uid: 0,
+        options: const ChannelMediaOptions(
+          channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
+        ),
+      );
+    } catch (e) {
+      debugPrint("⚠️ Agora init error: $e");
+      if (mounted && !_isDisposing) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to start live consultation: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted && !_isDisposing) {
+        setState(() => _loading = false);
+      }
+    }
   }
 
-  Future<void> _handlePermissions() async {
-    await [
-      Permission.camera,
-      Permission.microphone,
-    ].request();
+  void _startViewerCountSync() {
+    _viewerCountTimer?.cancel();
+    _viewerCountTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (_isDisposing || !mounted) {
+        timer.cancel();
+        return;
+      }
+      _updateViewerCount();
+    });
   }
 
-  Future<void> _initAgora() async {
-    _engine = createAgoraRtcEngine();
-    await _engine.initialize(
-      RtcEngineContext(
-        appId: "873c3e4a81ca45cb92806d6362381790",
-      ),
-    );
+  Future<void> _updateViewerCount() async {
+    if (!widget.isInitiator || _isDisposing) return;
+    try {
+      await FirebaseFirestore.instance
+          .collection('Consultations')
+          .doc(widget.chatId)
+          .update({'viewerCount': _viewerCount});
+    } catch (e) {
+      debugPrint("Error updating viewer count: $e");
+    }
+  }
 
-    _engine.registerEventHandler(
-      RtcEngineEventHandler(
-        onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
-          setState(() {
-            _localUserJoined = true;
+  Future<void> _toggleMute() async {
+    if (!_isEngineInitialized || _engine == null || !widget.isInitiator || _isDisposing) return;
+    try {
+      if (_isMuted) {
+        await _engine!.enableLocalAudio(true);
+        if (mounted && !_isDisposing) {
+          setState(() => _isMuted = false);
+        }
+      } else {
+        await _engine!.enableLocalAudio(false);
+        if (mounted && !_isDisposing) {
+          setState(() => _isMuted = true);
+        }
+      }
+    } catch (e) {
+      debugPrint("⚠️ Toggle mute error: $e");
+    }
+  }
+
+  Future<void> _toggleVideo() async {
+    if (!_isEngineInitialized || _engine == null || !widget.isInitiator || _isDisposing) return;
+    try {
+      if (_isVideoEnabled) {
+        await _engine!.enableLocalVideo(false);
+        if (mounted && !_isDisposing) {
+          setState(() => _isVideoEnabled = false);
+        }
+      } else {
+        await _engine!.enableLocalVideo(true);
+        if (mounted && !_isDisposing) {
+          setState(() => _isVideoEnabled = true);
+        }
+      }
+    } catch (e) {
+      debugPrint("⚠️ Toggle video error: $e");
+    }
+  }
+
+  Future<void> _switchCamera() async {
+    if (!_isEngineInitialized || _engine == null || !widget.isInitiator || _isDisposing) return;
+    try {
+      await _engine!.switchCamera();
+    } catch (e) {
+      debugPrint("⚠️ Switch camera error: $e");
+    }
+  }
+
+  Future<void> _sendComment() async {
+    if (_commentController.text.trim().isEmpty) return;
+    final text = _commentController.text.trim();
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final userName = FirebaseAuth.instance.currentUser?.displayName ?? 'Anonymous';
+    
+    _commentController.clear();
+    
+    try {
+      // Save comment to Firestore
+      await FirebaseFirestore.instance
+          .collection('Consultations')
+          .doc(widget.chatId)
+          .collection('comments')
+          .add({
+        'userId': userId,
+        'userName': userName,
+        'text': text,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+      
+      // Also add to local list for immediate UI update
+      if (mounted && !_isDisposing) {
+        setState(() {
+          _comments.insert(0, {
+            'text': text,
+            'userName': userName,
+            'timestamp': DateTime.now(),
           });
-        },
-        onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
-          setState(() {
-            _remoteUid = remoteUid;
-            _viewerCount++;
-          });
-        },
-        onUserOffline: (RtcConnection connection, int remoteUid,
-            UserOfflineReasonType reason) {
-          setState(() {
-            _remoteUid = null;
-            _viewerCount = (_viewerCount > 1) ? _viewerCount - 1 : 1;
-          });
-        },
-      ),
-    );
-
-    await _engine.enableVideo();
-
-    await _engine.setClientRole(
-      role: widget.isInitiator
-          ? ClientRoleType.clientRoleBroadcaster
-          : ClientRoleType.clientRoleAudience,
-    );
-
-    await _engine.joinChannel(
-      token: "",
-      channelId: widget.channelName,
-      uid: 0,
-      options: const ChannelMediaOptions(),
-    );
+        });
+      }
+    } catch (e) {
+      debugPrint("Error sending comment: $e");
+      if (mounted && !_isDisposing) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to send comment: $e"), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   Future<void> _endStreamCleanup() async {
-    try {
-      final docRef = FirebaseFirestore.instance
-          .collection('Consultations')
-          .doc(widget.chatId);
+    if (_isDisposing) return;
+    _isDisposing = true;
 
+    _viewerCountTimer?.cancel();
+
+    try {
       if (widget.isInitiator) {
-        await docRef.update({
+        await FirebaseFirestore.instance
+            .collection('Consultations')
+            .doc(widget.chatId)
+            .update({
           'status': 'ended',
           'viewerCount': _viewerCount,
+          'endTimestamp': FieldValue.serverTimestamp(),
         });
       } else {
-        final snapshot = await docRef.get();
+        final snapshot = await FirebaseFirestore.instance
+            .collection('Consultations')
+            .doc(widget.chatId)
+            .get();
         if (snapshot.exists) {
-          final currentCount = snapshot['viewerCount'] ?? 0;
-          await docRef.update({
+          final currentCount = snapshot.data()?['viewerCount'] ?? 0;
+          await FirebaseFirestore.instance
+              .collection('Consultations')
+              .doc(widget.chatId)
+              .update({
             'viewerCount': (currentCount > 0) ? currentCount - 1 : 0,
           });
         }
       }
-
-      await _engine.leaveChannel();
-      await _engine.release();
     } catch (e) {
-      debugPrint("⚠️ Error during cleanup: $e");
+      debugPrint("Error updating consultation status: $e");
+    }
+
+    try {
+      if (_engine != null) {
+        if (widget.isInitiator) {
+          await _engine!.stopPreview();
+        }
+        await _engine!.leaveChannel();
+        await _engine!.release();
+        _engine = null;
+      }
+    } catch (e) {
+      debugPrint("Error cleaning up Agora engine: $e");
+    }
+
+    if (mounted) {
+      Navigator.pop(context);
     }
   }
 
   @override
   void dispose() {
-    _endStreamCleanup();
+    _isDisposing = true;
+    _viewerCountTimer?.cancel();
     _commentController.dispose();
+    _endStreamCleanup();
     super.dispose();
   }
 
   Widget _renderVideo() {
+    if (!_isEngineInitialized || _engine == null) {
+      return Container(
+        color: Colors.black87,
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: Colors.white70),
+              SizedBox(height: 16),
+              Text(
+                "Connecting...",
+                style: TextStyle(color: Colors.white70, fontSize: 16),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (widget.isInitiator) {
       return AgoraVideoView(
         controller: VideoViewController(
-          rtcEngine: _engine,
+          rtcEngine: _engine!,
           canvas: const VideoCanvas(uid: 0),
         ),
       );
     } else {
-      if (_remoteUid != null) {
+      if (_remoteUid != null && _localUserJoined) {
         return AgoraVideoView(
           controller: VideoViewController.remote(
-            rtcEngine: _engine,
+            rtcEngine: _engine!,
             canvas: VideoCanvas(uid: _remoteUid),
             connection: RtcConnection(channelId: widget.channelName),
           ),
         );
       } else {
-        return const Center(
-          child: Text(
-            "Waiting for host...",
-            style: TextStyle(color: Colors.white70, fontSize: 16),
+        return Container(
+          color: Colors.black87,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const CircularProgressIndicator(color: Colors.white70),
+                const SizedBox(height: 16),
+                Text(
+                  initiatorName.isNotEmpty 
+                      ? "Waiting for $initiatorName to start..."
+                      : "Waiting for host...",
+                  style: const TextStyle(color: Colors.white70, fontSize: 16),
+                ),
+              ],
+            ),
           ),
         );
       }
@@ -186,226 +416,470 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
   }
 
   Widget _buildCommentsOverlay() {
-    return Positioned(
-      left: 10,
-      bottom: 90,
-      right: 10,
-      child: SizedBox(
-        height: 180,
-        child: ListView.builder(
-          reverse: true,
-          padding: const EdgeInsets.only(bottom: 8),
-          itemCount: _comments.length,
-          itemBuilder: (context, index) {
-            final text = _comments[index];
-            final clipped =
-            text.length > 50 ? "${text.substring(0, 50)}..." : text;
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('Consultations')
+          .doc(widget.chatId)
+          .collection('comments')
+          .orderBy('timestamp', descending: true)
+          .limit(50)
+          .snapshots(),
+      builder: (context, snapshot) {
+        List<Map<String, dynamic>> comments = List.from(_comments);
+        
+        if (snapshot.hasData) {
+          comments = snapshot.data!.docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            return {
+              'text': data['text'] ?? '',
+              'userName': data['userName'] ?? 'Anonymous',
+              'timestamp': (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+            };
+          }).toList();
+        }
 
-            return TweenAnimationBuilder<double>(
-              key: ValueKey(_comments[index]),
-              tween: Tween(begin: 0, end: 1),
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.easeOut,
-              builder: (context, value, child) {
-                return Opacity(
-                  opacity: value,
-                  child: Transform.translate(
-                    offset: Offset(0, (1 - value) * 20),
-                    child: child,
+        return Positioned(
+          left: 10,
+          bottom: 120,
+          right: 10,
+          child: SizedBox(
+            height: 200,
+            child: ListView.builder(
+              reverse: true,
+              padding: const EdgeInsets.only(bottom: 8),
+              itemCount: comments.length,
+              itemBuilder: (context, index) {
+                final comment = comments[index];
+                final text = comment['text'] as String;
+                final clipped = text.length > 60 ? "${text.substring(0, 60)}..." : text;
+
+                return TweenAnimationBuilder<double>(
+                  key: ValueKey('${comment['timestamp']}_$text'),
+                  tween: Tween(begin: 0, end: 1),
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeOut,
+                  builder: (context, value, child) {
+                    return Opacity(
+                      opacity: value,
+                      child: Transform.translate(
+                        offset: Offset(0, (1 - value) * 20),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.redAccent.withOpacity(0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.person, color: Colors.white, size: 14),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            clipped,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black54,
+                                  offset: Offset(0.5, 0.5),
+                                  blurRadius: 2,
+                                )
+                              ],
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Text(
-                  clipped,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black54,
-                        offset: Offset(0.5, 0.5),
-                        blurRadius: 2,
-                      )
-                    ],
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            );
-          },
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 
   Widget _buildCommentInput() {
     return Align(
       alignment: Alignment.bottomCenter,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            color: Colors.black.withOpacity(0.6),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.emoji_emotions_outlined,
-                      color: Colors.white70),
-                  onPressed: () {
-                    setState(() => _showEmojiPicker = !_showEmojiPicker);
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.transparent,
+              Colors.black.withOpacity(0.8),
+            ],
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_showEmojiPicker)
+              SizedBox(
+                height: 250,
+                child: EmojiPicker(
+                  onEmojiSelected: (category, emoji) {
+                    _commentController.text += emoji.emoji;
                   },
                 ),
-                Expanded(
-                  child: TextField(
-                    controller: _commentController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
-                      hintText: "Add a comment...",
-                      hintStyle: TextStyle(color: Colors.white54),
-                      border: InputBorder.none,
+              ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      _showEmojiPicker ? Icons.keyboard : Icons.emoji_emotions_outlined,
+                      color: Colors.white70,
+                    ),
+                    onPressed: () {
+                      setState(() => _showEmojiPicker = !_showEmojiPicker);
+                    },
+                  ),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(25),
+                        border: Border.all(color: Colors.white.withOpacity(0.3)),
+                      ),
+                      child: TextField(
+                        controller: _commentController,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(
+                          hintText: "Add a comment...",
+                          hintStyle: TextStyle(color: Colors.white54),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          border: InputBorder.none,
+                        ),
+                        maxLines: null,
+                      ),
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send, color: Colors.white70),
-                  onPressed: () {
-                    if (_commentController.text.trim().isNotEmpty) {
-                      setState(() {
-                        _comments.insert(0, _commentController.text.trim());
-                        _commentController.clear();
-                      });
-                    }
-                  },
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.send, color: Colors.white),
+                      onPressed: _sendComment,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          _showEmojiPicker
-              ? SizedBox(
-            height: 250,
-            child: EmojiPicker(
-              onEmojiSelected: (category, emoji) {
-                _commentController.text += emoji.emoji;
-              },
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildControlButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    required Color backgroundColor,
+    required String tooltip,
+    bool isEnabled = true,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.4),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
-          )
-              : const SizedBox.shrink(),
-        ],
+          ],
+        ),
+        child: IconButton(
+          icon: Icon(icon, color: Colors.white, size: 24),
+          onPressed: isEnabled ? onPressed : null,
+          padding: const EdgeInsets.all(12),
+        ),
       ),
     );
   }
 
   Widget _buildOverlayButtons() {
     return Positioned(
-      top: 20,
+      top: 80,
       right: 16,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.6),
-              borderRadius: BorderRadius.circular(20),
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Viewer count
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.remove_red_eye, color: Colors.white, size: 18),
+                  const SizedBox(width: 6),
+                  Text(
+                    '$_viewerCount',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            child: Row(
-              children: [
-                const Icon(Icons.remove_red_eye,
-                    color: Colors.white, size: 18),
-                const SizedBox(width: 4),
-                Text(
-                  '$_viewerCount',
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ],
+            const SizedBox(height: 16),
+            
+            // Like button
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.7),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white.withOpacity(0.3)),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.favorite, color: Colors.red, size: 24),
+                onPressed: () {
+                  setState(() => _likes++);
+                  // Haptic feedback would be nice here
+                },
+                padding: const EdgeInsets.all(12),
+              ),
             ),
-          ),
-          const SizedBox(height: 15),
-          FloatingActionButton(
-            heroTag: "likeBtn",
-            backgroundColor: Colors.grey.shade800,
-            mini: true,
-            onPressed: () => setState(() => _likes++),
-            child: const Icon(Icons.favorite, color: Colors.red),
-          ),
-          const SizedBox(height: 5),
-          Text('$_likes',
-              style: const TextStyle(color: Colors.white70, fontSize: 12)),
-
-          const SizedBox(height: 15),
-          if (widget.isInitiator && _localUserJoined)
-            FloatingActionButton(
-              heroTag: "cameraSwitchBtn",
-              backgroundColor: Colors.grey.shade700,
-              onPressed: () async {
-                await _engine.switchCamera();
-              },
-              child: const Icon(Icons.cameraswitch, color: Colors.white),
+            Text(
+              '$_likes',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                shadows: [
+                  Shadow(
+                    color: Colors.black54,
+                    offset: Offset(0.5, 0.5),
+                    blurRadius: 2,
+                  ),
+                ],
+              ),
             ),
-          const SizedBox(height: 15),
-          if (widget.isInitiator)
-            FloatingActionButton(
-              heroTag: "endStreamBtn",
-              backgroundColor: Colors.red.shade700,
-              onPressed: () async {
-                await _endStreamCleanup();
-                if (mounted) Navigator.pop(context);
-              },
-              child: const Icon(Icons.call_end, color: Colors.white),
-            ),
-        ],
+            
+            // Host controls
+            if (widget.isInitiator && _localUserJoined) ...[
+              const SizedBox(height: 16),
+              _buildControlButton(
+                icon: _isMuted ? Icons.mic_off : Icons.mic,
+                onPressed: _toggleMute,
+                backgroundColor: _isMuted ? Colors.red : Colors.blueGrey[800]!,
+                tooltip: _isMuted ? "Unmute" : "Mute",
+              ),
+              _buildControlButton(
+                icon: _isVideoEnabled ? Icons.videocam : Icons.videocam_off,
+                onPressed: _toggleVideo,
+                backgroundColor: _isVideoEnabled ? Colors.blueGrey[800]! : Colors.red,
+                tooltip: _isVideoEnabled ? "Turn off camera" : "Turn on camera",
+              ),
+              _buildControlButton(
+                icon: Icons.cameraswitch,
+                onPressed: _switchCamera,
+                backgroundColor: Colors.blueGrey[700]!,
+                tooltip: "Switch camera",
+              ),
+              _buildControlButton(
+                icon: Icons.call_end,
+                onPressed: () async {
+                  final shouldEnd = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      backgroundColor: Colors.grey[900],
+                      title: const Text("End Live Consultation?", style: TextStyle(color: Colors.white)),
+                      content: const Text("Are you sure you want to end this live consultation?", style: TextStyle(color: Colors.white70)),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text("Cancel", style: TextStyle(color: Colors.white70)),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text("End", style: TextStyle(color: Colors.red)),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (shouldEnd == true) {
+                    await _endStreamCleanup();
+                  }
+                },
+                backgroundColor: Colors.red,
+                tooltip: "End stream",
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: Row(
-          children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundImage: initiatorPic.isNotEmpty
-                  ? NetworkImage(initiatorPic)
-                  : const AssetImage("assets/Images/placeholder.png")
-              as ImageProvider,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                initiatorName.isNotEmpty ? initiatorName : "Loading...",
-                style: const TextStyle(color: Colors.white, fontSize: 16),
-                overflow: TextOverflow.ellipsis,
+    if (_loading) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: Colors.white),
+              SizedBox(height: 20),
+              Text(
+                "Connecting...",
+                style: TextStyle(color: Colors.white70, fontSize: 16),
               ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.redAccent,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                "LIVE",
-                style: TextStyle(color: Colors.white, fontSize: 12),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
           Positioned.fill(child: _renderVideo()),
           _buildCommentsOverlay(),
           _buildOverlayButtons(),
           _buildCommentInput(),
+          
+          // Top bar
+          SafeArea(
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.8),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () async {
+                      if (widget.isInitiator) {
+                        final shouldEnd = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            backgroundColor: Colors.grey[900],
+                            title: const Text("End Live Consultation?", style: TextStyle(color: Colors.white)),
+                            content: const Text("Are you sure you want to end this live consultation?", style: TextStyle(color: Colors.white70)),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text("Cancel", style: TextStyle(color: Colors.white70)),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text("End", style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (shouldEnd == true) {
+                          await _endStreamCleanup();
+                        }
+                      } else {
+                        Navigator.pop(context);
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundImage: initiatorPic.isNotEmpty
+                        ? NetworkImage(initiatorPic)
+                        : null,
+                    backgroundColor: Colors.grey[700],
+                    child: initiatorPic.isEmpty
+                        ? const Icon(Icons.person, color: Colors.white)
+                        : null,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          initiatorName.isNotEmpty ? initiatorName : "Loading...",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            const Text(
+                              "LIVE",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
