@@ -265,4 +265,126 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get french => 'Français';
+
+  @override
+  String get recentActivity => 'Activité Récente';
+
+  @override
+  String get viewAll => 'Afficher Tout';
+
+  @override
+  String get consultationScheduled => 'Consultation Prévue';
+
+  @override
+  String get consultationScheduledSubtitle =>
+      'Avec Av. Sarah Johnson - Demain 14h00';
+
+  @override
+  String get twoHoursAgo => 'Il y a 2 heures';
+
+  @override
+  String get newMessage => 'Nouveau Message';
+
+  @override
+  String get newMessageSubtitle => 'Du Forum de la Communauté Juridique';
+
+  @override
+  String get fiveHoursAgo => 'Il y a 5 heures';
+
+  @override
+  String get documentSaved => 'Document Enregistré';
+
+  @override
+  String get documentSavedSubtitle => 'Modèle de Contrat - Droit du Travail';
+
+  @override
+  String get oneDayAgo => 'Il y a 1 jour';
+
+  @override
+  String get editButton => 'Éditer';
+
+  @override
+  String get saveButton => 'Enregistrer';
+
+  @override
+  String get region => 'Région';
+
+  @override
+  String get mobileNumber => 'Numéro de Téléphone';
+
+  @override
+  String get noEmail => 'Pas d\'email';
+
+  @override
+  String get noRegion => 'Pas de région';
+
+  @override
+  String get bookings => 'Réservations';
+
+  @override
+  String get referAClient => 'Référer un Client';
+
+  @override
+  String get referrals => 'Références';
+
+  @override
+  String get blockedUsers => 'Utilisateurs Bloqués';
+
+  @override
+  String get manageBlockedUsers => 'Gérer les utilisateurs bloqués';
+
+  @override
+  String get deleteAccountTitle => 'Supprimer le Compte';
+
+  @override
+  String get deleteAccountConfirmation =>
+      'Êtes-vous sûr de vouloir supprimer définitivement votre compte ? Cette action ne peut pas être annulée.';
+
+  @override
+  String get cancelButton => 'Annuler';
+
+  @override
+  String get deleteButton => 'Supprimer';
+
+  @override
+  String get deleteButtonLabel => 'Supprimer';
+
+  @override
+  String get logoutButtonLabel => 'Déconnexion';
+
+  @override
+  String get logoutButton => 'Déconnexion';
+
+  @override
+  String get noUserLoggedIn => 'Aucun utilisateur actuellement connecté';
+
+  @override
+  String get lawyerReauthRequired =>
+      'Les avocats doivent se déconnecter et se reconnecter pour supprimer leur compte';
+
+  @override
+  String get retry => 'Réessayer';
+
+  @override
+  String get accessDenied => 'Accès Refusé';
+
+  @override
+  String onlyLawyersAccess(Object action) {
+    return 'Seuls les avocats peuvent accéder à $action.';
+  }
+
+  @override
+  String get referralForm => 'Formulaire de Référence';
+
+  @override
+  String get okButton => 'OK';
+
+  @override
+  String get accountDeletedSuccess =>
+      'Compte supprimé avec succès. Vous êtes maintenant déconnecté';
+
+  @override
+  String logoutFailed(Object error) {
+    return 'Déconnexion échouée : $error';
+  }
 }

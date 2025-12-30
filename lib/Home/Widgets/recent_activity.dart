@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 
 class RecentActivity extends StatefulWidget {
   const RecentActivity({super.key});
@@ -45,6 +46,8 @@ class _RecentActivityState extends State<RecentActivity>
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -54,9 +57,9 @@ class _RecentActivityState extends State<RecentActivity>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Recent Activity',
-                style: TextStyle(
+              Text(
+                localizations?.recentActivity ?? 'Recent Activity',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -64,7 +67,8 @@ class _RecentActivityState extends State<RecentActivity>
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.grey[850],
                   borderRadius: BorderRadius.circular(12),
@@ -76,7 +80,7 @@ class _RecentActivityState extends State<RecentActivity>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'View All',
+                      localizations?.viewAll ?? 'View All',
                       style: TextStyle(
                         color: Colors.grey[400],
                         fontSize: 12,
@@ -109,9 +113,11 @@ class _RecentActivityState extends State<RecentActivity>
                   position: _slideAnimations[0],
                   child: _ActivityItem(
                     icon: Icons.calendar_today_outlined,
-                    title: 'Consultation Scheduled',
-                    subtitle: 'With Adv. Sarah Johnson - Tomorrow 2:00 PM',
-                    time: '2 hours ago',
+                    title: localizations?.consultationScheduled ??
+                        'Consultation Scheduled',
+                    subtitle: localizations?.consultationScheduledSubtitle ??
+                        'With Adv. Sarah Johnson - Tomorrow 2:00 PM',
+                    time: localizations?.twoHoursAgo ?? '2 hours ago',
                   ),
                 ),
                 _buildDivider(),
@@ -119,9 +125,10 @@ class _RecentActivityState extends State<RecentActivity>
                   position: _slideAnimations[1],
                   child: _ActivityItem(
                     icon: Icons.message_outlined,
-                    title: 'New Message',
-                    subtitle: 'From Legal Community Forum',
-                    time: '5 hours ago',
+                    title: localizations?.newMessage ?? 'New Message',
+                    subtitle: localizations?.newMessageSubtitle ??
+                        'From Legal Community Forum',
+                    time: localizations?.fiveHoursAgo ?? '5 hours ago',
                   ),
                 ),
                 _buildDivider(),
@@ -129,9 +136,10 @@ class _RecentActivityState extends State<RecentActivity>
                   position: _slideAnimations[2],
                   child: _ActivityItem(
                     icon: Icons.bookmark_outline,
-                    title: 'Document Saved',
-                    subtitle: 'Contract Template - Employment Law',
-                    time: '1 day ago',
+                    title: localizations?.documentSaved ?? 'Document Saved',
+                    subtitle: localizations?.documentSavedSubtitle ??
+                        'Contract Template - Employment Law',
+                    time: localizations?.oneDayAgo ?? '1 day ago',
                   ),
                 ),
               ],
@@ -182,9 +190,7 @@ class _ActivityItemState extends State<_ActivityItem> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _isHovered
-              ? Colors.grey[850]
-              : Colors.transparent,
+          color: _isHovered ? Colors.grey[850] : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -243,6 +249,3 @@ class _ActivityItemState extends State<_ActivityItem> {
     );
   }
 }
-
-
-

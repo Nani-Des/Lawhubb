@@ -585,6 +585,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'French'**
   String get french;
+
+  /// No description provided for @recentActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Activity'**
+  String get recentActivity;
+
+  /// No description provided for @viewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View All'**
+  String get viewAll;
+
+  /// No description provided for @consultationScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'Consultation Scheduled'**
+  String get consultationScheduled;
+
+  /// No description provided for @consultationScheduledSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'With Adv. Sarah Johnson - Tomorrow 2:00 PM'**
+  String get consultationScheduledSubtitle;
+
+  /// No description provided for @twoHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'2 hours ago'**
+  String get twoHoursAgo;
+
+  /// No description provided for @newMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'New Message'**
+  String get newMessage;
+
+  /// No description provided for @newMessageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'From Legal Community Forum'**
+  String get newMessageSubtitle;
+
+  /// No description provided for @fiveHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'5 hours ago'**
+  String get fiveHoursAgo;
+
+  /// No description provided for @documentSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Document Saved'**
+  String get documentSaved;
+
+  /// No description provided for @documentSavedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contract Template - Employment Law'**
+  String get documentSavedSubtitle;
+
+  /// No description provided for @oneDayAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'1 day ago'**
+  String get oneDayAgo;
+
+  /// No description provided for @editButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get editButton;
+
+  /// No description provided for @saveButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get saveButton;
+
+  /// No description provided for @region.
+  ///
+  /// In en, this message translates to:
+  /// **'Region'**
+  String get region;
+
+  /// No description provided for @mobileNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile Number'**
+  String get mobileNumber;
+
+  /// No description provided for @noEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'No email'**
+  String get noEmail;
+
+  /// No description provided for @noRegion.
+  ///
+  /// In en, this message translates to:
+  /// **'No region'**
+  String get noRegion;
+
+  /// No description provided for @bookings.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookings'**
+  String get bookings;
+
+  /// No description provided for @referAClient.
+  ///
+  /// In en, this message translates to:
+  /// **'Refer A Client'**
+  String get referAClient;
+
+  /// No description provided for @referrals.
+  ///
+  /// In en, this message translates to:
+  /// **'Referrals'**
+  String get referrals;
+
+  /// No description provided for @blockedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked Users'**
+  String get blockedUsers;
+
+  /// No description provided for @manageBlockedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage blocked users'**
+  String get manageBlockedUsers;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to permanently delete your account? This action cannot be undone.'**
+  String get deleteAccountConfirmation;
+
+  /// No description provided for @cancelButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancelButton;
+
+  /// No description provided for @deleteButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteButton;
+
+  /// No description provided for @deleteButtonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteButtonLabel;
+
+  /// No description provided for @logoutButtonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout'**
+  String get logoutButtonLabel;
+
+  /// No description provided for @logoutButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout'**
+  String get logoutButton;
+
+  /// No description provided for @noUserLoggedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'No user is currently logged in'**
+  String get noUserLoggedIn;
+
+  /// No description provided for @lawyerReauthRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Lawyers must log out and log in again to delete their account'**
+  String get lawyerReauthRequired;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @accessDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Access Denied'**
+  String get accessDenied;
+
+  /// No description provided for @onlyLawyersAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Only Lawyers can access {action}.'**
+  String onlyLawyersAccess(Object action);
+
+  /// No description provided for @referralForm.
+  ///
+  /// In en, this message translates to:
+  /// **'Referral Form'**
+  String get referralForm;
+
+  /// No description provided for @okButton.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get okButton;
+
+  /// No description provided for @accountDeletedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deleted successfully. You are now logged out'**
+  String get accountDeletedSuccess;
+
+  /// No description provided for @logoutFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout failed: {error}'**
+  String logoutFailed(Object error);
 }
 
 class _AppLocalizationsDelegate

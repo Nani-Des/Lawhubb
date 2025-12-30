@@ -256,4 +256,126 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get french => 'French';
+
+  @override
+  String get recentActivity => 'Recent Activity';
+
+  @override
+  String get viewAll => 'View All';
+
+  @override
+  String get consultationScheduled => 'Consultation Scheduled';
+
+  @override
+  String get consultationScheduledSubtitle =>
+      'With Adv. Sarah Johnson - Tomorrow 2:00 PM';
+
+  @override
+  String get twoHoursAgo => '2 hours ago';
+
+  @override
+  String get newMessage => 'New Message';
+
+  @override
+  String get newMessageSubtitle => 'From Legal Community Forum';
+
+  @override
+  String get fiveHoursAgo => '5 hours ago';
+
+  @override
+  String get documentSaved => 'Document Saved';
+
+  @override
+  String get documentSavedSubtitle => 'Contract Template - Employment Law';
+
+  @override
+  String get oneDayAgo => '1 day ago';
+
+  @override
+  String get editButton => 'Edit';
+
+  @override
+  String get saveButton => 'Save';
+
+  @override
+  String get region => 'Region';
+
+  @override
+  String get mobileNumber => 'Mobile Number';
+
+  @override
+  String get noEmail => 'No email';
+
+  @override
+  String get noRegion => 'No region';
+
+  @override
+  String get bookings => 'Bookings';
+
+  @override
+  String get referAClient => 'Refer A Client';
+
+  @override
+  String get referrals => 'Referrals';
+
+  @override
+  String get blockedUsers => 'Blocked Users';
+
+  @override
+  String get manageBlockedUsers => 'Manage blocked users';
+
+  @override
+  String get deleteAccountTitle => 'Delete Account';
+
+  @override
+  String get deleteAccountConfirmation =>
+      'Are you sure you want to permanently delete your account? This action cannot be undone.';
+
+  @override
+  String get cancelButton => 'Cancel';
+
+  @override
+  String get deleteButton => 'Delete';
+
+  @override
+  String get deleteButtonLabel => 'Delete';
+
+  @override
+  String get logoutButtonLabel => 'Logout';
+
+  @override
+  String get logoutButton => 'Logout';
+
+  @override
+  String get noUserLoggedIn => 'No user is currently logged in';
+
+  @override
+  String get lawyerReauthRequired =>
+      'Lawyers must log out and log in again to delete their account';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get accessDenied => 'Access Denied';
+
+  @override
+  String onlyLawyersAccess(Object action) {
+    return 'Only Lawyers can access $action.';
+  }
+
+  @override
+  String get referralForm => 'Referral Form';
+
+  @override
+  String get okButton => 'OK';
+
+  @override
+  String get accountDeletedSuccess =>
+      'Account deleted successfully. You are now logged out';
+
+  @override
+  String logoutFailed(Object error) {
+    return 'Logout failed: $error';
+  }
 }
