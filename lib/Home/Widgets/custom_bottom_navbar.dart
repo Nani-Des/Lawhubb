@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nhap/Home/home_page.dart';
 import 'package:nhap/Login/login_screen1.dart';
+import 'package:nhap/main.dart';
 import '../../Auth/auth_screen.dart';
 import '../../Forums/Chat/HomeScreen.dart';
 import '../../Hospital/general_hospital_page.dart';
@@ -81,33 +82,50 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
 
     switch (widget.setup) {
       case 1: // Home
-        if (index == 0) _navigateBasedOnAuthStatus(context,  GeneralHospitalPage());
-        else if (index == 1) _navigateBasedOnAuthStatus(context,  LibraryPage());
-        else if (index == 2) _navigateBasedOnAuthStatus(context, const HomeScreen(initialTabIndex: 0));
+        if (index == 0)
+          _navigateBasedOnAuthStatus(context, GeneralHospitalPage());
+        else if (index == 1)
+          _navigateBasedOnAuthStatus(context, LibraryPage());
+        else if (index == 2)
+          _navigateBasedOnAuthStatus(
+              context, const HomeScreen(initialTabIndex: 0));
         break;
 
       case 2: // Chambers
-        if (index == 0) _navigateBasedOnAuthStatus(context,  HomePage());
-        else if (index == 1) _navigateBasedOnAuthStatus(context,  LibraryPage());
-        else if (index == 2) _navigateBasedOnAuthStatus(context, const HomeScreen(initialTabIndex: 1));
+        if (index == 0)
+          _navigateBasedOnAuthStatus(context, HomePage());
+        else if (index == 1)
+          _navigateBasedOnAuthStatus(context, LibraryPage());
+        else if (index == 2)
+          _navigateBasedOnAuthStatus(
+              context, const HomeScreen(initialTabIndex: 1));
         break;
 
       case 3: // Social
-        if (index == 0) _navigateBasedOnAuthStatus(context,  HomePage());
-        else if (index == 1) _navigateBasedOnAuthStatus(context,  LibraryPage());
-        else if (index == 2) _navigateBasedOnAuthStatus(context,  GeneralHospitalPage());
+        if (index == 0)
+          _navigateBasedOnAuthStatus(context, HomePage());
+        else if (index == 1)
+          _navigateBasedOnAuthStatus(context, LibraryPage());
+        else if (index == 2)
+          _navigateBasedOnAuthStatus(context, GeneralHospitalPage());
         break;
 
       case 4: // Forum
-        if (index == 0) _onSearchPressed();
-        else if (index == 1) _onCreatePostPressed();
+        if (index == 0)
+          _onSearchPressed();
+        else if (index == 1)
+          _onCreatePostPressed();
         else if (index == 2) _onLivePressed();
         break;
 
       case 5: // Law insights
-        if (index == 0) _navigateBasedOnAuthStatus(context,  HomePage());
-        else if (index == 1) _navigateBasedOnAuthStatus(context,  GeneralHospitalPage());
-        else if (index == 2) _navigateBasedOnAuthStatus(context, const HomeScreen(initialTabIndex: 1));
+        if (index == 0)
+          _navigateBasedOnAuthStatus(context, HomePage());
+        else if (index == 1)
+          _navigateBasedOnAuthStatus(context, GeneralHospitalPage());
+        else if (index == 2)
+          _navigateBasedOnAuthStatus(
+              context, const HomeScreen(initialTabIndex: 1));
         break;
     }
   }
@@ -116,34 +134,49 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
   List<BottomNavigationBarItem> _buildNavItems() {
     switch (widget.setup) {
       case 1:
-        return const [
-          BottomNavigationBarItem(icon: Icon(Icons.balance), label: 'Chambers'),
-          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Law Insights'),
-          BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'SocialHubb'),
+        return [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.balance), label: appLocalization!.chambers),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.menu_book), label: appLocalization!.lawInsights),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.forum), label: appLocalization!.socialHubb),
         ];
       case 2:
-        return const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Law Insights'),
-          BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'SocialHubb'),
+        return [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.home_filled), label: appLocalization!.home),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.menu_book), label: appLocalization!.lawInsights),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.forum), label: appLocalization!.socialHubb),
         ];
       case 3:
-        return const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Law Insights'),
-          BottomNavigationBarItem(icon: Icon(Icons.balance), label: 'Chambers'),
+        return [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.home_filled), label: appLocalization!.home),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.menu_book), label: appLocalization!.lawInsights),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.balance), label: appLocalization!.chambers),
         ];
       case 4:
-        return const [
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-          BottomNavigationBarItem(icon: Icon(Icons.create), label: 'Create Post'),
-          BottomNavigationBarItem(icon: Icon(Icons.videocam), label: 'Live'),
+        return [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.search), label: appLocalization!.search),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.create), label: appLocalization!.createPost),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.videocam), label: appLocalization!.live),
         ];
       case 5:
-        return const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.balance), label: 'Chambers'),
-          BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'SocialHubb'),
+        return [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.home_filled), label: appLocalization!.home),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.balance), label: appLocalization!.chambers),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.forum), label: appLocalization!.socialHubb),
         ];
       default:
         return const [];
@@ -178,7 +211,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
             selectedItemColor: Colors.white,
             unselectedItemColor: Colors.grey[400],
             selectedLabelStyle:
-            const TextStyle(fontSize: 10.0, fontWeight: FontWeight.bold),
+                const TextStyle(fontSize: 10.0, fontWeight: FontWeight.bold),
             unselectedLabelStyle: const TextStyle(fontSize: 8.0),
             backgroundColor: Colors.transparent,
             elevation: 0,

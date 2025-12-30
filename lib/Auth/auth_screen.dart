@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nhap/main.dart';
 import 'package:provider/provider.dart';
 import 'auth_service.dart';
 import 'package:nhap/Home/home_page.dart';
@@ -60,7 +61,7 @@ class _AuthScreenState extends State<AuthScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Password reset email sent. Check your inbox.'),
-            backgroundColor: Colors.grey,  // Grey snackbar background
+            backgroundColor: Colors.grey, // Grey snackbar background
           ),
         );
         setState(() {
@@ -90,7 +91,7 @@ class _AuthScreenState extends State<AuthScreen> {
     if (success) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) =>  HomePage()),
+        MaterialPageRoute(builder: (context) => HomePage()),
       );
     }
   }
@@ -100,7 +101,7 @@ class _AuthScreenState extends State<AuthScreen> {
     final authService = Provider.of<AuthService>(context);
 
     return Scaffold(
-      backgroundColor: Colors.black,  // Black background
+      backgroundColor: Colors.black, // Black background
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
@@ -113,12 +114,12 @@ class _AuthScreenState extends State<AuthScreen> {
                   _isForgotPassword
                       ? 'Reset Password'
                       : _isRegistering
-                      ? 'Register'
-                      : 'Login',
+                          ? appLocalization!.register
+                          : appLocalization!.login,
                   style: const TextStyle(
                     fontSize: 34,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,  // White text for contrast
+                    color: Colors.white, // White text for contrast
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -126,9 +127,9 @@ class _AuthScreenState extends State<AuthScreen> {
                   _isForgotPassword
                       ? 'Enter your email to reset password'
                       : _isRegistering
-                      ? 'Create your account'
-                      : 'Welcome back',
-                  style: TextStyle(color: Colors.grey[400]),  // Light grey text
+                          ? appLocalization!.createAccount
+                          : appLocalization!.welcomeBack,
+                  style: TextStyle(color: Colors.grey[400]), // Light grey text
                 ),
                 const SizedBox(height: 20),
                 if (_isRegistering && !_isForgotPassword) ...[
@@ -137,11 +138,12 @@ class _AuthScreenState extends State<AuthScreen> {
                       Expanded(
                         child: _buildTextField(
                           controller: _firstNameController,
-                          label: 'First Name',
+                          label: appLocalization!.firstName,
                           validator: (value) =>
-                          value!.isEmpty ? 'Enter first name' : null,
+                              value!.isEmpty ? 'Enter first name' : null,
                           inputFormatters: [
-                            FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]')),
+                            FilteringTextInputFormatter.allow(
+                                RegExp(r'[a-zA-Z]')),
                           ],
                         ),
                       ),
@@ -149,11 +151,12 @@ class _AuthScreenState extends State<AuthScreen> {
                       Expanded(
                         child: _buildTextField(
                           controller: _lastNameController,
-                          label: 'Last Name',
+                          label: appLocalization!.lastName,
                           validator: (value) =>
-                          value!.isEmpty ? 'Enter last name' : null,
+                              value!.isEmpty ? 'Enter last name' : null,
                           inputFormatters: [
-                            FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]')),
+                            FilteringTextInputFormatter.allow(
+                                RegExp(r'[a-zA-Z]')),
                           ],
                         ),
                       ),
@@ -163,10 +166,11 @@ class _AuthScreenState extends State<AuthScreen> {
                 ],
                 _buildTextField(
                   controller: _emailController,
-                  label: 'Email',
+                  label: appLocalization!.email,
                   validator: (value) {
                     if (value!.isEmpty) return 'Enter email';
-                    if (!AuthService.isValidEmail(value.trim())) return 'Invalid email format';
+                    if (!AuthService.isValidEmail(value.trim()))
+                      return 'Invalid email format';
                     return null;
                   },
                 ),
@@ -174,10 +178,10 @@ class _AuthScreenState extends State<AuthScreen> {
                   const SizedBox(height: 20),
                   _buildTextField(
                     controller: _passwordController,
-                    label: 'Password',
+                    label: appLocalization!.password,
                     obscureText: true,
                     validator: (value) =>
-                    value!.isEmpty ? 'Enter password' : null,
+                        value!.isEmpty ? 'Enter password' : null,
                     inputFormatters: [
                       LengthLimitingTextInputFormatter(20),
                     ],
@@ -187,9 +191,9 @@ class _AuthScreenState extends State<AuthScreen> {
                   const SizedBox(height: 20),
                   _buildTextField(
                     controller: _phoneNumberController,
-                    label: 'Phone Number',
+                    label: appLocalization!.phoneNumber,
                     validator: (value) =>
-                    value!.isEmpty ? 'Enter phone number' : null,
+                        value!.isEmpty ? 'Enter phone number' : null,
                     inputFormatters: [
                       FilteringTextInputFormatter.digitsOnly,
                     ],
@@ -207,7 +211,8 @@ class _AuthScreenState extends State<AuthScreen> {
                 Center(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,  // White button for visibility
+                      backgroundColor:
+                          Colors.white, // White button for visibility
                       padding: const EdgeInsets.symmetric(
                         horizontal: 80,
                         vertical: 15,
@@ -216,18 +221,17 @@ class _AuthScreenState extends State<AuthScreen> {
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
-                    onPressed: authService.isLoading
-                        ? null
-                        : () => _submit(context),
+                    onPressed:
+                        authService.isLoading ? null : () => _submit(context),
                     child: Text(
                       _isForgotPassword
                           ? 'Send Reset Email'
                           : _isRegistering
-                          ? 'Register'
-                          : 'Login',
+                              ? appLocalization!.register
+                              : appLocalization!.login,
                       style: const TextStyle(
                         fontSize: 18,
-                        color: Colors.black,  // Black text for contrast
+                        color: Colors.black, // Black text for contrast
                       ),
                     ),
                   ),
@@ -237,7 +241,8 @@ class _AuthScreenState extends State<AuthScreen> {
                   Center(
                     child: OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.white),  // White border
+                        side: const BorderSide(
+                            color: Colors.white), // White border
                         padding: const EdgeInsets.symmetric(
                           horizontal: 40,
                           vertical: 15,
@@ -249,24 +254,25 @@ class _AuthScreenState extends State<AuthScreen> {
                       onPressed: authService.isLoading
                           ? null
                           : () async {
-                        bool success =
-                        await authService.signInWithGoogle(context);
-                        if (success) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>  HomePage(),
-                            ),
-                          );
-                        }
-                      },
+                              bool success =
+                                  await authService.signInWithGoogle(context);
+                              if (success) {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => HomePage(),
+                                  ),
+                                );
+                              }
+                            },
                       icon: Image.network(
                         'https://www.google.com/favicon.ico',
                         height: 24,
                       ),
-                      label: const Text(
-                        'Sign in with Google',
-                        style: TextStyle(fontSize: 16, color: Colors.white),  // White text
+                      label: Text(
+                        appLocalization!.signInWithGoogle,
+                        style: TextStyle(
+                            fontSize: 16, color: Colors.white), // White text
                       ),
                     ),
                   ),
@@ -278,25 +284,30 @@ class _AuthScreenState extends State<AuthScreen> {
                       if (!_isRegistering)
                         TextButton(
                           onPressed: _toggleForgotPassword,
-                          child: const Text(
-                            'Forgot Password?',
-                            style: TextStyle(color: Colors.white, fontSize: 12),  // White text
+                          child: Text(
+                            '${appLocalization!.forgotPassword}',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12), // White text
                           ),
                         ),
                       if (!_isRegistering && !_isForgotPassword)
                         const Text(
                           '|',
-                          style: TextStyle(color: Colors.white, fontSize: 16),  // White text
+                          style: TextStyle(
+                              color: Colors.white, fontSize: 16), // White text
                         ),
                       TextButton(
-                        onPressed: _isForgotPassword ? _toggleMode : _toggleMode,
+                        onPressed:
+                            _isForgotPassword ? _toggleMode : _toggleMode,
                         child: Text(
                           _isForgotPassword
                               ? 'Back to Login'
                               : _isRegistering
-                              ? 'Already have an account? Login'
-                              : 'Need an account? Register',
-                          style: const TextStyle(color: Colors.white, fontSize: 12),  // White text
+                                  ? '${appLocalization!.alreadyHaveAccount} Login'
+                                  : '${appLocalization!.needAnAccount}',
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 12), // White text
                         ),
                       ),
                     ],
@@ -323,29 +334,29 @@ class _AuthScreenState extends State<AuthScreen> {
       inputFormatters: inputFormatters,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.grey[400]),  // Light grey label
+        labelStyle: TextStyle(color: Colors.grey[400]), // Light grey label
         prefixIcon: Icon(
-          label.contains('Email')
+          label.contains(appLocalization!.email)
               ? Icons.email
-              : label.contains('Password')
-              ? Icons.lock
-              : label.contains('Phone')
-              ? Icons.phone
-              : Icons.person,
-          color: Colors.white,  // White icon for contrast
+              : label.contains(appLocalization!.password)
+                  ? Icons.lock
+                  : label.contains(appLocalization!.phoneNumber)
+                      ? Icons.phone
+                      : Icons.person,
+          color: Colors.white, // White icon for contrast
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
         ),
         filled: true,
-        fillColor: Colors.grey[900],  // Dark grey fill
+        fillColor: Colors.grey[900], // Dark grey fill
         contentPadding: const EdgeInsets.symmetric(
           vertical: 20,
           horizontal: 20,
         ),
       ),
       validator: validator,
-      style: const TextStyle(fontSize: 16, color: Colors.white),  // White text
+      style: const TextStyle(fontSize: 16, color: Colors.white), // White text
     );
   }
 }

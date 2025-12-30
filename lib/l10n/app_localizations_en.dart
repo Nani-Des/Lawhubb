@@ -1,0 +1,111 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for English (`en`).
+class AppLocalizationsEn extends AppLocalizations {
+  AppLocalizationsEn([String locale = 'en']) : super(locale);
+
+  @override
+  String get findYourLegalAlly => 'Find your legal Ally';
+
+  @override
+  String get tapToAskQuestions => 'Tap to ask questions on various topics.';
+
+  @override
+  String get attorneysNearYou => 'Attorneys near you!';
+
+  @override
+  String get noChamberFound => 'No Chamber found';
+
+  @override
+  String get findLawyerOrDescribe =>
+      'Find a lawyer? or describe your legal issue...';
+
+  @override
+  String get chambers => 'Chambers';
+
+  @override
+  String get lawInsights => 'Law Insights';
+
+  @override
+  String get socialHubb => 'SocialHubb';
+
+  @override
+  String get home => 'Home';
+
+  @override
+  String get search => 'Search';
+
+  @override
+  String get createPost => 'Create Post';
+
+  @override
+  String get live => 'Live';
+
+  @override
+  String get login => 'Login';
+
+  @override
+  String get welcomeBack => 'Welcome back';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get forgotPassword => 'Forgot Password';
+
+  @override
+  String get needAnAccount => 'Need an account';
+
+  @override
+  String get register => 'Register';
+
+  @override
+  String get signInWithGoogle => 'Sign in with Google';
+
+  @override
+  String get bookAppointment => 'Book appointment';
+
+  @override
+  String get findLawyer => 'Find lawyer';
+
+  @override
+  String get lawServices => 'Law services';
+
+  @override
+  String get help => 'Help';
+
+  @override
+  String get firstName => 'First Name';
+
+  @override
+  String get lastName => 'Last Name';
+
+  @override
+  String get phoneNumber => 'Phone Number';
+
+  @override
+  String get alreadyHaveAccount => 'Already have an account?';
+
+  @override
+  String get createAccount => 'Create your account';
+
+  @override
+  String get book_appointment => 'How do I book an appointment with a lawyer?';
+
+  @override
+  String get type_of_lawyer => 'How do I know what type of lawyer I need?';
+
+  @override
+  String get services_provided =>
+      'What services does the chamber of law provide?';
+
+  @override
+  String get sue_someone => 'What should I do when I want to sue someone?';
+}

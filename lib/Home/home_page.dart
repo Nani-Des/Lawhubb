@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:nhap/ChatModule/constants.dart';
+import 'package:nhap/main.dart';
 import 'package:nhap/news_stand.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -76,7 +77,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final prefs = await SharedPreferences.getInstance();
-      final bool hasSeenWalkthrough = prefs.getBool('hasSeenEmergencyWalkthrough') ?? false;
+      final bool hasSeenWalkthrough =
+          prefs.getBool('hasSeenEmergencyWalkthrough') ?? false;
       if (!hasSeenWalkthrough && mounted) {
         ShowCaseWidget.of(context)?.startShowCase([_fabKey]);
         await prefs.setBool('hasSeenEmergencyWalkthrough', true);
@@ -88,15 +90,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Future<void> _fetchUserData() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final docSnapshot = await FirebaseFirestore.instance.collection('Users').doc(user.uid).get();
+      final docSnapshot = await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(user.uid)
+          .get();
       setState(() {
         currentUser = user;
-        userImageUrl = docSnapshot['User Pic'] ?? '';  // Load user image if available
+        userImageUrl =
+            docSnapshot['User Pic'] ?? ''; // Load user image if available
       });
     } else {
       setState(() {
         currentUser = null;
-        userImageUrl = null;  // If not logged in, clear user image
+        userImageUrl = null; // If not logged in, clear user image
       });
     }
   }
@@ -140,17 +146,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,  // Changed to black background
+      backgroundColor: Colors.black, // Changed to black background
       appBar: AppBar(
         title: Text(
-          'Find your legal Ally',
+          appLocalization!.findYourLegalAlly,
           style: TextStyle(
-            color: Colors.white,  // Changed to white for contrast
+            color: Colors.white, // Changed to white for contrast
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Colors.grey[900],  // Dark grey for app bar
+        backgroundColor: Colors.grey[900], // Dark grey for app bar
         actions: [
           GestureDetector(
             onTap: _onAvatarTap,
@@ -159,7 +165,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   ? NetworkImage(userImageUrl!)
                   : null,
               child: userImageUrl == null || userImageUrl!.isEmpty
-                  ? Icon(Icons.person, color: Colors.black)  // Changed to white
+                  ? Icon(Icons.person, color: Colors.black) // Changed to white
                   : null,
             ),
           ),
@@ -176,7 +182,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.grey[900]!, Colors.black],  // Dark grey to black gradient
+                  colors: [
+                    Colors.grey[900]!,
+                    Colors.black
+                  ], // Dark grey to black gradient
                 ),
               ),
               child: Column(
@@ -193,10 +202,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ],
         ),
       ),
-      bottomNavigationBar: CustomBottomNavBar(selectedIndex:1, setup: 1),
+      bottomNavigationBar: CustomBottomNavBar(selectedIndex: 1, setup: 1),
       floatingActionButton: Showcase(
         key: _fabKey,
-        description: 'Tap to ask questions on various topics.',
+        description: appLocalization!.tapToAskQuestions,
         child: GestureDetector(
           onTap: () {
             Navigator.push(
@@ -215,7 +224,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 elevation: 20,
                 tooltip: 'Chat Bot',
               ),
-
             ],
           ),
         ),

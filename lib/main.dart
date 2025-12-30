@@ -3,12 +3,14 @@ import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 import 'package:nhap/try.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -50,7 +52,8 @@ void main() async {
       storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET']!,
     ),
   );
-  FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: true);
+  FirebaseFirestore.instance.settings =
+      const Settings(persistenceEnabled: true);
 
   // Initialize Remote Config
   final configService = ConfigService();
@@ -72,18 +75,25 @@ void main() async {
     );
 
     // Initialize local notifications
-    final FlutterLocalNotificationsPlugin localNotificationsPlugin = FlutterLocalNotificationsPlugin();
-    const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const InitializationSettings initSettings = InitializationSettings(android: androidSettings);
+    final FlutterLocalNotificationsPlugin localNotificationsPlugin =
+        FlutterLocalNotificationsPlugin();
+    const AndroidInitializationSettings androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const InitializationSettings initSettings =
+        InitializationSettings(android: androidSettings);
     await localNotificationsPlugin.initialize(
       initSettings,
       onDidReceiveNotificationResponse: (response) async {
         if (response.payload != null) {
           final data = Map<String, dynamic>.from(jsonDecode(response.payload!));
           final userId = FirebaseAuth.instance.currentUser?.uid;
-          if (userId != null && (data['type'] == 'new_booking' || data['type'] == 'status_update' || data['type'] == 'reminder')) {
+          if (userId != null &&
+              (data['type'] == 'new_booking' ||
+                  data['type'] == 'status_update' ||
+                  data['type'] == 'reminder')) {
             Navigator.of(navigatorKey.currentContext!).pushReplacement(
-              MaterialPageRoute(builder: (context) => BookingPage(currentUserId: userId)),
+              MaterialPageRoute(
+                  builder: (context) => BookingPage(currentUserId: userId)),
             );
           }
         }
@@ -102,10 +112,13 @@ void main() async {
     // Handle initial message
     RemoteMessage? initialMessage = await messaging.getInitialMessage();
     if (initialMessage != null && userId != null) {
-      if (initialMessage.data['type'] == 'new_booking' || initialMessage.data['type'] == 'status_update' || initialMessage.data['type'] == 'reminder') {
+      if (initialMessage.data['type'] == 'new_booking' ||
+          initialMessage.data['type'] == 'status_update' ||
+          initialMessage.data['type'] == 'reminder') {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Navigator.of(navigatorKey.currentContext!).pushReplacement(
-            MaterialPageRoute(builder: (context) => BookingPage(currentUserId: userId)),
+            MaterialPageRoute(
+                builder: (context) => BookingPage(currentUserId: userId)),
           );
         });
       }
@@ -114,9 +127,13 @@ void main() async {
     // Handle message opened from background
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       final userId = FirebaseAuth.instance.currentUser?.uid;
-      if (userId != null && (message.data['type'] == 'new_booking' || message.data['type'] == 'status_update' || message.data['type'] == 'reminder')) {
+      if (userId != null &&
+          (message.data['type'] == 'new_booking' ||
+              message.data['type'] == 'status_update' ||
+              message.data['type'] == 'reminder')) {
         Navigator.of(navigatorKey.currentContext!).pushReplacement(
-          MaterialPageRoute(builder: (context) => BookingPage(currentUserId: userId)),
+          MaterialPageRoute(
+              builder: (context) => BookingPage(currentUserId: userId)),
         );
       }
     });
@@ -142,6 +159,8 @@ void main() async {
 
 // Global navigator key for notification navigation
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+final appLocalization = AppLocalizations.of(navigatorKey.currentContext!);
 
 Future<void> _requestLocationPermission() async {
   LocationPermission permission = await Geolocator.checkPermission();
@@ -183,6 +202,22 @@ class MyApp extends StatelessWidget {
       child: ShowCaseWidget(
         builder: (context) => MaterialApp(
           title: 'nhap',
+          locale: Locale('en'),
+
+          // 2. Define supported locales
+          supportedLocales: const [
+            Locale('en'), // English
+            Locale('es'), // Spanish
+            Locale('fr'), // French
+          ],
+
+          // 3. Add delegates
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
             useMaterial3: true,
@@ -203,7 +238,8 @@ class CustomTransitionScreen extends StatefulWidget {
   _CustomTransitionScreenState createState() => _CustomTransitionScreenState();
 }
 
-class _CustomTransitionScreenState extends State<CustomTransitionScreen> with SingleTickerProviderStateMixin {
+class _CustomTransitionScreenState extends State<CustomTransitionScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _rotationAnimation;
   late Animation<double> _scaleAnimation;
@@ -227,7 +263,8 @@ class _CustomTransitionScreenState extends State<CustomTransitionScreen> with Si
     _controller.forward().then((_) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const LocationPermissionScreen()),
+        MaterialPageRoute(
+            builder: (context) => const LocationPermissionScreen()),
       );
     });
   }
@@ -250,7 +287,8 @@ class _CustomTransitionScreenState extends State<CustomTransitionScreen> with Si
               angle: _rotationAnimation.value,
               child: Transform.scale(
                 scale: _scaleAnimation.value,
-                child: Image.asset('assets/Icons/Icon.png', width: 200, height: 200),
+                child: Image.asset('assets/Icons/Icon.png',
+                    width: 200, height: 200),
               ),
             );
           },

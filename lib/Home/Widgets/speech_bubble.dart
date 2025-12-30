@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+import 'package:nhap/main.dart';
+
 class SpeechBubble extends StatefulWidget {
   final VoidCallback onPressed;
   final TextStyle textStyle;
@@ -43,7 +45,7 @@ class _SpeechBubbleState extends State<SpeechBubble> {
               opacity: _isVisible ? 1.0 : 0.0,
               duration: Duration(milliseconds: 500),
               child: Text(
-                'Attorneys near you!',
+                appLocalization!.attorneysNearYou,
                 style: widget.textStyle,
               ),
             ),

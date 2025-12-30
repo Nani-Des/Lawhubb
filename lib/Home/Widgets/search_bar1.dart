@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:nhap/main.dart';
 import '../../Hospital/doctor_profile.dart';
 import '../../bot/widget/openai_service.dart';
 
@@ -44,13 +45,13 @@ class _SearchBar1State extends State<SearchBar1> {
       final queryLower = query.toLowerCase();
       final lawyers = snapshot.docs
           .map((doc) => {
-        ...doc.data(),
-        'userId': doc.id,
-      })
+                ...doc.data(),
+                'userId': doc.id,
+              })
           .where((lawyer) =>
-      (lawyer['Fname']?.toLowerCase().contains(queryLower) ?? false) ||
-          (lawyer['Lname']?.toLowerCase().contains(queryLower) ?? false) ||
-          (lawyer['Region']?.toLowerCase().contains(queryLower) ?? false))
+              (lawyer['Fname']?.toLowerCase().contains(queryLower) ?? false) ||
+              (lawyer['Lname']?.toLowerCase().contains(queryLower) ?? false) ||
+              (lawyer['Region']?.toLowerCase().contains(queryLower) ?? false))
           .toList();
 
       setState(() {
@@ -71,9 +72,10 @@ class _SearchBar1State extends State<SearchBar1> {
     try {
       // Fetch available practice names
       final practiceSnapshot =
-      await FirebaseFirestore.instance.collection('Practice').get();
-      final practices =
-      practiceSnapshot.docs.map((e) => e['Practice Name'] as String).toList();
+          await FirebaseFirestore.instance.collection('Practice').get();
+      final practices = practiceSnapshot.docs
+          .map((e) => e['Practice Name'] as String)
+          .toList();
 
       if (practices.isEmpty) {
         print('⚠️ No practices found in database.');
@@ -105,7 +107,8 @@ class _SearchBar1State extends State<SearchBar1> {
       }
 
       if (matchedPractice == null) {
-        print('⚠️ AI response "$cleanedResponse" did not match any known practice.');
+        print(
+            '⚠️ AI response "$cleanedResponse" did not match any known practice.');
         setState(() {
           _isLoading = false;
           _lawyerSuggestions = [];
@@ -135,9 +138,9 @@ class _SearchBar1State extends State<SearchBar1> {
 
       final lawyers = snapshot.docs
           .map((doc) => {
-        ...doc.data(),
-        'userId': doc.id,
-      })
+                ...doc.data(),
+                'userId': doc.id,
+              })
           .toList();
 
       setState(() {
@@ -189,18 +192,15 @@ class _SearchBar1State extends State<SearchBar1> {
                 child: TextField(
                   controller: _controller,
                   decoration: InputDecoration(
-                    hintText:
-                    'Find a lawyer? or describe you legal issue...',
-                    hintStyle:
-                    TextStyle(color: Colors.grey[400], fontSize: 12),
-                    prefixIcon:
-                    const Icon(Icons.search, color: Colors.white),
+                    hintText: appLocalization!.findLawyerOrDescribe,
+                    hintStyle: TextStyle(color: Colors.grey[400], fontSize: 12),
+                    prefixIcon: const Icon(Icons.search, color: Colors.white),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
                     contentPadding:
-                    const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+                        const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
                   ),
                   style: const TextStyle(color: Colors.white),
                   onChanged: (value) => _fetchLawyerSuggestions(value),
@@ -219,8 +219,7 @@ class _SearchBar1State extends State<SearchBar1> {
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor:
-                      AlwaysStoppedAnimation<Color>(Colors.white),
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   ),
                 ),
@@ -281,19 +280,18 @@ class _SearchBar1State extends State<SearchBar1> {
                           );
                         },
                         child: Padding(
-                          padding:
-                          const EdgeInsets.symmetric(horizontal: 8.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
                           child: Column(
                             children: [
                               CircleAvatar(
                                 radius: 30,
                                 backgroundImage: lawyer['User Pic'] != null
                                     ? CachedNetworkImageProvider(
-                                    lawyer['User Pic'])
+                                        lawyer['User Pic'])
                                     : null,
                                 child: lawyer['User Pic'] == null
                                     ? const Icon(Icons.person,
-                                    size: 30, color: Colors.white)
+                                        size: 30, color: Colors.white)
                                     : null,
                               ),
                               const SizedBox(height: 4),
