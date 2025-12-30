@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -11,21 +12,47 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:nhap/l10n/app_localizations.dart';
-import 'package:nhap/try.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:showcaseview/showcaseview.dart';
-import 'Appointments/referral_form.dart';
-import 'Auth/auth_screen.dart';
 import 'Auth/auth_service.dart';
 import 'ChatModule/chat_module.dart';
-import 'Home/home_page.dart';
-import 'Maps/map_screen.dart';
+import 'main_layout.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'Services/config_service.dart';
 import 'booking_page.dart';
+
+// #region agent log helper
+void _debugLog({
+  required String hypothesisId,
+  required String location,
+  required String message,
+  required Map<String, dynamic> data,
+}) {
+  try {
+    final logFile = File(
+        r'c:\Users\HP\PROJECTS\flutter_projects\lawhubb\Lawhubb\.cursor\debug.log');
+    if (!logFile.parent.existsSync()) {
+      logFile.parent.createSync(recursive: true);
+    }
+    logFile.writeAsStringSync(
+      jsonEncode({
+            'sessionId': 'debug-session',
+            'runId': 'pre-fix',
+            'hypothesisId': hypothesisId,
+            'location': location,
+            'message': message,
+            'data': data,
+            'timestamp': DateTime.now().millisecondsSinceEpoch,
+          }) +
+          '\n',
+      mode: FileMode.append,
+    );
+  } catch (_) {}
+}
+// #endregion
 
 // Background message handler
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -150,10 +177,17 @@ void main() async {
     print('Error initializing image cache: $e');
   }
 
-  await CallService().clearOldNotifications();
+  // await CallService().clearOldNotifications();
+  // await WordFilterService().initialize();
+  // CallService().initialize();
+
+  try {
+    await CallService().clearOldNotifications();
+  } catch (e) {
+    debugPrint('Skipping clearOldNotifications: $e');
+  }
   await WordFilterService().initialize();
   CallService().initialize();
-
   runApp(const MyApp());
 }
 
@@ -183,6 +217,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // #region agent log
+    _debugLog(
+      hypothesisId: 'D',
+      location: 'main.dart:MyApp.build',
+      message: 'MyApp build invoked',
+      data: {},
+    );
+    // #endregion
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthService()),
@@ -247,6 +290,14 @@ class _CustomTransitionScreenState extends State<CustomTransitionScreen>
   @override
   void initState() {
     super.initState();
+    // #region agent log
+    _debugLog(
+      hypothesisId: 'A',
+      location: 'main.dart:CustomTransitionScreen.initState',
+      message: 'Splash init started',
+      data: {},
+    );
+    // #endregion
     _controller = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
@@ -261,11 +312,38 @@ class _CustomTransitionScreenState extends State<CustomTransitionScreen>
     );
 
     _controller.forward().then((_) {
+      // #region agent log
+      _debugLog(
+        hypothesisId: 'A',
+        location: 'main.dart:CustomTransitionScreen.afterForward',
+        message: 'Splash animation completed',
+        data: {},
+      );
+      // #endregion
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
             builder: (context) => const LocationPermissionScreen()),
       );
+      // #region agent log
+      _debugLog(
+        hypothesisId: 'B',
+        location: 'main.dart:CustomTransitionScreen.afterNavigate',
+        message: 'Navigation from splash triggered',
+        data: {},
+      );
+      // #endregion
+    });
+
+    // Add failsafe timeout to force navigation even if Firebase/network is stuck
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => const LocationPermissionScreen()),
+        );
+      }
     });
   }
 
@@ -329,10 +407,18 @@ class LocationPermissionScreen extends StatelessWidget {
               const SizedBox(height: 30),
               ElevatedButton(
                 onPressed: () async {
+                  // #region agent log
+                  _debugLog(
+                    hypothesisId: 'C',
+                    location: 'main.dart:LocationPermissionScreen.allow',
+                    message: 'Allow location tapped',
+                    data: {},
+                  );
+                  // #endregion
                   await _requestLocationPermission();
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => HomePage()),
+                    MaterialPageRoute(builder: (context) => const MainLayout()),
                   );
                 },
                 child: const Text('Allow Location Access'),
@@ -342,7 +428,7 @@ class LocationPermissionScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => HomePage()),
+                    MaterialPageRoute(builder: (context) => const MainLayout()),
                   );
                 },
                 child: const Text('Skip for Now'),

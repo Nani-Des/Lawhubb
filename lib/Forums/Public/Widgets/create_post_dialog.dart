@@ -5,6 +5,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:video_player/video_player.dart';
 
 import '../Services/forum_firebase_service.dart';
+import '../../../ChatModule/chat_module.dart';
 
 class CreatePostDialog extends StatefulWidget {
   final String userId;
@@ -29,15 +30,29 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
+      File file = File(pickedFile.path);
+      int sizeInBytes = await file.length();
+      double sizeInMb = sizeInBytes / (1024 * 1024);
+
+      if (sizeInMb > 5) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Image too large. Max size is 5MB.")),
+          );
+        }
+        return;
+      }
+
       setState(() {
-        _localImageFile = File(pickedFile.path);
+        _localImageFile = file;
         _isLoading = true;
       });
 
+      // ... rest of upload logic ...
       String fileName = DateTime.now().millisecondsSinceEpoch.toString();
       Reference ref =
-      FirebaseStorage.instance.ref().child('post_images/$fileName');
-      UploadTask uploadTask = ref.putFile(File(pickedFile.path));
+          FirebaseStorage.instance.ref().child('post_images/$fileName');
+      UploadTask uploadTask = ref.putFile(file);
       TaskSnapshot snapshot = await uploadTask;
       _imageUrl = await snapshot.ref.getDownloadURL();
 
@@ -52,15 +67,28 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
     final pickedFile = await picker.pickVideo(source: ImageSource.gallery);
 
     if (pickedFile != null) {
+      File file = File(pickedFile.path);
+      int sizeInBytes = await file.length();
+      double sizeInMb = sizeInBytes / (1024 * 1024);
+
+      if (sizeInMb > 20) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Video too large. Max size is 20MB.")),
+          );
+        }
+        return;
+      }
+
       setState(() {
-        _localVideoFile = File(pickedFile.path);
+        _localVideoFile = file;
         _isLoading = true;
       });
 
       String fileName = DateTime.now().millisecondsSinceEpoch.toString();
       Reference ref =
-      FirebaseStorage.instance.ref().child('post_videos/$fileName');
-      UploadTask uploadTask = ref.putFile(File(pickedFile.path));
+          FirebaseStorage.instance.ref().child('post_videos/$fileName');
+      UploadTask uploadTask = ref.putFile(file);
       TaskSnapshot snapshot = await uploadTask;
       _videoUrl = await snapshot.ref.getDownloadURL();
 
@@ -76,16 +104,53 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
   }
 
   Future<void> _submitPost() async {
-    if (_contentController.text.isNotEmpty ||
-        _imageUrl != null ||
-        _videoUrl != null) {
+    final content = _contentController.text.trim();
+    
+    if (content.isEmpty && _imageUrl == null && _videoUrl == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please add some content to your post'),
+          backgroundColor: Colors.grey[800],
+        ),
+      );
+      return;
+    }
+    
+    if (content.isNotEmpty) {
+      final canPost = await WordFilterService().canSendMessage(content, context);
+      if (!canPost) return;
+    }
+    
+    setState(() => _isLoading = true);
+    
+    try {
       await ForumFirebaseService().createPost(
         widget.userId,
-        _contentController.text,
+        content,
         _imageUrl,
         _videoUrl,
       );
-      Navigator.pop(context);
+      
+      if (mounted) {
+        setState(() => _isLoading = false);
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Post created successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to create post: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -150,7 +215,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
               ),
 
             // Video preview if uploaded
-            if (_localVideoFile != null&&
+            if (_localVideoFile != null &&
                 _videoPlayerController != null &&
                 _videoPlayerController!.value.isInitialized)
               Padding(
@@ -158,7 +223,8 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: SizedBox(
-                    height: 150, // ✅ Constrain the height so it doesn't overflow
+                    height:
+                        150, // ✅ Constrain the height so it doesn't overflow
                     width: double.infinity,
                     child: AspectRatio(
                       aspectRatio: 16 / 9, // ✅ Keeps video aspect ratio
@@ -182,23 +248,22 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
               children: [
                 TextButton.icon(
                   onPressed: _uploadImage,
-                  icon: Icon(Icons.image, color: Colors.white),
+                  icon: Icon(Icons.image_outlined, color: Colors.white),
                   label: Text(
-                    'Image',
+                    'Photo',
                     style: TextStyle(color: Colors.white),
                   ),
                   style: TextButton.styleFrom(
                     backgroundColor: Colors.grey[800],
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    padding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   ),
                 ),
                 TextButton.icon(
                   onPressed: _uploadVideo,
-                  icon: Icon(Icons.videocam, color: Colors.white),
+                  icon: Icon(Icons.videocam_outlined, color: Colors.white),
                   label: Text(
                     'Video',
                     style: TextStyle(color: Colors.white),
@@ -206,10 +271,9 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                   style: TextButton.styleFrom(
                     backgroundColor: Colors.grey[800],
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    padding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   ),
                 ),
               ],
@@ -219,25 +283,27 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
 
             // Actions
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment:
+                  MainAxisAlignment.spaceBetween, // Space out for modern feel
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text("Cancel", style: TextStyle(color: Colors.grey)),
+                  child:
+                      Text("Cancel", style: TextStyle(color: Colors.grey[400])),
                 ),
-                const SizedBox(width: 10),
                 ElevatedButton(
                   onPressed: _submitPost,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.black,
+                    elevation: 0, // Flat modern button
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(20), // Pill shape
                     ),
-                    padding:
-                    EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   ),
-                  child: Text("Post"),
+                  child: Text("Post",
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ],
             )
