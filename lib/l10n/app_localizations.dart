@@ -297,6 +297,294 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'What should I do when I want to sue someone?'**
   String get sue_someone;
+
+  /// No description provided for @appTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'LawHub'**
+  String get appTitle;
+
+  /// No description provided for @locationPermissionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We Need Your Location'**
+  String get locationPermissionTitle;
+
+  /// No description provided for @locationPermissionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'To provide you with the best experience, we need your location to find Lawyers and Chambers near you.'**
+  String get locationPermissionDescription;
+
+  /// No description provided for @allowLocationButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Location Access'**
+  String get allowLocationButton;
+
+  /// No description provided for @skipButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for Now'**
+  String get skipButton;
+
+  /// No description provided for @platformOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform Overview'**
+  String get platformOverview;
+
+  /// No description provided for @growing.
+  ///
+  /// In en, this message translates to:
+  /// **'Growing'**
+  String get growing;
+
+  /// No description provided for @activeLawyersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'2,500+'**
+  String get activeLawyersCount;
+
+  /// No description provided for @activeLawyersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Lawyers'**
+  String get activeLawyersLabel;
+
+  /// No description provided for @lawChambersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'150+'**
+  String get lawChambersCount;
+
+  /// No description provided for @lawChambersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Law Chambers'**
+  String get lawChambersLabel;
+
+  /// No description provided for @casesResolvedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'10k+'**
+  String get casesResolvedCount;
+
+  /// No description provided for @casesResolvedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cases Resolved'**
+  String get casesResolvedLabel;
+
+  /// No description provided for @goodMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Good Morning'**
+  String get goodMorning;
+
+  /// No description provided for @goodAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Good Afternoon'**
+  String get goodAfternoon;
+
+  /// No description provided for @goodEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Good Evening'**
+  String get goodEvening;
+
+  /// No description provided for @loggedInMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your legal journey continues here'**
+  String get loggedInMessage;
+
+  /// No description provided for @notLoggedInMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Join thousands of legal professionals'**
+  String get notLoggedInMessage;
+
+  /// No description provided for @searchPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Search lawyers, chambers...'**
+  String get searchPlaceholder;
+
+  /// No description provided for @searchFunctionalityComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Search functionality coming soon'**
+  String get searchFunctionalityComingSoon;
+
+  /// No description provided for @quickServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Services'**
+  String get quickServices;
+
+  /// No description provided for @available24_7.
+  ///
+  /// In en, this message translates to:
+  /// **'24/7 Available'**
+  String get available24_7;
+
+  /// No description provided for @emergencyLegalHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Legal Help'**
+  String get emergencyLegalHelp;
+
+  /// No description provided for @immediateAssistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediate assistance'**
+  String get immediateAssistance;
+
+  /// No description provided for @bookConsultation.
+  ///
+  /// In en, this message translates to:
+  /// **'Book Consultation'**
+  String get bookConsultation;
+
+  /// No description provided for @scheduleWithExperts.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule with experts'**
+  String get scheduleWithExperts;
+
+  /// No description provided for @pleaseSignInToBook.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in to book consultations'**
+  String get pleaseSignInToBook;
+
+  /// No description provided for @legalCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal Community'**
+  String get legalCommunity;
+
+  /// No description provided for @connectAndDiscuss.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect & discuss'**
+  String get connectAndDiscuss;
+
+  /// No description provided for @useSocialHub.
+  ///
+  /// In en, this message translates to:
+  /// **'Use bottom navigation to access Social Hub'**
+  String get useSocialHub;
+
+  /// No description provided for @legalResources.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal Resources'**
+  String get legalResources;
+
+  /// No description provided for @browseLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse library'**
+  String get browseLibrary;
+
+  /// No description provided for @useLawInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Use bottom navigation to access Law Insights'**
+  String get useLawInsights;
+
+  /// No description provided for @trendingLegalTopics.
+  ///
+  /// In en, this message translates to:
+  /// **'Trending Legal Topics'**
+  String get trendingLegalTopics;
+
+  /// No description provided for @hot.
+  ///
+  /// In en, this message translates to:
+  /// **'Hot'**
+  String get hot;
+
+  /// No description provided for @employmentLaw.
+  ///
+  /// In en, this message translates to:
+  /// **'Employment Law'**
+  String get employmentLaw;
+
+  /// No description provided for @employmentLawDiscussions.
+  ///
+  /// In en, this message translates to:
+  /// **'245 discussions'**
+  String get employmentLawDiscussions;
+
+  /// No description provided for @propertyRights.
+  ///
+  /// In en, this message translates to:
+  /// **'Property Rights'**
+  String get propertyRights;
+
+  /// No description provided for @propertyRightsDiscussions.
+  ///
+  /// In en, this message translates to:
+  /// **'189 discussions'**
+  String get propertyRightsDiscussions;
+
+  /// No description provided for @familyLaw.
+  ///
+  /// In en, this message translates to:
+  /// **'Family Law'**
+  String get familyLaw;
+
+  /// No description provided for @familyLawDiscussions.
+  ///
+  /// In en, this message translates to:
+  /// **'156 discussions'**
+  String get familyLawDiscussions;
+
+  /// No description provided for @businessLaw.
+  ///
+  /// In en, this message translates to:
+  /// **'Business Law'**
+  String get businessLaw;
+
+  /// No description provided for @businessLawDiscussions.
+  ///
+  /// In en, this message translates to:
+  /// **'134 discussions'**
+  String get businessLawDiscussions;
+
+  /// No description provided for @exploreDiscussions.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore {title} discussions'**
+  String exploreDiscussions(Object title);
+
+  /// No description provided for @selectLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Language'**
+  String get selectLanguage;
+
+  /// No description provided for @english.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get english;
+
+  /// No description provided for @spanish.
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get spanish;
+
+  /// No description provided for @french.
+  ///
+  /// In en, this message translates to:
+  /// **'French'**
+  String get french;
 }
 
 class _AppLocalizationsDelegate

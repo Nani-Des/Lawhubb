@@ -108,4 +108,152 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sue_someone => 'What should I do when I want to sue someone?';
+
+  @override
+  String get appTitle => 'LawHub';
+
+  @override
+  String get locationPermissionTitle => 'We Need Your Location';
+
+  @override
+  String get locationPermissionDescription =>
+      'To provide you with the best experience, we need your location to find Lawyers and Chambers near you.';
+
+  @override
+  String get allowLocationButton => 'Allow Location Access';
+
+  @override
+  String get skipButton => 'Skip for Now';
+
+  @override
+  String get platformOverview => 'Platform Overview';
+
+  @override
+  String get growing => 'Growing';
+
+  @override
+  String get activeLawyersCount => '2,500+';
+
+  @override
+  String get activeLawyersLabel => 'Active Lawyers';
+
+  @override
+  String get lawChambersCount => '150+';
+
+  @override
+  String get lawChambersLabel => 'Law Chambers';
+
+  @override
+  String get casesResolvedCount => '10k+';
+
+  @override
+  String get casesResolvedLabel => 'Cases Resolved';
+
+  @override
+  String get goodMorning => 'Good Morning';
+
+  @override
+  String get goodAfternoon => 'Good Afternoon';
+
+  @override
+  String get goodEvening => 'Good Evening';
+
+  @override
+  String get loggedInMessage => 'Your legal journey continues here';
+
+  @override
+  String get notLoggedInMessage => 'Join thousands of legal professionals';
+
+  @override
+  String get searchPlaceholder => 'Search lawyers, chambers...';
+
+  @override
+  String get searchFunctionalityComingSoon =>
+      'Search functionality coming soon';
+
+  @override
+  String get quickServices => 'Quick Services';
+
+  @override
+  String get available24_7 => '24/7 Available';
+
+  @override
+  String get emergencyLegalHelp => 'Emergency Legal Help';
+
+  @override
+  String get immediateAssistance => 'Immediate assistance';
+
+  @override
+  String get bookConsultation => 'Book Consultation';
+
+  @override
+  String get scheduleWithExperts => 'Schedule with experts';
+
+  @override
+  String get pleaseSignInToBook => 'Please sign in to book consultations';
+
+  @override
+  String get legalCommunity => 'Legal Community';
+
+  @override
+  String get connectAndDiscuss => 'Connect & discuss';
+
+  @override
+  String get useSocialHub => 'Use bottom navigation to access Social Hub';
+
+  @override
+  String get legalResources => 'Legal Resources';
+
+  @override
+  String get browseLibrary => 'Browse library';
+
+  @override
+  String get useLawInsights => 'Use bottom navigation to access Law Insights';
+
+  @override
+  String get trendingLegalTopics => 'Trending Legal Topics';
+
+  @override
+  String get hot => 'Hot';
+
+  @override
+  String get employmentLaw => 'Employment Law';
+
+  @override
+  String get employmentLawDiscussions => '245 discussions';
+
+  @override
+  String get propertyRights => 'Property Rights';
+
+  @override
+  String get propertyRightsDiscussions => '189 discussions';
+
+  @override
+  String get familyLaw => 'Family Law';
+
+  @override
+  String get familyLawDiscussions => '156 discussions';
+
+  @override
+  String get businessLaw => 'Business Law';
+
+  @override
+  String get businessLawDiscussions => '134 discussions';
+
+  @override
+  String exploreDiscussions(Object title) {
+    return 'Explore $title discussions';
+  }
+
+  @override
+  String get selectLanguage => 'Select Language';
+
+  @override
+  String get english => 'English';
+
+  @override
+  String get spanish => 'Spanish';
+
+  @override
+  String get french => 'French';
 }

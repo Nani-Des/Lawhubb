@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 
 class HeroSection extends StatefulWidget {
   final String userName;
@@ -15,16 +16,17 @@ class HeroSection extends StatefulWidget {
 }
 
 class _HeroSectionState extends State<HeroSection> {
-
-  String _getGreeting() {
+  String _getGreeting(AppLocalizations? localizations) {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good Morning';
-    if (hour < 17) return 'Good Afternoon';
-    return 'Good Evening';
+    if (hour < 12) return localizations?.goodMorning ?? 'Good Morning';
+    if (hour < 17) return localizations?.goodAfternoon ?? 'Good Afternoon';
+    return localizations?.goodEvening ?? 'Good Evening';
   }
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Column(
@@ -52,7 +54,7 @@ class _HeroSectionState extends State<HeroSection> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _getGreeting(),
+                            _getGreeting(localizations),
                             style: TextStyle(
                               color: Colors.grey[500],
                               fontSize: 16,
@@ -74,8 +76,10 @@ class _HeroSectionState extends State<HeroSection> {
                           const SizedBox(height: 12),
                           Text(
                             widget.isLoggedIn
-                                ? 'Your legal journey continues here'
-                                : 'Join thousands of legal professionals',
+                                ? (localizations?.loggedInMessage ??
+                                    'Your legal journey continues here')
+                                : (localizations?.notLoggedInMessage ??
+                                    'Join thousands of legal professionals'),
                             style: TextStyle(
                               color: Colors.grey[400],
                               fontSize: 16,
@@ -110,7 +114,9 @@ class _HeroSectionState extends State<HeroSection> {
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: const Text('Search functionality coming soon'),
+                        content: Text(
+                            localizations?.searchFunctionalityComingSoon ??
+                                'Search functionality coming soon'),
                         backgroundColor: Colors.grey[800],
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(
@@ -120,7 +126,8 @@ class _HeroSectionState extends State<HeroSection> {
                     );
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
                     decoration: BoxDecoration(
                       color: Colors.grey[850],
                       borderRadius: BorderRadius.circular(12),
@@ -138,7 +145,8 @@ class _HeroSectionState extends State<HeroSection> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Search lawyers, chambers...',
+                            localizations?.searchPlaceholder ??
+                                'Search lawyers, chambers...',
                             style: TextStyle(
                               color: Colors.grey[600],
                               fontSize: 15,
