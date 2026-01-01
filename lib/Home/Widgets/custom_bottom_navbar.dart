@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nhap/Home/home_page.dart';
+import 'package:nhap/main.dart';
 import '../../Auth/auth_screen.dart';
 import '../../Forums/Chat/HomeScreen.dart';
 import '../../Hospital/general_hospital_page.dart';
@@ -10,7 +11,8 @@ import '../../Library/library_page.dart';
 class CustomBottomNavBar extends StatefulWidget {
   final int selectedIndex;
   final int setup; // Added parameter to control which setup to use
-  final Function(int)? onItemTapped; // Optional callback for parent to handle navigation
+  final Function(int)?
+      onItemTapped; // Optional callback for parent to handle navigation
 
   const CustomBottomNavBar({
     Key? key,
@@ -137,34 +139,52 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
     // Fallback to old navigation for backward compatibility
     switch (widget.setup) {
       case 1: // Home setup (default)
-        if (index == 0) _navigateBasedOnAuthStatus(context, const HomePage());
-        else if (index == 1) _navigateBasedOnAuthStatus(context, GeneralHospitalPage());
-        else if (index == 2) _navigateBasedOnAuthStatus(context, LibraryPage());
-        else if (index == 3) _navigateBasedOnAuthStatus(context, const HomeScreen(initialTabIndex: 0));
+        if (index == 0)
+          _navigateBasedOnAuthStatus(context, const HomePage());
+        else if (index == 1)
+          _navigateBasedOnAuthStatus(context, GeneralHospitalPage());
+        else if (index == 2)
+          _navigateBasedOnAuthStatus(context, LibraryPage());
+        else if (index == 3)
+          _navigateBasedOnAuthStatus(
+              context, const HomeScreen(initialTabIndex: 0));
         break;
 
       case 2: // Chambers
-        if (index == 0) _navigateBasedOnAuthStatus(context, HomePage());
-        else if (index == 1) _navigateBasedOnAuthStatus(context, LibraryPage());
-        else if (index == 2) _navigateBasedOnAuthStatus(context, const HomeScreen(initialTabIndex: 1));
+        if (index == 0)
+          _navigateBasedOnAuthStatus(context, HomePage());
+        else if (index == 1)
+          _navigateBasedOnAuthStatus(context, LibraryPage());
+        else if (index == 2)
+          _navigateBasedOnAuthStatus(
+              context, const HomeScreen(initialTabIndex: 1));
         break;
 
       case 3: // Social
-        if (index == 0) _navigateBasedOnAuthStatus(context, HomePage());
-        else if (index == 1) _navigateBasedOnAuthStatus(context, LibraryPage());
-        else if (index == 2) _navigateBasedOnAuthStatus(context, GeneralHospitalPage());
+        if (index == 0)
+          _navigateBasedOnAuthStatus(context, HomePage());
+        else if (index == 1)
+          _navigateBasedOnAuthStatus(context, LibraryPage());
+        else if (index == 2)
+          _navigateBasedOnAuthStatus(context, GeneralHospitalPage());
         break;
 
       case 4: // Forum
-        if (index == 0) _onSearchPressed();
-        else if (index == 1) _onCreatePostPressed();
+        if (index == 0)
+          _onSearchPressed();
+        else if (index == 1)
+          _onCreatePostPressed();
         else if (index == 2) _onLivePressed();
         break;
 
       case 5: // Law insights
-        if (index == 0) _navigateBasedOnAuthStatus(context, HomePage());
-        else if (index == 1) _navigateBasedOnAuthStatus(context, GeneralHospitalPage());
-        else if (index == 2) _navigateBasedOnAuthStatus(context, const HomeScreen(initialTabIndex: 1));
+        if (index == 0)
+          _navigateBasedOnAuthStatus(context, HomePage());
+        else if (index == 1)
+          _navigateBasedOnAuthStatus(context, GeneralHospitalPage());
+        else if (index == 2)
+          _navigateBasedOnAuthStatus(
+              context, const HomeScreen(initialTabIndex: 1));
         break;
     }
   }
@@ -205,9 +225,12 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 220),
                         curve: Curves.easeOut,
-                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 8),
                         decoration: BoxDecoration(
-                          color: isSelected ? Colors.white.withOpacity(0.08) : Colors.transparent,
+                          color: isSelected
+                              ? Colors.white.withOpacity(0.08)
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Column(
@@ -223,8 +246,11 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
                               item.label,
                               style: TextStyle(
                                 fontSize: 11,
-                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                color: isSelected ? Colors.white : Colors.white70,
+                                fontWeight: isSelected
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                color:
+                                    isSelected ? Colors.white : Colors.white70,
                                 letterSpacing: 0.2,
                               ),
                             ),

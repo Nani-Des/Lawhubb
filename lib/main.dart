@@ -4,12 +4,14 @@ import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'Auth/auth_service.dart';
@@ -20,6 +22,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'Services/config_service.dart';
+import 'Services/language_provider.dart';
 import 'booking_page.dart';
 
 // #region agent log helper
@@ -186,11 +189,18 @@ void main() async {
   }
   await WordFilterService().initialize();
   CallService().initialize();
-  runApp(const MyApp());
+
+  // Initialize LanguageProvider
+  final languageProvider = LanguageProvider();
+  await languageProvider.init();
+
+  runApp(MyApp(languageProvider: languageProvider));
 }
 
 // Global navigator key for notification navigation
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+final appLocalization = AppLocalizations.of(navigatorKey.currentContext!);
 
 Future<void> _requestLocationPermission() async {
   LocationPermission permission = await Geolocator.checkPermission();
@@ -209,7 +219,12 @@ Future<void> _requestLocationPermission() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final LanguageProvider languageProvider;
+
+  const MyApp({
+    super.key,
+    required this.languageProvider,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -237,17 +252,36 @@ class MyApp extends StatelessWidget {
             return userModel;
           },
         ),
+        ChangeNotifierProvider.value(value: languageProvider),
       ],
       child: ShowCaseWidget(
-        builder: (context) => MaterialApp(
-          title: 'nhap',
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
-            useMaterial3: true,
+        builder: (context) => Consumer<LanguageProvider>(
+          builder: (context, langProvider, _) => MaterialApp(
+            title: AppLocalizations.of(context)?.appTitle ?? 'LawHub',
+            locale: langProvider.currentLocale,
+
+            // 2. Define supported locales
+            supportedLocales: const [
+              Locale('en'), // English
+              Locale('es'), // Spanish
+              Locale('fr'), // French
+            ],
+
+            // 3. Add delegates
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
+              useMaterial3: true,
+            ),
+            home: const CustomTransitionScreen(),
+            debugShowCheckedModeBanner: false,
+            navigatorKey: navigatorKey, // Add navigator key
           ),
-          home: const CustomTransitionScreen(),
-          debugShowCheckedModeBanner: false,
-          navigatorKey: navigatorKey, // Add navigator key
         ),
       ),
     );
@@ -314,7 +348,7 @@ class _CustomTransitionScreenState extends State<CustomTransitionScreen>
       );
       // #endregion
     });
-    
+
     // Add failsafe timeout to force navigation even if Firebase/network is stuck
     Future.delayed(const Duration(seconds: 5), () {
       if (mounted) {
@@ -356,11 +390,19 @@ class _CustomTransitionScreenState extends State<CustomTransitionScreen>
   }
 }
 
-class LocationPermissionScreen extends StatelessWidget {
+class LocationPermissionScreen extends StatefulWidget {
   const LocationPermissionScreen({super.key});
 
   @override
+  State<LocationPermissionScreen> createState() =>
+      _LocationPermissionScreenState();
+}
+
+class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
+  @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
@@ -371,18 +413,20 @@ class LocationPermissionScreen extends StatelessWidget {
             children: [
               Image.asset('assets/Icons/Icon.png', width: 100, height: 100),
               const SizedBox(height: 20),
-              const Text(
-                'We Need Your Location',
-                style: TextStyle(
+              Text(
+                localizations?.locationPermissionTitle ??
+                    'We Need Your Location',
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 10),
-              const Text(
-                'To provide you with the best experience, we need your location to find Lawyers and Chambers near you.',
+              Text(
+                localizations?.locationPermissionDescription ??
+                    'To provide you with the best experience, we need your location to find Lawyers and Chambers near you.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16),
+                style: const TextStyle(fontSize: 16),
               ),
               const SizedBox(height: 30),
               ElevatedButton(
@@ -401,7 +445,8 @@ class LocationPermissionScreen extends StatelessWidget {
                     MaterialPageRoute(builder: (context) => const MainLayout()),
                   );
                 },
-                child: const Text('Allow Location Access'),
+                child: Text(localizations?.allowLocationButton ??
+                    'Allow Location Access'),
               ),
               const SizedBox(height: 10),
               TextButton(
@@ -411,7 +456,7 @@ class LocationPermissionScreen extends StatelessWidget {
                     MaterialPageRoute(builder: (context) => const MainLayout()),
                   );
                 },
-                child: const Text('Skip for Now'),
+                child: Text(localizations?.skipButton ?? 'Skip for Now'),
               ),
             ],
           ),

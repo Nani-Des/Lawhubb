@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 import '../../Emergency/emergency_page.dart';
 import '../../booking_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,6 +9,8 @@ class ServicesGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -17,9 +20,9 @@ class ServicesGrid extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Quick Services',
-                style: TextStyle(
+              Text(
+                localizations?.quickServices ?? 'Quick Services',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -27,7 +30,8 @@ class ServicesGrid extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(16),
@@ -36,7 +40,7 @@ class ServicesGrid extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  '24/7 Available',
+                  localizations?.available24_7 ?? '24/7 Available',
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.8),
                     fontSize: 11,
@@ -57,8 +61,10 @@ class ServicesGrid extends StatelessWidget {
             children: [
               _ServiceCard(
                 icon: Icons.emergency_outlined,
-                title: 'Emergency Legal Help',
-                subtitle: 'Immediate assistance',
+                title:
+                    localizations?.emergencyLegalHelp ?? 'Emergency Legal Help',
+                subtitle: localizations?.immediateAssistance ??
+                    'Immediate assistance',
                 onTap: () {
                   Navigator.push(
                     context,
@@ -70,21 +76,24 @@ class ServicesGrid extends StatelessWidget {
               ),
               _ServiceCard(
                 icon: Icons.calendar_today_outlined,
-                title: 'Book Consultation',
-                subtitle: 'Schedule with experts',
+                title: localizations?.bookConsultation ?? 'Book Consultation',
+                subtitle: localizations?.scheduleWithExperts ??
+                    'Schedule with experts',
                 onTap: () {
                   final userId = FirebaseAuth.instance.currentUser?.uid;
                   if (userId != null) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => BookingPage(currentUserId: userId),
+                        builder: (context) =>
+                            BookingPage(currentUserId: userId),
                       ),
                     );
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: const Text('Please sign in to book consultations'),
+                        content: Text(localizations?.pleaseSignInToBook ??
+                            'Please sign in to book consultations'),
                         backgroundColor: Colors.grey[800],
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(
@@ -97,12 +106,14 @@ class ServicesGrid extends StatelessWidget {
               ),
               _ServiceCard(
                 icon: Icons.forum_outlined,
-                title: 'Legal Community',
-                subtitle: 'Connect & discuss',
+                title: localizations?.legalCommunity ?? 'Legal Community',
+                subtitle:
+                    localizations?.connectAndDiscuss ?? 'Connect & discuss',
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Text('Use bottom navigation to access Social Hub'),
+                      content: Text(localizations?.useSocialHub ??
+                          'Use bottom navigation to access Social Hub'),
                       backgroundColor: Colors.grey[800],
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
@@ -114,12 +125,13 @@ class ServicesGrid extends StatelessWidget {
               ),
               _ServiceCard(
                 icon: Icons.menu_book_outlined,
-                title: 'Legal Resources',
-                subtitle: 'Browse library',
+                title: localizations?.legalResources ?? 'Legal Resources',
+                subtitle: localizations?.browseLibrary ?? 'Browse library',
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Text('Use bottom navigation to access Law Insights'),
+                      content: Text(localizations?.useLawInsights ??
+                          'Use bottom navigation to access Law Insights'),
                       backgroundColor: Colors.grey[800],
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
@@ -210,9 +222,7 @@ class _ServiceCardState extends State<_ServiceCard>
                 color: Colors.grey[900],
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: _isPressed
-                      ? Colors.grey[700]!
-                      : Colors.grey[800]!,
+                  color: _isPressed ? Colors.grey[700]! : Colors.grey[800]!,
                   width: 1,
                 ),
               ),
@@ -270,6 +280,3 @@ class _ServiceCardState extends State<_ServiceCard>
     );
   }
 }
-
-
-

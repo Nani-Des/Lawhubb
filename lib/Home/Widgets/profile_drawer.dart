@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 import 'package:nhap/Appointments/referral_form.dart';
 import 'package:nhap/Appointments/Referral%20screens/referral_details_page.dart';
 import '../../Auth/auth_screen.dart';
@@ -41,7 +42,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
-  
+
   DocumentSnapshot? _cachedUserData;
   bool _isCacheValid = false;
 
@@ -64,25 +65,40 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
     if (_isCacheValid && _cachedUserData != null) {
       return _cachedUserData!;
     }
-    
+
     // #region agent log
-    final logFile = File(r'c:\Users\HP\PROJECTS\flutter_projects\lawhubb\Lawhubb\.cursor\debug.log');
-    void debugLog(String hypothesisId, String message, Map<String, dynamic> data) {
+    final logFile = File(
+        r'c:\Users\HP\PROJECTS\flutter_projects\lawhubb\Lawhubb\.cursor\debug.log');
+    void debugLog(
+        String hypothesisId, String message, Map<String, dynamic> data) {
       try {
-        final entry = jsonEncode({'hypothesisId': hypothesisId, 'location': 'profile_drawer.dart:_fetchUserData', 'message': message, 'data': data, 'timestamp': DateTime.now().millisecondsSinceEpoch, 'sessionId': 'debug-session'}) + '\n';
+        final entry = jsonEncode({
+              'hypothesisId': hypothesisId,
+              'location': 'profile_drawer.dart:_fetchUserData',
+              'message': message,
+              'data': data,
+              'timestamp': DateTime.now().millisecondsSinceEpoch,
+              'sessionId': 'debug-session'
+            }) +
+            '\n';
         logFile.writeAsStringSync(entry, mode: FileMode.append);
       } catch (_) {}
     }
+
     // #endregion
     final User? currentUser = FirebaseAuth.instance.currentUser;
     // #region agent log
-    debugLog('A', 'Auth check in profile drawer', {'userIsNull': currentUser == null, 'userId': currentUser?.uid ?? 'null'});
+    debugLog('A', 'Auth check in profile drawer', {
+      'userIsNull': currentUser == null,
+      'userId': currentUser?.uid ?? 'null'
+    });
     // #endregion
     if (currentUser == null) {
       throw Exception('User not logged in');
     }
     // #region agent log
-    debugLog('A', 'Before Firestore query profile drawer', {'userId': currentUser.uid, 'collection': 'Users'});
+    debugLog('A', 'Before Firestore query profile drawer',
+        {'userId': currentUser.uid, 'collection': 'Users'});
     // #endregion
     try {
       final DocumentSnapshot userDoc = await FirebaseFirestore.instance
@@ -90,27 +106,30 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
           .doc(currentUser.uid)
           .get();
       // #region agent log
-      debugLog('C', 'Firestore query result profile drawer', {'docExists': userDoc.exists, 'userId': currentUser.uid});
+      debugLog('C', 'Firestore query result profile drawer',
+          {'docExists': userDoc.exists, 'userId': currentUser.uid});
       // #endregion
       if (!userDoc.exists || userDoc['Status'] != true) {
         throw Exception('User data is deleted or does not exist');
       }
-      
+
       // Cache the data
       _cachedUserData = userDoc;
       _isCacheValid = true;
-      
+
       return userDoc;
     } catch (e) {
       // #region agent log
-      debugLog('A', 'Firestore query FAILED profile drawer', {'error': e.toString(), 'userId': currentUser.uid});
+      debugLog('A', 'Firestore query FAILED profile drawer',
+          {'error': e.toString(), 'userId': currentUser.uid});
       // #endregion
       rethrow;
     }
   }
 
   Future<void> _pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         _imageFile = File(pickedFile.path);
@@ -152,14 +171,17 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
   }
 
   Future<void> _deleteUserAccount(BuildContext context) async {
+    final localizations = AppLocalizations.of(context);
     final User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('No user is currently logged in'),
+          content: Text(localizations?.noUserLoggedIn ??
+              'No user is currently logged in'),
           backgroundColor: Colors.grey[800],
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
       return;
@@ -179,10 +201,12 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
     if (isDoctor && await _requiresRecentLogin(currentUser)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Lawyers must log out and log in again to delete their account'),
+          content: Text(localizations?.lawyerReauthRequired ??
+              'Lawyers must log out and log in again to delete their account'),
           backgroundColor: Colors.grey[800],
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
       return;
@@ -191,20 +215,24 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
     final bool? confirmDelete = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete Account', style: TextStyle(color: Colors.white)),
+        title: Text(localizations?.deleteAccountTitle ?? 'Delete Account',
+            style: TextStyle(color: Colors.white)),
         content: Text(
-          'Are you sure you want to permanently delete your account? This action cannot be undone.',
+          localizations?.deleteAccountConfirmation ??
+              'Are you sure you want to permanently delete your account? This action cannot be undone.',
           style: TextStyle(color: Colors.grey[300]),
         ),
         backgroundColor: Colors.grey[900],
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel', style: TextStyle(color: Colors.white)),
+            child: Text(localizations?.cancelButton ?? 'Cancel',
+                style: TextStyle(color: Colors.white)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text(localizations?.deleteButton ?? 'Delete',
+                style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -215,7 +243,10 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
     }
 
     try {
-      await FirebaseFirestore.instance.collection('Users').doc(currentUser.uid).update({
+      await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(currentUser.uid)
+          .update({
         'Status': false,
         'Email': null,
       });
@@ -243,56 +274,76 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const AuthScreen()),
-              (route) => false,
+          (route) => false,
         );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Account deleted successfully. You are now logged out'),
+            content: Text(localizations?.accountDeletedSuccess ??
+                'Account deleted successfully. You are now logged out'),
             backgroundColor: Colors.grey[800],
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
         );
       }
     } catch (e) {
-      final String errorMessage = e is FirebaseAuthException ? e.message ?? 'Failed to disable account' : e.toString();
+      final String errorMessage = e is FirebaseAuthException
+          ? e.message ?? 'Failed to disable account'
+          : e.toString();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
             backgroundColor: Colors.grey[800],
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
         );
       }
     }
   }
 
-  Future<void> _checkAndNavigate(BuildContext context, {required bool isReferralForm}) async {
+  Future<void> _checkAndNavigate(BuildContext context,
+      {required bool isReferralForm}) async {
+    final localizations = AppLocalizations.of(context);
     final User? user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => const AuthScreen()));
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => const AuthScreen()));
       return;
     }
 
-    final DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('Users').doc(user.uid).get();
+    final DocumentSnapshot userDoc = await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(user.uid)
+        .get();
     final bool isDoctor = userDoc.exists && userDoc['Role'] == true;
     if (!isDoctor) {
       if (context.mounted) {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('Access Denied', style: TextStyle(color: Colors.white)),
+            title: Text(localizations?.accessDenied ?? 'Access Denied',
+                style: TextStyle(color: Colors.white)),
             content: Text(
-              "Only Lawyers can access ${isReferralForm ? 'Referral Form' : 'Referrals'}.",
+              (localizations?.onlyLawyersAccess ??
+                      'Only Lawyers can access {form}.')
+                  .toString()
+                  .replaceFirst(
+                      '{form}',
+                      isReferralForm
+                          ? (localizations?.referralForm ?? 'Referral Form')
+                          : (localizations?.referrals ?? 'Referrals')),
               style: TextStyle(color: Colors.grey[300]),
             ),
             backgroundColor: Colors.grey[900],
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text('OK', style: TextStyle(color: Colors.white)),
+                child: Text(localizations?.okButton ?? 'OK',
+                    style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -304,7 +355,9 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => isReferralForm ? const ReferralForm() : ReferralDetailsPage(userId: user.uid),
+        builder: (context) => isReferralForm
+            ? const ReferralForm()
+            : ReferralDetailsPage(userId: user.uid),
       ),
     );
   }
@@ -319,6 +372,8 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     if (!widget.showProfileDrawer) {
       return const SizedBox.shrink();
     }
@@ -330,28 +385,35 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
         child: Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.grey[900],  // Dark grey background
+            color: Colors.grey[900], // Dark grey background
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             boxShadow: const [
-              BoxShadow(color: Colors.black54, blurRadius: 12, offset: Offset(0, -6)),  // Darker shadow
+              BoxShadow(
+                  color: Colors.black54,
+                  blurRadius: 12,
+                  offset: Offset(0, -6)), // Darker shadow
             ],
           ),
           child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(10),
               child: Consumer<AuthService>(
-                builder: (BuildContext context, AuthService authService, Widget? _) {
-                  if (authService.currentUser == null || _userDataFuture == null) {
+                builder:
+                    (BuildContext context, AuthService authService, Widget? _) {
+                  if (authService.currentUser == null ||
+                      _userDataFuture == null) {
                     return const SizedBox.shrink();
                   }
 
                   return FutureBuilder<DocumentSnapshot>(
                     future: _userDataFuture,
-                    builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+                    builder: (BuildContext context,
+                        AsyncSnapshot<DocumentSnapshot> snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return Center(
                           child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),  // White progress indicator
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white), // White progress indicator
                           ),
                         );
                       }
@@ -361,7 +423,8 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.error_outline, color: Colors.red, size: 40),
+                              Icon(Icons.error_outline,
+                                  color: Colors.red, size: 40),
                               SizedBox(height: 8),
                               Text(
                                 'Error: ${snapshot.error}',
@@ -370,7 +433,8 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                               ),
                               TextButton(
                                 onPressed: _refreshUserData,
-                                child: Text('Retry', style: TextStyle(color: Colors.white)),
+                                child: Text(localizations?.retry ?? 'Retry',
+                                    style: TextStyle(color: Colors.white)),
                               ),
                             ],
                           ),
@@ -381,11 +445,14 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                         return const SizedBox.shrink();
                       }
 
-                      final Map<String, dynamic> userData = snapshot.data!.data() as Map<String, dynamic>;
-                      final String? userImageUrl = userData['User Pic'] as String?;
+                      final Map<String, dynamic> userData =
+                          snapshot.data!.data() as Map<String, dynamic>;
+                      final String? userImageUrl =
+                          userData['User Pic'] as String?;
                       final String? firstName = userData['Fname'] as String?;
                       final String? lastName = userData['Lname'] as String?;
-                      final String? mobileNumber = userData['Mobile Number'] as String?;
+                      final String? mobileNumber =
+                          userData['Mobile Number'] as String?;
                       final String? region = userData['Region'] as String?;
                       final String? email = userData['Email'] as String?;
 
@@ -412,8 +479,12 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                   }
                                 },
                                 child: Text(
-                                  _isEditing ? 'Save' : 'Edit',
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                  _isEditing
+                                      ? (localizations?.saveButton ?? 'Save')
+                                      : (localizations?.editButton ?? 'Edit'),
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ),
                             ],
@@ -425,14 +496,19 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                               children: [
                                 CircleAvatar(
                                   radius: 50,
-                                  backgroundColor: Colors.grey[800],  // Darker grey avatar background
+                                  backgroundColor: Colors.grey[
+                                      800], // Darker grey avatar background
                                   backgroundImage: _imageFile != null
                                       ? FileImage(_imageFile!)
-                                      : (userImageUrl != null && userImageUrl.isNotEmpty
-                                      ? NetworkImage(userImageUrl)
-                                      : null),
-                                  child: _imageFile == null && (userImageUrl == null || userImageUrl.isEmpty)
-                                      ? Icon(Icons.person, size: 50, color: Colors.grey[400])
+                                      : (userImageUrl != null &&
+                                              userImageUrl.isNotEmpty
+                                          ? NetworkImage(userImageUrl)
+                                          : null),
+                                  child: _imageFile == null &&
+                                          (userImageUrl == null ||
+                                              userImageUrl.isEmpty)
+                                      ? Icon(Icons.person,
+                                          size: 50, color: Colors.grey[400])
                                       : null,
                                 ),
                                 if (_isEditing)
@@ -442,7 +518,8 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                       color: Colors.white,
                                       shape: BoxShape.circle,
                                     ),
-                                    child: Icon(Icons.edit, color: Colors.black, size: 16),
+                                    child: Icon(Icons.edit,
+                                        color: Colors.black, size: 16),
                                   ),
                               ],
                             ),
@@ -452,119 +529,173 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                             duration: const Duration(milliseconds: 300),
                             child: _isEditing
                                 ? Card(
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              color: Colors.grey[850],  // Slightly lighter grey card
-                              child: Padding(
-                                padding: const EdgeInsets.all(10),
-                                child: Column(
-                                  children: [
-                                    TextFormField(
-                                      controller: _firstNameController,
-                                      decoration: InputDecoration(
-                                        labelText: 'First Name',
-                                        labelStyle: TextStyle(color: Colors.grey[400]),
-                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(color: Colors.grey[700]!),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(color: Colors.white),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
+                                    elevation: 2,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
+                                    color: Colors.grey[
+                                        850], // Slightly lighter grey card
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(10),
+                                      child: Column(
+                                        children: [
+                                          TextFormField(
+                                            controller: _firstNameController,
+                                            decoration: InputDecoration(
+                                              labelText:
+                                                  localizations?.firstName ??
+                                                      'First Name',
+                                              labelStyle: TextStyle(
+                                                  color: Colors.grey[400]),
+                                              border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8)),
+                                              enabledBorder: OutlineInputBorder(
+                                                borderSide: BorderSide(
+                                                    color: Colors.grey[700]!),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              focusedBorder: OutlineInputBorder(
+                                                borderSide: BorderSide(
+                                                    color: Colors.white),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                            ),
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                          SizedBox(height: 12),
+                                          TextFormField(
+                                            controller: _lastNameController,
+                                            decoration: InputDecoration(
+                                              labelText:
+                                                  localizations?.lastName ??
+                                                      'Last Name',
+                                              labelStyle: TextStyle(
+                                                  color: Colors.grey[400]),
+                                              border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8)),
+                                              enabledBorder: OutlineInputBorder(
+                                                borderSide: BorderSide(
+                                                    color: Colors.grey[700]!),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              focusedBorder: OutlineInputBorder(
+                                                borderSide: BorderSide(
+                                                    color: Colors.white),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                            ),
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                          SizedBox(height: 12),
+                                          TextFormField(
+                                            controller: _regionController,
+                                            decoration: InputDecoration(
+                                              labelText:
+                                                  localizations?.region ??
+                                                      'Region',
+                                              labelStyle: TextStyle(
+                                                  color: Colors.grey[400]),
+                                              border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8)),
+                                              enabledBorder: OutlineInputBorder(
+                                                borderSide: BorderSide(
+                                                    color: Colors.grey[700]!),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              focusedBorder: OutlineInputBorder(
+                                                borderSide: BorderSide(
+                                                    color: Colors.white),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                            ),
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                          SizedBox(height: 12),
+                                          TextFormField(
+                                            controller: _mobileController,
+                                            decoration: InputDecoration(
+                                              labelText:
+                                                  localizations?.mobileNumber ??
+                                                      'Mobile Number',
+                                              labelStyle: TextStyle(
+                                                  color: Colors.grey[400]),
+                                              border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8)),
+                                              enabledBorder: OutlineInputBorder(
+                                                borderSide: BorderSide(
+                                                    color: Colors.grey[700]!),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              focusedBorder: OutlineInputBorder(
+                                                borderSide: BorderSide(
+                                                    color: Colors.white),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                            ),
+                                            keyboardType: TextInputType.phone,
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                          SizedBox(height: 50),
+                                        ],
                                       ),
-                                      style: TextStyle(color: Colors.white),
                                     ),
-                                    SizedBox(height: 12),
-                                    TextFormField(
-                                      controller: _lastNameController,
-                                      decoration: InputDecoration(
-                                        labelText: 'Last Name',
-                                        labelStyle: TextStyle(color: Colors.grey[400]),
-                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(color: Colors.grey[700]!),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(color: Colors.white),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                      ),
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    SizedBox(height: 12),
-                                    TextFormField(
-                                      controller: _regionController,
-                                      decoration: InputDecoration(
-                                        labelText: 'Region',
-                                        labelStyle: TextStyle(color: Colors.grey[400]),
-                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(color: Colors.grey[700]!),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(color: Colors.white),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                      ),
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    SizedBox(height: 12),
-                                    TextFormField(
-                                      controller: _mobileController,
-                                      decoration: InputDecoration(
-                                        labelText: 'Mobile Number',
-                                        labelStyle: TextStyle(color: Colors.grey[400]),
-                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(color: Colors.grey[700]!),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(color: Colors.white),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                      ),
-                                      keyboardType: TextInputType.phone,
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    SizedBox(height: 50),
-                                  ],
-                                ),
-                              ),
-                            )
+                                  )
                                 : Column(
-                              children: [
-                                Text(
-                                  '$firstName $lastName',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,  // White text
+                                    children: [
+                                      Text(
+                                        '$firstName $lastName',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white, // White text
+                                        ),
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            email ??
+                                                (localizations?.noEmail ??
+                                                    'No email'),
+                                            style: TextStyle(
+                                                fontSize: 8,
+                                                color: Colors.grey[400]),
+                                          ),
+                                          Text(
+                                            '  ||  ',
+                                            style: TextStyle(
+                                                fontSize: 8,
+                                                color: Colors.grey[600]),
+                                          ),
+                                          Text(
+                                            region ??
+                                                (localizations?.noRegion ??
+                                                    'No region'),
+                                            style: TextStyle(
+                                                fontSize: 8,
+                                                color: Colors.grey[400]),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      email ?? 'No email',
-                                      style: TextStyle(fontSize: 8, color: Colors.grey[400]),
-                                    ),
-                                    Text(
-                                      '  ||  ',
-                                      style: TextStyle(fontSize: 8, color: Colors.grey[600]),
-                                    ),
-                                    Text(
-                                      region ?? 'No region',
-                                      style: TextStyle(fontSize: 8, color: Colors.grey[400]),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
                           ),
                           if (!_isEditing)
                             SingleChildScrollView(
@@ -574,15 +705,18 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                 children: [
                                   _buildInfoBox(
                                     icon: Icons.message_outlined,
-                                    label: 'Bookings',
+                                    label:
+                                        localizations?.bookings ?? 'Bookings',
                                     value: mobileNumber,
                                     onTap: () {
-                                      final User? currentUser = FirebaseAuth.instance.currentUser;
+                                      final User? currentUser =
+                                          FirebaseAuth.instance.currentUser;
                                       if (currentUser != null) {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => BookingPage(currentUserId: currentUser.uid),
+                                            builder: (context) => BookingPage(
+                                                currentUserId: currentUser.uid),
                                           ),
                                         );
                                       }
@@ -591,16 +725,20 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                   SizedBox(width: 20),
                                   _buildInfoBox(
                                     icon: Icons.person_add,
-                                    label: 'Refer A Client',
+                                    label: localizations?.referAClient ??
+                                        'Refer A Client',
                                     value: region,
-                                    onTap: () => _checkAndNavigate(context, isReferralForm: true),
+                                    onTap: () => _checkAndNavigate(context,
+                                        isReferralForm: true),
                                   ),
                                   SizedBox(width: 20),
                                   _buildInfoBox(
                                     icon: Icons.description,
-                                    label: 'Referrals',
+                                    label:
+                                        localizations?.referrals ?? 'Referrals',
                                     value: region,
-                                    onTap: () => _checkAndNavigate(context, isReferralForm: false),
+                                    onTap: () => _checkAndNavigate(context,
+                                        isReferralForm: false),
                                   ),
                                 ],
                               ),
@@ -620,21 +758,30 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                   color: Colors.grey[800],
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: const Icon(Icons.block, color: Colors.white, size: 20),
+                                child: const Icon(Icons.block,
+                                    color: Colors.white, size: 20),
                               ),
-                              title: const Text(
-                                'Blocked Users',
-                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15),
+                              title: Text(
+                                localizations?.blockedUsers ?? 'Blocked Users',
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15),
                               ),
                               subtitle: Text(
-                                'Manage blocked users',
-                                style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                                localizations?.manageBlockedUsers ??
+                                    'Manage blocked users',
+                                style: TextStyle(
+                                    color: Colors.grey[500], fontSize: 12),
                               ),
-                              trailing: Icon(Icons.arrow_forward_ios, color: Colors.grey[600], size: 16),
+                              trailing: Icon(Icons.arrow_forward_ios,
+                                  color: Colors.grey[600], size: 16),
                               onTap: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (context) => const BlockedUsersPage()),
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const BlockedUsersPage()),
                                 );
                               },
                             ),
@@ -644,26 +791,38 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
                               Semantics(
-                                label: 'Delete Account',
+                                label: localizations?.deleteAccountTitle ??
+                                    'Delete Account',
                                 child: ElevatedButton.icon(
                                   onPressed: () => _deleteUserAccount(context),
-                                  icon: Icon(Icons.delete_forever, size: 18, color: Colors.white),
-                                  label: Text('Delete', style: TextStyle(color: Colors.white)),
+                                  icon: Icon(Icons.delete_forever,
+                                      size: 18, color: Colors.white),
+                                  label: Text(
+                                      localizations?.deleteButtonLabel ??
+                                          'Delete',
+                                      style: TextStyle(color: Colors.white)),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.red,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8)),
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 12),
                                   ),
                                 ),
                               ),
                               Semantics(
-                                label: 'Logout',
+                                label: localizations?.logoutButtonLabel ??
+                                    'Logout',
                                 child: ElevatedButton.icon(
                                   onPressed: () async {
                                     try {
                                       await GoogleSignIn().signOut();
-                                      await Provider.of<AuthService>(context, listen: false).signOut();
-                                      Provider.of<UserModel>(context, listen: false).clearUserId();
+                                      await Provider.of<AuthService>(context,
+                                              listen: false)
+                                          .signOut();
+                                      Provider.of<UserModel>(context,
+                                              listen: false)
+                                          .clearUserId();
                                       setState(() {
                                         _userDataFuture = null;
                                         _imageFile = null;
@@ -672,29 +831,39 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                       if (context.mounted) {
                                         Navigator.pushAndRemoveUntil(
                                           context,
-                                          MaterialPageRoute(builder: (context) => HomePage()),
-                                              (route) => false,
+                                          MaterialPageRoute(
+                                              builder: (context) => HomePage()),
+                                          (route) => false,
                                         );
                                       }
                                     } catch (e) {
                                       if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
                                           SnackBar(
-                                            content: Text('Logout failed: $e'),
+                                            content: Text(
+                                                '${localizations?.logoutFailed.toString().replaceFirst('{error}', e.toString()) ?? "Logout failed: $e"}'),
                                             backgroundColor: Colors.grey[800],
                                             behavior: SnackBarBehavior.floating,
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10)),
                                           ),
                                         );
                                       }
                                     }
                                   },
-                                  icon: Icon(Icons.logout, size: 18, color: Colors.black),
-                                  label: Text('Logout', style: TextStyle(color: Colors.black)),
+                                  icon: Icon(Icons.logout,
+                                      size: 18, color: Colors.black),
+                                  label: Text(
+                                      localizations?.logoutButton ?? 'Logout',
+                                      style: TextStyle(color: Colors.black)),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8)),
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 12),
                                   ),
                                 ),
                               ),
@@ -727,7 +896,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
         width: 100,
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.grey[850],  // Slightly lighter grey
+          color: Colors.grey[850], // Slightly lighter grey
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -740,11 +909,17 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: Colors.white, size: 24, semanticLabel: label),  // White icon
+            Icon(icon,
+                color: Colors.white,
+                size: 24,
+                semanticLabel: label), // White icon
             SizedBox(height: 8),
             Text(
               label,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 4),
