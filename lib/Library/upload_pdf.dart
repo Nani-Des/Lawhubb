@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 
 class UploadPDFPage extends StatefulWidget {
   const UploadPDFPage({super.key});
@@ -37,15 +38,16 @@ class _UploadPDFPageState extends State<UploadPDFPage> {
       } else {
         // ⚠️ Show error if unsupported file is chosen
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select a PDF or Word document'),
+          SnackBar(
+            content: Text(
+                AppLocalizations.of(context)?.selectPdfOrWordDocument ??
+                    'Please select a PDF or Word document'),
             backgroundColor: Colors.redAccent,
           ),
         );
       }
     }
   }
-
 
   /// Upload to Firebase Storage and save metadata
   Future<void> uploadFile() async {
@@ -58,8 +60,7 @@ class _UploadPDFPageState extends State<UploadPDFPage> {
     final fileName =
         '${DateTime.now().millisecondsSinceEpoch}_${title.replaceAll(" ", "_")}.$fileExtension';
 
-    final ref =
-    FirebaseStorage.instance.ref().child('library_files/$fileName');
+    final ref = FirebaseStorage.instance.ref().child('library_files/$fileName');
 
     await ref.putFile(selectedFile!);
     final url = await ref.getDownloadURL();
@@ -78,7 +79,9 @@ class _UploadPDFPageState extends State<UploadPDFPage> {
     if (mounted) {
       setState(() => uploading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Uploaded Successfully!')),
+        SnackBar(
+            content: Text(AppLocalizations.of(context)?.uploadedSuccessfully ??
+                'Uploaded Successfully!')),
       );
       Navigator.pop(context);
     }
@@ -89,56 +92,79 @@ class _UploadPDFPageState extends State<UploadPDFPage> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text("Upload Document"),
+        title: Text(
+            AppLocalizations.of(context)?.uploadDocument ?? "Upload Document"),
         backgroundColor: Colors.redAccent,
         centerTitle: true,
       ),
       body: uploading
-          ? const Center(child: CircularProgressIndicator(color: Colors.redAccent))
+          ? const Center(
+              child: CircularProgressIndicator(color: Colors.redAccent))
           : Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              ElevatedButton.icon(
-                onPressed: pickFile,
-                icon: const Icon(Icons.file_present, color: Colors.white),
-                label: Text(
-                  selectedFile == null
-                      ? "Select PDF or Word File"
-                      : "Selected: ${fileExtension.toUpperCase()}",
-                  style: const TextStyle(color: Colors.white),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: ListView(
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: pickFile,
+                      icon: const Icon(Icons.file_present, color: Colors.white),
+                      label: Text(
+                        selectedFile == null
+                            ? (AppLocalizations.of(context)
+                                    ?.selectPdfOrWordFile ??
+                                "Select PDF or Word File")
+                            : (AppLocalizations.of(context)
+                                    ?.selected(fileExtension.toUpperCase()) ??
+                                "Selected: ${fileExtension.toUpperCase()}"),
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    buildField(
+                        AppLocalizations.of(context)?.fieldTitle ?? "Title",
+                        (v) => title = v!),
+                    buildField(
+                        AppLocalizations.of(context)?.fieldAuthor ?? "Author",
+                        (v) => author = v!),
+                    buildField(
+                        AppLocalizations.of(context)?.fieldCategory ??
+                            "Category",
+                        (v) => category = v!),
+                    buildField(
+                        AppLocalizations.of(context)?.fieldDescription ??
+                            "Preface / Description",
+                        (v) => description = v!,
+                        lines: 3),
+                    buildField(
+                        AppLocalizations.of(context)?.fieldPrice ??
+                            "Price (GHS)",
+                        (v) => price = double.tryParse(v ?? '') ?? 0),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: uploadFile,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: Text(
+                          AppLocalizations.of(context)?.uploadButton ??
+                              "Upload",
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 16)),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              buildField("Title", (v) => title = v!),
-              buildField("Author", (v) => author = v!),
-              buildField("Category", (v) => category = v!),
-              buildField("Preface / Description", (v) => description = v!, lines: 3),
-              buildField("Price (GHS)", (v) => price = double.tryParse(v ?? '') ?? 0),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: uploadFile,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                ),
-                child: const Text("Upload",
-                    style: TextStyle(color: Colors.white, fontSize: 16)),
-              ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 
@@ -156,7 +182,9 @@ class _UploadPDFPageState extends State<UploadPDFPage> {
         ),
         style: const TextStyle(color: Colors.white),
         maxLines: lines,
-        validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+        validator: (v) => (v == null || v.isEmpty)
+            ? (AppLocalizations.of(context)?.required ?? 'Required')
+            : null,
         onSaved: onSaved,
       ),
     );

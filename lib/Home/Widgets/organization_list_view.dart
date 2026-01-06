@@ -6,6 +6,7 @@ import 'package:nhap/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 import '../../Auth/auth_screen.dart';
 import '../../Hospital/hospital_page.dart';
 import '../../Hospital/hospital_profile_screen.dart';
@@ -57,7 +58,9 @@ class _OrganizationListViewState extends State<OrganizationListView> {
         _isOffline = results.contains(ConnectivityResult.none);
       });
       if (!_isOffline) {
-        _showModernSnackBar(context, "Back online, syncing data...");
+        final localizations = AppLocalizations.of(context);
+        _showModernSnackBar(context,
+            localizations?.backOnlineSyncing ?? "Back online, syncing data...");
       }
     });
   }
@@ -112,6 +115,7 @@ class _OrganizationListViewState extends State<OrganizationListView> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     return Column(
       children: [
         if (widget.showSearchBar)
@@ -119,7 +123,8 @@ class _OrganizationListViewState extends State<OrganizationListView> {
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'Search by name or city...',
+                hintText: localizations?.searchByNameOrCity ??
+                    'Search by name or city...',
                 hintStyle:
                     TextStyle(color: Colors.grey[400]), // Light grey hint text
                 prefixIcon:
@@ -152,7 +157,10 @@ class _OrganizationListViewState extends State<OrganizationListView> {
                                     Colors.white)), // White progress indicator
                             const SizedBox(height: 16),
                             Text(
-                              "Loading ${_isOffline ? ' (Offline)' : ''}...",
+                              _isOffline
+                                  ? (localizations?.loadingOffline ??
+                                      "Loading (Offline)...")
+                                  : (localizations?.loading ?? "Loading..."),
                               style: const TextStyle(
                                   fontSize: 16,
                                   color: Colors.white), // White text
@@ -164,7 +172,9 @@ class _OrganizationListViewState extends State<OrganizationListView> {
 
                     if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                       return Center(
-                          child: Text(appLocalization!.noChamberFound,
+                          child: Text(
+                              localizations?.noChamberFound ??
+                                  'No Chamber found',
                               style: TextStyle(
                                   color: Colors.white))); // White text
                     }
@@ -175,8 +185,10 @@ class _OrganizationListViewState extends State<OrganizationListView> {
                       return {
                         'id': doc.id,
                         'Chamber Name': data['Chamber Name'] ?? '',
-                        'City': data['City'] ?? 'Unknown City',
-                        'Contact': data['Contact'] ?? 'No Contact Info',
+                        'City': data['City'] ??
+                            (localizations?.unknownCity ?? 'Unknown City'),
+                        'Contact': data['Contact'] ??
+                            (localizations?.noContactInfo ?? 'No Contact Info'),
                         'Background Image':
                             data['Background Image']?.isNotEmpty == true
                                 ? data['Background Image']
@@ -219,9 +231,11 @@ class _OrganizationListViewState extends State<OrganizationListView> {
                             return HospitalCard(
                               backgroundImage: backgroundImage,
                               hospitalName: hospitalData['Chamber Name'] ??
-                                  'Unknown Chamber',
-                              contact:
-                                  hospitalData['Contact'] ?? 'No Contact Info',
+                                  (localizations?.unknownChamber ??
+                                      'Unknown Chamber'),
+                              contact: hospitalData['Contact'] ??
+                                  (localizations?.noContactInfo ??
+                                      'No Contact Info'),
                               hospitalId: hospital.id,
                               onTap: () =>
                                   _navigateToHospitalPage(context, hospital.id),
@@ -541,9 +555,9 @@ class HospitalCard extends StatelessWidget {
                                       color: Colors.white,
                                       size: 16,
                                     ),
-                                    const SizedBox(width: 6),
-                                    const Text(
-                                      "Reviews",
+                                    Text(
+                                      AppLocalizations.of(context)?.reviews ??
+                                          "Reviews",
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 14,

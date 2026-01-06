@@ -29,7 +29,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chambers => 'Cabinets';
 
   @override
-  String get lawInsights => 'Actualités Juridiques';
+  String get lawInsights => 'Aperçus Juridiques';
 
   @override
   String get socialHubb => 'SocialHubb';
@@ -387,4 +387,163 @@ class AppLocalizationsFr extends AppLocalizations {
   String logoutFailed(Object error) {
     return 'Déconnexion échouée : $error';
   }
+
+  @override
+  String get legalChambers => 'Cabinets Juridiques';
+
+  @override
+  String get aiAssistant => 'Assistant IA';
+
+  @override
+  String get viewReferrals => 'Voir les Références';
+
+  @override
+  String get searchChambersPlaceholder =>
+      'Rechercher des cabinets et avocats...';
+
+  @override
+  String get resources => 'Ressources';
+
+  @override
+  String get searchByNameOrCity => 'Rechercher par nom ou ville...';
+
+  @override
+  String get backOnlineSyncing =>
+      'De retour en ligne, synchronisation des données...';
+
+  @override
+  String get loadingOffline => 'Chargement (Hors ligne)...';
+
+  @override
+  String get loading => 'Chargement...';
+
+  @override
+  String get unknownCity => 'Ville inconnue';
+
+  @override
+  String get noContactInfo => 'Aucune info de contact';
+
+  @override
+  String get unknownChamber => 'Cabinet inconnu';
+
+  @override
+  String get reviews => 'Avis';
+
+  @override
+  String get welcome => 'Bienvenue';
+
+  @override
+  String get getALawyer => 'Obtenir un Avocat';
+
+  @override
+  String get tapToExplore => 'Appuyez pour explorer';
+
+  @override
+  String get chamberEvents => 'Événements du Cabinet';
+
+  @override
+  String get chamberPractices => 'Pratiques du Cabinet';
+
+  @override
+  String get tap => 'Appuyez';
+
+  @override
+  String get tapHereToAddHospital => 'Appuyez ici pour ajouter un cabinet';
+
+  @override
+  String get loadingHospital => 'Chargement du Cabinet..';
+
+  @override
+  String get loadingDots => 'Chargement ..';
+
+  @override
+  String get searchDocuments => 'Rechercher titre, auteur, catégorie...';
+
+  @override
+  String get continueReading => 'Continuer la Lecture';
+
+  @override
+  String get allDocuments => 'Tous les Documents';
+
+  @override
+  String items(Object count) {
+    return '$count éléments';
+  }
+
+  @override
+  String get unknown => 'Inconnu';
+
+  @override
+  String get untitled => 'Sans titre';
+
+  @override
+  String get free => 'Gratuit';
+
+  @override
+  String get complete => 'complète';
+
+  @override
+  String get myNotes => 'Mes Notes';
+
+  @override
+  String get noNotesYet => 'Pas de notes encore';
+
+  @override
+  String notes(Object count) {
+    return '$count notes';
+  }
+
+  @override
+  String page(Object number) {
+    return 'Page $number';
+  }
+
+  @override
+  String books(Object count) {
+    return '$count Livres';
+  }
+
+  @override
+  String streak(Object days) {
+    return 'Série ${days}j';
+  }
+
+  @override
+  String get uploadDocument => 'Télécharger un Document';
+
+  @override
+  String get selectPdfOrWordFile => 'Sélectionnez un fichier PDF ou Word';
+
+  @override
+  String selected(Object extension) {
+    return 'Sélectionné : $extension';
+  }
+
+  @override
+  String get fieldTitle => 'Titre';
+
+  @override
+  String get fieldAuthor => 'Auteur';
+
+  @override
+  String get fieldCategory => 'Catégorie';
+
+  @override
+  String get fieldDescription => 'Préface / Description';
+
+  @override
+  String get fieldPrice => 'Prix (GHS)';
+
+  @override
+  String get uploadButton => 'Télécharger';
+
+  @override
+  String get required => 'Obligatoire';
+
+  @override
+  String get selectPdfOrWordDocument =>
+      'Veuillez sélectionner un document PDF ou Word';
+
+  @override
+  String get uploadedSuccessfully => 'Téléchargement réussi !';
 }

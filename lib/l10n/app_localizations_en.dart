@@ -378,4 +378,160 @@ class AppLocalizationsEn extends AppLocalizations {
   String logoutFailed(Object error) {
     return 'Logout failed: $error';
   }
+
+  @override
+  String get legalChambers => 'Legal Chambers';
+
+  @override
+  String get aiAssistant => 'AI Assistant';
+
+  @override
+  String get viewReferrals => 'View Referrals';
+
+  @override
+  String get searchChambersPlaceholder => 'Search legal chambers & lawyers...';
+
+  @override
+  String get resources => 'Resources';
+
+  @override
+  String get searchByNameOrCity => 'Search by name or city...';
+
+  @override
+  String get backOnlineSyncing => 'Back online, syncing data...';
+
+  @override
+  String get loadingOffline => 'Loading (Offline)...';
+
+  @override
+  String get loading => 'Loading...';
+
+  @override
+  String get unknownCity => 'Unknown City';
+
+  @override
+  String get noContactInfo => 'No Contact Info';
+
+  @override
+  String get unknownChamber => 'Unknown Chamber';
+
+  @override
+  String get reviews => 'Reviews';
+
+  @override
+  String get welcome => 'Welcome';
+
+  @override
+  String get getALawyer => 'Get A Lawyer';
+
+  @override
+  String get tapToExplore => 'Tap to explore';
+
+  @override
+  String get chamberEvents => 'Chamber Events';
+
+  @override
+  String get chamberPractices => 'Chamber Practices';
+
+  @override
+  String get tap => 'Tap';
+
+  @override
+  String get tapHereToAddHospital => 'Tap Here To Add Hospital';
+
+  @override
+  String get loadingHospital => 'Loading Hospital..';
+
+  @override
+  String get loadingDots => 'Loading ..';
+
+  @override
+  String get searchDocuments => 'Search title, author, category...';
+
+  @override
+  String get continueReading => 'Continue Reading';
+
+  @override
+  String get allDocuments => 'All Documents';
+
+  @override
+  String items(Object count) {
+    return '$count items';
+  }
+
+  @override
+  String get unknown => 'Unknown';
+
+  @override
+  String get untitled => 'Untitled';
+
+  @override
+  String get free => 'Free';
+
+  @override
+  String get complete => 'complete';
+
+  @override
+  String get myNotes => 'My Notes';
+
+  @override
+  String get noNotesYet => 'No notes yet';
+
+  @override
+  String notes(Object count) {
+    return '$count notes';
+  }
+
+  @override
+  String page(Object number) {
+    return 'Page $number';
+  }
+
+  @override
+  String books(Object count) {
+    return '$count Books';
+  }
+
+  @override
+  String streak(Object days) {
+    return 'Streak ${days}d';
+  }
+
+  @override
+  String get uploadDocument => 'Upload Document';
+
+  @override
+  String get selectPdfOrWordFile => 'Select PDF or Word File';
+
+  @override
+  String selected(Object extension) {
+    return 'Selected: $extension';
+  }
+
+  @override
+  String get fieldTitle => 'Title';
+
+  @override
+  String get fieldAuthor => 'Author';
+
+  @override
+  String get fieldCategory => 'Category';
+
+  @override
+  String get fieldDescription => 'Preface / Description';
+
+  @override
+  String get fieldPrice => 'Price (GHS)';
+
+  @override
+  String get uploadButton => 'Upload';
+
+  @override
+  String get required => 'Required';
+
+  @override
+  String get selectPdfOrWordDocument => 'Please select a PDF or Word document';
+
+  @override
+  String get uploadedSuccessfully => 'Uploaded Successfully!';
 }
