@@ -472,12 +472,25 @@ class _EmergencyPageState extends State<EmergencyPage> with SingleTickerProvider
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.black,
-        leading: Icon(
-          _isOffline ? Icons.cloud_off : Icons.cloud_done,
-          color: Colors.white,
-          size: 24,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
         ),
-        title: SizedBox.shrink(), // Optional: removes extra space if no title is needed
+        title: Row(
+          children: [
+            Icon(
+              _isOffline ? Icons.cloud_off : Icons.cloud_done,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            if (_isOffline)
+              const Text(
+                "Offline",
+                style: TextStyle(color: Colors.white, fontSize: 14),
+              ),
+          ],
+        ),
         actions: [
           // Your existing Police, Fire, and Ambulance buttons here
           Padding(

@@ -42,7 +42,15 @@ class _MainLayoutState extends State<MainLayout> {
       case 1: // Home setup (default)
         switch (index) {
           case 0:
-            return const HomePage(); // Home
+            return Navigator(
+              onGenerateRoute: (settings) {
+                return MaterialPageRoute(
+                  builder: (_) => HomePage(
+                    onTabChange: _onItemTapped,
+                  ),
+                );
+              },
+            );
           case 1:
             return ChambersContent(); // Chambers
           case 2:
@@ -50,43 +58,107 @@ class _MainLayoutState extends State<MainLayout> {
           case 3:
             return const SocialContent(initialTabIndex: 0); // SocialHubb
           default:
-            return const HomePage();
+            return Navigator(
+              onGenerateRoute: (settings) {
+                return MaterialPageRoute(
+                  builder: (_) => HomePage(
+                    onTabChange: _onItemTapped,
+                  ),
+                );
+              },
+            );
         }
       case 2: // Chambers setup
         switch (index) {
           case 0:
-            return const HomePage(); // Home
+            return Navigator(
+              onGenerateRoute: (settings) {
+                return MaterialPageRoute(
+                  builder: (_) => HomePage(
+                    onTabChange: _onItemTapped,
+                  ),
+                );
+              },
+            );
           case 1:
             return LibraryPage(); // Law Insights
           case 2:
             return const SocialContent(initialTabIndex: 1); // SocialHubb
           default:
-            return const HomePage();
+            return Navigator(
+              onGenerateRoute: (settings) {
+                return MaterialPageRoute(
+                  builder: (_) => HomePage(
+                    onTabChange: _onItemTapped,
+                  ),
+                );
+              },
+            );
         }
       case 3: // Social setup
         switch (index) {
           case 0:
-            return const HomePage(); // Home
+            return Navigator(
+              onGenerateRoute: (settings) {
+                return MaterialPageRoute(
+                  builder: (_) => HomePage(
+                    onTabChange: _onItemTapped,
+                  ),
+                );
+              },
+            );
           case 1:
             return LibraryPage(); // Law Insights
           case 2:
             return ChambersContent(); // Chambers
           default:
-            return const HomePage();
+            return Navigator(
+              onGenerateRoute: (settings) {
+                return MaterialPageRoute(
+                  builder: (_) => HomePage(
+                    onTabChange: _onItemTapped,
+                  ),
+                );
+              },
+            );
         }
       case 5: // Law insights setup
         switch (index) {
           case 0:
-            return const HomePage(); // Home
+            return Navigator(
+              onGenerateRoute: (settings) {
+                return MaterialPageRoute(
+                  builder: (_) => HomePage(
+                    onTabChange: _onItemTapped,
+                  ),
+                );
+              },
+            );
           case 1:
             return ChambersContent(); // Chambers
           case 2:
             return const SocialContent(initialTabIndex: 1); // SocialHubb
           default:
-            return const HomePage();
+            return Navigator(
+              onGenerateRoute: (settings) {
+                return MaterialPageRoute(
+                  builder: (_) => HomePage(
+                    onTabChange: _onItemTapped,
+                  ),
+                );
+              },
+            );
         }
       default:
-        return const HomePage();
+        return Navigator(
+          onGenerateRoute: (settings) {
+            return MaterialPageRoute(
+              builder: (_) => HomePage(
+                onTabChange: _onItemTapped,
+              ),
+            );
+          },
+        );
     }
   }
 

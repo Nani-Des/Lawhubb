@@ -5,7 +5,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../Library/library_page.dart';
 
 class ServicesGrid extends StatelessWidget {
-  const ServicesGrid({super.key});
+  final Function(int)? onTabChange;
+
+  const ServicesGrid({
+    super.key,
+    this.onTabChange,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -101,21 +106,17 @@ class ServicesGrid extends StatelessWidget {
                 title: 'Legal Community',
                 subtitle: 'Connect & discuss',
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Use bottom navigation to access Social Hub'),
-                      backgroundColor: Colors.grey[800],
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  );
+                  if (onTabChange != null) {
+                    // Switch to Social Hub (Index 3 usually, but depends on setup. MainLayout says Case 1 Index 3 is SocialHubb)
+                    // Let's assume default setup for now, or check usage.
+                    // MainLayout: case 1 -> index 3 is Social content.
+                    onTabChange!(3);
+                  }
                 },
               ),
               _ServiceCard(
                 icon: Icons.menu_book_outlined,
-                title: 'Legal Resources',
+                title: 'Law Insights',
                 subtitle: 'Browse library',
                 onTap: () {
                   Navigator.push(

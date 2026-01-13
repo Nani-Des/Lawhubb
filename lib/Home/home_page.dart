@@ -10,7 +10,12 @@ import 'Widgets/redesigned_home_content.dart';
 import 'Widgets/app_bar.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final Function(int)? onTabChange;
+
+  const HomePage({
+    super.key,
+    this.onTabChange,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -167,7 +172,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           children: [
             Container(
               color: Colors.black,
-              child: const RedesignedHomeContent(),
+              child: RedesignedHomeContent(
+                onTabChange: widget.onTabChange,
+                currentUser: currentUser,
+              ),
             ),
             if (_drawerController != null && _slideAnimation != null)
               ProfileDrawer(

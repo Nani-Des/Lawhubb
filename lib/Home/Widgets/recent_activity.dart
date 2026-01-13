@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
+import '../../booking_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../Library/library_page.dart';
 
 class RecentActivity extends StatefulWidget {
-  const RecentActivity({super.key});
+  final Function(int)? onTabChange;
+
+  const RecentActivity({
+    super.key,
+    this.onTabChange,
+  });
 
   @override
   State<RecentActivity> createState() => _RecentActivityState();
@@ -102,33 +110,63 @@ class _RecentActivityState extends State<RecentActivity>
             ),
             child: Column(
               children: [
-                SlideTransition(
-                  position: _slideAnimations[0],
-                  child: _ActivityItem(
-                    icon: Icons.calendar_today_outlined,
-                    title: 'Consultation Scheduled',
-                    subtitle: 'With Adv. Sarah Johnson - Tomorrow 2:00 PM',
-                    time: '2 hours ago',
+                GestureDetector(
+                  onTap: () {
+                    final userId = FirebaseAuth.instance.currentUser?.uid;
+                    if (userId != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BookingPage(currentUserId: userId),
+                        ),
+                      );
+                    }
+                  },
+                  child: SlideTransition(
+                    position: _slideAnimations[0],
+                    child: _ActivityItem(
+                      icon: Icons.calendar_today_outlined,
+                      title: 'Consultation Scheduled',
+                      subtitle: 'With Adv. Sarah Johnson - Tomorrow 2:00 PM',
+                      time: '2 hours ago',
+                    ),
                   ),
                 ),
                 _buildDivider(),
-                SlideTransition(
-                  position: _slideAnimations[1],
-                  child: _ActivityItem(
-                    icon: Icons.message_outlined,
-                    title: 'New Message',
-                    subtitle: 'From Legal Community Forum',
-                    time: '5 hours ago',
+                GestureDetector(
+                  onTap: () {
+                    if (widget.onTabChange != null) {
+                       widget.onTabChange!(3); // Social/Chats
+                    }
+                  },
+                  child: SlideTransition(
+                    position: _slideAnimations[1],
+                    child: _ActivityItem(
+                      icon: Icons.message_outlined,
+                      title: 'New Message',
+                      subtitle: 'From Legal Community Forum',
+                      time: '5 hours ago',
+                    ),
                   ),
                 ),
                 _buildDivider(),
-                SlideTransition(
-                  position: _slideAnimations[2],
-                  child: _ActivityItem(
-                    icon: Icons.bookmark_outline,
-                    title: 'Document Saved',
-                    subtitle: 'Contract Template - Employment Law',
-                    time: '1 day ago',
+                GestureDetector(
+                  onTap: () {
+                     // Navigate to Library/Saved Documents
+                     // For now, let's navigate to LibraryPage
+                     Navigator.push(
+                       context,
+                       MaterialPageRoute(builder: (context) => LibraryPage()),
+                     );
+                  },
+                  child: SlideTransition(
+                    position: _slideAnimations[2],
+                    child: _ActivityItem(
+                      icon: Icons.bookmark_outline,
+                      title: 'Document Saved',
+                      subtitle: 'Contract Template - Employment Law',
+                      time: '1 day ago',
+                    ),
                   ),
                 ),
               ],
