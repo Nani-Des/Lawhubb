@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../Emergency/emergency_page.dart';
 import '../../booking_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../Library/library_page.dart';
 
 class ServicesGrid extends StatelessWidget {
   const ServicesGrid({super.key});
@@ -117,14 +118,10 @@ class ServicesGrid extends StatelessWidget {
                 title: 'Legal Resources',
                 subtitle: 'Browse library',
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Use bottom navigation to access Law Insights'),
-                      backgroundColor: Colors.grey[800],
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => LibraryPage(),
                     ),
                   );
                 },

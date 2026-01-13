@@ -4,6 +4,7 @@ import 'Library/library_page.dart';
 import 'wrappers/chambers_content.dart';
 import 'wrappers/social_content.dart';
 import 'Home/Widgets/custom_bottom_navbar.dart';
+import 'package:nhap/ChatModule/chat_module.dart';
 
 class MainLayout extends StatefulWidget {
   final int initialIndex;
@@ -45,7 +46,7 @@ class _MainLayoutState extends State<MainLayout> {
           case 1:
             return ChambersContent(); // Chambers
           case 2:
-            return LibraryPage(); // Law Insights
+            return const ChatHomePage(); // Chats
           case 3:
             return const SocialContent(initialTabIndex: 0); // SocialHubb
           default:

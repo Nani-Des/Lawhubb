@@ -6,6 +6,9 @@ import '../../Auth/auth_screen.dart';
 import '../../Forums/Chat/HomeScreen.dart';
 import '../../Hospital/general_hospital_page.dart';
 import '../../Library/library_page.dart';
+import '../../ChatModule/chat_module.dart';
+import '../../wrappers/chambers_content.dart';
+import '../../wrappers/social_content.dart';
 
 class CustomBottomNavBar extends StatefulWidget {
   final int selectedIndex;
@@ -92,7 +95,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
         return const [
           _NavItem(icon: Icons.home_filled, label: 'Home'),
           _NavItem(icon: Icons.balance, label: 'Chambers'),
-          _NavItem(icon: Icons.menu_book, label: 'Law Insights'),
+          _NavItem(icon: Icons.chat_bubble_outline, label: 'Chats'),
           _NavItem(icon: Icons.forum, label: 'SocialHubb'),
         ];
       case 2:
@@ -138,9 +141,9 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
     switch (widget.setup) {
       case 1: // Home setup (default)
         if (index == 0) _navigateBasedOnAuthStatus(context, const HomePage());
-        else if (index == 1) _navigateBasedOnAuthStatus(context, GeneralHospitalPage());
-        else if (index == 2) _navigateBasedOnAuthStatus(context, LibraryPage());
-        else if (index == 3) _navigateBasedOnAuthStatus(context, const HomeScreen(initialTabIndex: 0));
+        else if (index == 1) _navigateBasedOnAuthStatus(context, ChambersContent());
+        else if (index == 2) _navigateBasedOnAuthStatus(context, const ChatHomePage());
+        else if (index == 3) _navigateBasedOnAuthStatus(context, const SocialContent(initialTabIndex: 0));
         break;
 
       case 2: // Chambers
