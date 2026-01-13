@@ -171,9 +171,8 @@ class _OrganizationListViewState extends State<OrganizationListView> {
 
               return Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(24),
+                decoration: const BoxDecoration(
+                  color: Colors.transparent,
                 ),
                 child: Scrollbar(
                   controller: _scrollController,
@@ -218,9 +217,8 @@ class _OrganizationListViewState extends State<OrganizationListView> {
     final filteredHospitals = _filterCachedHospitals(_cachedHospitals);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(24),
+      decoration: const BoxDecoration(
+        color: Colors.transparent,
       ),
       child: Scrollbar(
         controller: _scrollController,
@@ -366,7 +364,7 @@ class HospitalCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: const Color(0xFF1C1C1E),
         borderRadius: BorderRadius.circular(20.0),
       ),
       child: Material(
@@ -484,7 +482,7 @@ class HospitalCard extends StatelessWidget {
                         ),
                         Container(
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
+                            color: Colors.grey[900],
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Material(

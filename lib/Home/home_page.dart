@@ -166,13 +166,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         child: Stack(
           children: [
             Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.grey[900]!, Colors.black],
-                ),
-              ),
+              color: Colors.black,
               child: const RedesignedHomeContent(),
             ),
             if (_drawerController != null && _slideAnimation != null)
