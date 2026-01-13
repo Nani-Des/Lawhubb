@@ -316,7 +316,7 @@ class _EmergencyPageState extends State<EmergencyPage> with SingleTickerProvider
         return Dialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 10,
-          backgroundColor: Colors.white,
+          backgroundColor: Color(0xFF1E1E1E),
           child: Padding(
             padding: const EdgeInsets.all(60.0),
             child: Column(
@@ -468,24 +468,16 @@ class _EmergencyPageState extends State<EmergencyPage> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.redAccent,
+        backgroundColor: Colors.black,
         leading: Icon(
           _isOffline ? Icons.cloud_off : Icons.cloud_done,
           color: Colors.white,
           size: 24,
         ),
         title: SizedBox.shrink(), // Optional: removes extra space if no title is needed
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Colors.redAccent, Colors.redAccent.shade700],
-            ),
-          ),
-        ),
         actions: [
           // Your existing Police, Fire, and Ambulance buttons here
           Padding(
@@ -584,13 +576,7 @@ class _EmergencyPageState extends State<EmergencyPage> with SingleTickerProvider
         ],
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.redAccent.withOpacity(0.1), Colors.white],
-          ),
-        ),
+        color: Colors.black,
         child: Stack(
           children: [
             EmergencyHomePageContent(),
@@ -605,7 +591,7 @@ class _EmergencyPageState extends State<EmergencyPage> with SingleTickerProvider
                 child: Container(
                   padding: EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.black54,
+                    color: Color(0xFF1E1E1E),
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: Column(
@@ -631,11 +617,11 @@ class _EmergencyPageState extends State<EmergencyPage> with SingleTickerProvider
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Color(0xFF1E1E1E),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.black.withOpacity(0.2),
             spreadRadius: 2,
             blurRadius: 10,
             offset: const Offset(0, -2),
@@ -652,6 +638,7 @@ class _EmergencyPageState extends State<EmergencyPage> with SingleTickerProvider
               child: TextField(
                 controller: _messageController,
                 maxLines: null,
+                style: TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: "Describe the emergency...",
                   hintStyle: const TextStyle(
@@ -659,7 +646,7 @@ class _EmergencyPageState extends State<EmergencyPage> with SingleTickerProvider
                     color: Colors.grey,
                   ),
                   filled: true,
-                  fillColor: Colors.grey[100],
+                  fillColor: Colors.black,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
                     borderSide: BorderSide.none,
@@ -674,7 +661,7 @@ class _EmergencyPageState extends State<EmergencyPage> with SingleTickerProvider
                         child: Icon(
                           _isListening ? Icons.mic : Icons.mic_none,
                           key: ValueKey(_isListening),
-                          color: Colors.redAccent,
+                          color: _isListening ? Colors.redAccent : Colors.white,
                         ),
                       ),
                       onPressed: _isListening ? _stopListening : _startListening,
