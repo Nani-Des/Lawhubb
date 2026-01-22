@@ -538,4 +538,40 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get uploadedSuccessfully => '¡Cargado Exitosamente!';
+
+  @override
+  String get available => 'Disponible';
+
+  @override
+  String get bar => 'Colegio';
+
+  @override
+  String get practice => 'Práctica';
+
+  @override
+  String get yearOfCall => 'Año de Admisión';
+
+  @override
+  String get notAvailable => 'No disponible';
+
+  @override
+  String get naValue => 'N/D';
+
+  @override
+  String get experience => 'Experiencia';
+
+  @override
+  String get close => 'Cerrar';
+
+  @override
+  String get messageLawyer => 'Mensaje al Abogado';
+
+  @override
+  String get bookButton => 'Reservar';
+
+  @override
+  String get lawyerIdMissing => 'Falta el ID del abogado';
+
+  @override
+  String get chamberIdMissing => 'Falta el ID del despacho';
 }

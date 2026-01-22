@@ -534,4 +534,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uploadedSuccessfully => 'Uploaded Successfully!';
+
+  @override
+  String get available => 'Available';
+
+  @override
+  String get bar => 'Bar';
+
+  @override
+  String get practice => 'Practice';
+
+  @override
+  String get yearOfCall => 'Year of Call';
+
+  @override
+  String get notAvailable => 'Not available';
+
+  @override
+  String get naValue => 'N/A';
+
+  @override
+  String get experience => 'Experience';
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String get messageLawyer => 'Message Lawyer';
+
+  @override
+  String get bookButton => 'Book';
+
+  @override
+  String get lawyerIdMissing => 'Lawyer ID is missing';
+
+  @override
+  String get chamberIdMissing => 'Chamber ID is missing';
 }

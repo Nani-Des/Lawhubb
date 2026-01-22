@@ -168,5 +168,17 @@
   "uploadButton": "Upload",
   "required": "Required",
   "selectPdfOrWordDocument": "Please select a PDF or Word document",
-  "uploadedSuccessfully": "Uploaded Successfully!"
+  "uploadedSuccessfully": "Uploaded Successfully!",
+  "available": "Available",
+  "bar": "Bar",
+  "practice": "Practice",
+  "yearOfCall": "Year of Call",
+  "notAvailable": "Not available",
+  "naValue": "N/A",
+  "experience": "Experience",
+  "close": "Close",
+  "messageLawyer": "Message Lawyer",
+  "bookButton": "Book",
+  "lawyerIdMissing": "Lawyer ID is missing",
+  "chamberIdMissing": "Chamber ID is missing"
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nhap/Hospital/specialty_details.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 import '../Forums/Chat/chat_screen.dart';
 import 'doctor_availability_calendar.dart';
 import 'hospital_page.dart';
@@ -76,7 +77,8 @@ class DoctorInfoWidget extends StatelessWidget {
           backgroundColor: Colors.grey[800],
           backgroundImage: doctorDetails['User Pic']?.isNotEmpty ?? false
               ? NetworkImage(doctorDetails['User Pic'])
-              : const AssetImage('assets/Images/placeholder.png') as ImageProvider,
+              : const AssetImage('assets/Images/placeholder.png')
+                  as ImageProvider,
           child: Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
@@ -95,10 +97,13 @@ class DoctorInfoWidget extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
         Text(
-          doctorDetails['status'] ?? 'Available',
+          doctorDetails['status'] ??
+              (AppLocalizations.of(context)?.available ?? 'Available'),
           style: TextStyle(
             fontSize: 12,
-            color: doctorDetails['status'] == 'Available' ? Colors.green : Colors.red,
+            color: doctorDetails['status'] == 'Available'
+                ? Colors.green
+                : Colors.red,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -115,8 +120,9 @@ class DoctorInfoWidget extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       children: [
         _buildInfoBox(
+          context,
           Icons.gavel_outlined,
-          'Bar',
+          AppLocalizations.of(context)?.bar ?? 'Bar',
           hospitalName,
           onTap: () {
             Navigator.push(
@@ -131,8 +137,9 @@ class DoctorInfoWidget extends StatelessWidget {
           },
         ),
         _buildInfoBox(
+          context,
           Icons.business,
-          'Practice',
+          AppLocalizations.of(context)?.practice ?? 'Practice',
           departmentName,
           onTap: () {
             Navigator.push(
@@ -148,22 +155,32 @@ class DoctorInfoWidget extends StatelessWidget {
           },
         ),
         _buildInfoBox(
+          context,
           Icons.location_on,
-          'Region',
+          AppLocalizations.of(context)?.region ?? 'Region',
           doctorDetails['Region'],
-          onTap: () => _showInfoDialog(context, 'Region', doctorDetails['Region']),
+          onTap: () => _showInfoDialog(
+              context,
+              AppLocalizations.of(context)?.region ?? 'Region',
+              doctorDetails['Region']),
         ),
         _buildInfoBox(
+          context,
           Icons.calendar_month_outlined,
-          'Year of Call',
-          "${doctorDetails['Experience'] ?? 'N/A'}",
-          onTap: () => _showInfoDialog(context, 'Experience', "${doctorDetails['Experience'] ?? 'N/A'}"),
+          AppLocalizations.of(context)?.yearOfCall ?? 'Year of Call',
+          "${doctorDetails['Experience'] ?? (AppLocalizations.of(context)?.naValue ?? 'N/A')}",
+          onTap: () => _showInfoDialog(
+              context,
+              AppLocalizations.of(context)?.experience ?? 'Experience',
+              "${doctorDetails['Experience'] ?? (AppLocalizations.of(context)?.naValue ?? 'N/A')}"),
         ),
       ],
     );
   }
 
-  Widget _buildInfoBox(IconData icon, String label, String? value, {VoidCallback? onTap}) {
+  Widget _buildInfoBox(
+      BuildContext context, IconData icon, String label, String? value,
+      {VoidCallback? onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -180,11 +197,16 @@ class DoctorInfoWidget extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               label,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+              style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white),
             ),
             const SizedBox(height: 4),
             Text(
-              value ?? 'Not available',
+              value ??
+                  (AppLocalizations.of(context)?.notAvailable ??
+                      'Not available'),
               style: TextStyle(fontSize: 14, color: Colors.grey[400]),
               textAlign: TextAlign.center,
               maxLines: 2,
@@ -208,7 +230,8 @@ class DoctorInfoWidget extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Close', style: TextStyle(color: Colors.white)),
+              child: Text(AppLocalizations.of(context)?.close ?? 'Close',
+                  style: const TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -224,11 +247,14 @@ class DoctorInfoWidget extends StatelessWidget {
         Expanded(
           child: ElevatedButton.icon(
             icon: const Icon(Icons.message, color: Colors.black),
-            label: const Text('Message Lawyer', style: TextStyle(color: Colors.black)),
+            label: Text(
+                AppLocalizations.of(context)?.messageLawyer ?? 'Message Lawyer',
+                style: const TextStyle(color: Colors.black)),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(22)),
               elevation: 4,
             ),
             onPressed: () async {
@@ -266,28 +292,29 @@ class DoctorInfoWidget extends StatelessWidget {
                     chatId: foundChat!.id,
                     recipientId: otherUserId,
                     recipientName:
-                    "${doctorDetails['Fname'] ?? ''} ${doctorDetails['Lname'] ?? ''}",
+                        "${doctorDetails['Fname'] ?? ''} ${doctorDetails['Lname'] ?? ''}",
                     recipientPic: doctorDetails['User Pic'] ?? '',
                     recipientRole: doctorDetails['Role'] is bool
                         ? doctorDetails['Role']
-                        : (doctorDetails['Role']?.toString().toLowerCase() == 'true'),
-
+                        : (doctorDetails['Role']?.toString().toLowerCase() ==
+                            'true'),
                   ),
                 ),
               );
             },
-
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: ElevatedButton.icon(
             icon: const Icon(Icons.calendar_month, color: Colors.black),
-            label: const Text('Book', style: TextStyle(color: Colors.black)),
+            label: Text(AppLocalizations.of(context)?.bookButton ?? 'Book',
+                style: const TextStyle(color: Colors.black)),
             style: ElevatedButton.styleFrom(
               backgroundColor: isReferral ? Colors.grey[700] : Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(22)),
               elevation: isReferral ? 0 : 4,
             ),
             onPressed: isReferral ? null : () => _showCalendarDialog(context),
@@ -304,10 +331,15 @@ class DoctorInfoWidget extends StatelessWidget {
     if (doctorId == null || hospitalId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${doctorId == null ? 'Lawyers' : 'Chamber'} ID is missing'),
+          content: Text(doctorId == null
+              ? (AppLocalizations.of(context)?.lawyerIdMissing ??
+                  'Lawyer ID is missing')
+              : (AppLocalizations.of(context)?.chamberIdMissing ??
+                  'Chamber ID is missing')),
           backgroundColor: Colors.grey[800],
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
       return;

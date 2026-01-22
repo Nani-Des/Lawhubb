@@ -8,6 +8,7 @@ import '../Forums/Public/forum.dart';
 import '../Forums/Public/Widgets/create_post_dialog.dart';
 import '../Forums/Chat/chat_list.dart';
 import '../Forums/Chat/live_stream.dart';
+import '../Auth/auth_screen.dart';
 
 class SocialContent extends StatefulWidget {
   final int initialTabIndex;
@@ -40,7 +41,15 @@ class _SocialContentState extends State<SocialContent>
 
   Future<void> _startPublicConsultation(BuildContext context) async {
     try {
-      final currentUser = FirebaseAuth.instance.currentUser!;
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please log in to start a consultation')),
+          );
+        }
+        return;
+      }
       final chatId =
           'public_${currentUser.uid}_${DateTime.now().millisecondsSinceEpoch}';
 
@@ -93,7 +102,69 @@ class _SocialContentState extends State<SocialContent>
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = FirebaseAuth.instance.currentUser!;
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.lock_outline,
+                  size: 80,
+                  color: Colors.white54,
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'You are not logged in',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Please log in to access your chats and posts',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const AuthScreen()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Go to Login',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     final loggedInUserId = currentUser.uid;
 
     return Scaffold(

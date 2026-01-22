@@ -168,5 +168,17 @@
   "uploadButton": "Cargar",
   "required": "Requerido",
   "selectPdfOrWordDocument": "Por favor, selecciona un documento PDF o Word",
-  "uploadedSuccessfully": "¡Cargado Exitosamente!"
+  "uploadedSuccessfully": "¡Cargado Exitosamente!",
+  "available": "Disponible",
+  "bar": "Colegio",
+  "practice": "Práctica",
+  "yearOfCall": "Año de Admisión",
+  "notAvailable": "No disponible",
+  "naValue": "N/D",
+  "experience": "Experiencia",
+  "close": "Cerrar",
+  "messageLawyer": "Mensaje al Abogado",
+  "bookButton": "Reservar",
+  "lawyerIdMissing": "Falta el ID del abogado",
+  "chamberIdMissing": "Falta el ID del despacho"
 }

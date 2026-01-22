@@ -168,5 +168,17 @@
   "uploadButton": "Télécharger",
   "required": "Obligatoire",
   "selectPdfOrWordDocument": "Veuillez sélectionner un document PDF ou Word",
-  "uploadedSuccessfully": "Téléchargement réussi !"
+  "uploadedSuccessfully": "Téléchargement réussi !",
+  "available": "Disponible",
+  "bar": "Barreau",
+  "practice": "Cabinet",
+  "yearOfCall": "Année d'Inscription",
+  "notAvailable": "Non disponible",
+  "naValue": "N/D",
+  "experience": "Expérience",
+  "close": "Fermer",
+  "messageLawyer": "Message à l'Avocat",
+  "bookButton": "Réserver",
+  "lawyerIdMissing": "ID de l'avocat manquant",
+  "chamberIdMissing": "ID du cabinet manquant"
 }

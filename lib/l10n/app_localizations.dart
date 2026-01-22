@@ -1101,6 +1101,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Uploaded Successfully!'**
   String get uploadedSuccessfully;
+
+  /// No description provided for @available.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get available;
+
+  /// No description provided for @bar.
+  ///
+  /// In en, this message translates to:
+  /// **'Bar'**
+  String get bar;
+
+  /// No description provided for @practice.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice'**
+  String get practice;
+
+  /// No description provided for @yearOfCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Year of Call'**
+  String get yearOfCall;
+
+  /// No description provided for @notAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available'**
+  String get notAvailable;
+
+  /// No description provided for @naValue.
+  ///
+  /// In en, this message translates to:
+  /// **'N/A'**
+  String get naValue;
+
+  /// No description provided for @experience.
+  ///
+  /// In en, this message translates to:
+  /// **'Experience'**
+  String get experience;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// No description provided for @messageLawyer.
+  ///
+  /// In en, this message translates to:
+  /// **'Message Lawyer'**
+  String get messageLawyer;
+
+  /// No description provided for @bookButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Book'**
+  String get bookButton;
+
+  /// No description provided for @lawyerIdMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Lawyer ID is missing'**
+  String get lawyerIdMissing;
+
+  /// No description provided for @chamberIdMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Chamber ID is missing'**
+  String get chamberIdMissing;
 }
 
 class _AppLocalizationsDelegate
