@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nhap/l10n/app_localizations.dart';
+import '../../news_stand.dart';
 
 class TrendingTopics extends StatefulWidget {
   const TrendingTopics({super.key});
@@ -13,7 +14,8 @@ class _TrendingTopicsState extends State<TrendingTopics>
   late AnimationController _controller;
   late List<Animation<Offset>> _slideAnimations;
 
-  late List<Map<String, dynamic>> _topics;
+  // Get all articles from NewsStandApp lawData
+  late List<Map<String, dynamic>> _articles;
 
   @override
   void initState() {
@@ -22,51 +24,35 @@ class _TrendingTopicsState extends State<TrendingTopics>
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
+    
+    // Flatten all articles from all categories
+    _articles = lawData.expand((category) {
+      return (category["articles"] as List).map<Map<String, dynamic>>((article) {
+        final articleMap = Map<String, dynamic>.from(article as Map);
+        return {
+          ...articleMap,
+          'category': category["category"] as String,
+          'categoryIcon': category["icon"] as IconData,
+        };
+      });
+    }).toList();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final localizations = AppLocalizations.of(context);
 
-    _topics = [
-      {
-        'title': localizations?.employmentLaw ?? 'Employment Law',
-        'subtitle':
-            localizations?.employmentLawDiscussions ?? '245 discussions',
-        'icon': Icons.work_outline,
-        'trend': '+12%',
-      },
-      {
-        'title': localizations?.propertyRights ?? 'Property Rights',
-        'subtitle':
-            localizations?.propertyRightsDiscussions ?? '189 discussions',
-        'icon': Icons.home_outlined,
-        'trend': '+8%',
-      },
-      {
-        'title': localizations?.familyLaw ?? 'Family Law',
-        'subtitle': localizations?.familyLawDiscussions ?? '156 discussions',
-        'icon': Icons.family_restroom_outlined,
-        'trend': '+15%',
-      },
-      {
-        'title': localizations?.businessLaw ?? 'Business Law',
-        'subtitle': localizations?.businessLawDiscussions ?? '134 discussions',
-        'icon': Icons.business_center_outlined,
-        'trend': '+6%',
-      },
-    ];
-
-    _slideAnimations = List.generate(_topics.length, (index) {
+    _slideAnimations = List.generate(_articles.length, (index) {
+      final start = (index * 0.15).clamp(0.0, 1.0);
+      final end = (0.6 + (index * 0.15)).clamp(0.0, 1.0);
       return Tween<Offset>(
         begin: const Offset(0.5, 0),
         end: Offset.zero,
       ).animate(CurvedAnimation(
         parent: _controller,
         curve: Interval(
-          index * 0.15,
-          0.6 + (index * 0.15),
+          start,
+          end,
           curve: Curves.easeOutCubic,
         ),
       ));
@@ -105,57 +91,97 @@ class _TrendingTopicsState extends State<TrendingTopics>
                   letterSpacing: -0.3,
                 ),
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: Colors.grey[850],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.grey[800]!,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.local_fire_department,
-                      color: Colors.grey[400],
-                      size: 14,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      localizations?.hot ?? 'Hot',
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[850],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.grey[800]!,
                       ),
                     ),
-                  ],
-                ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.local_fire_department,
+                          color: Colors.grey[400],
+                          size: 14,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          localizations?.hot ?? 'Hot',
+                          style: TextStyle(
+                            color: Colors.grey[400],
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NewsStandPage(),
+                        ),
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'More',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 12,
+                          color: Colors.white70,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
           const SizedBox(height: 16),
           SizedBox(
-            height: 140,
+            height: 180,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
-              itemCount: _topics.length,
+              itemCount: _articles.length,
               itemBuilder: (context, index) {
                 return SlideTransition(
                   position: _slideAnimations[index],
                   child: Padding(
                     padding: EdgeInsets.only(
-                      right: index == _topics.length - 1 ? 0 : 16,
+                      right: index == _articles.length - 1 ? 0 : 16,
                     ),
-                    child: _TrendingCard(
-                      title: _topics[index]['title'],
-                      subtitle: _topics[index]['subtitle'],
-                      icon: _topics[index]['icon'],
-                      trend: _topics[index]['trend'],
+                    child: SizedBox(
+                      height: 180,
+                      child: _ArticleCard(
+                        article: _articles[index],
+                      ),
                     ),
                   ),
                 );
@@ -169,24 +195,18 @@ class _TrendingTopicsState extends State<TrendingTopics>
   }
 }
 
-class _TrendingCard extends StatefulWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final String trend;
+class _ArticleCard extends StatefulWidget {
+  final Map<String, dynamic> article;
 
-  const _TrendingCard({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.trend,
+  const _ArticleCard({
+    required this.article,
   });
 
   @override
-  State<_TrendingCard> createState() => _TrendingCardState();
+  State<_ArticleCard> createState() => _ArticleCardState();
 }
 
-class _TrendingCardState extends State<_TrendingCard>
+class _ArticleCardState extends State<_ArticleCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _hoverController;
   late Animation<double> _scaleAnimation;
@@ -220,19 +240,13 @@ class _TrendingCardState extends State<_TrendingCard>
       onTapUp: (_) {
         setState(() => _isPressed = false);
         _hoverController.reverse();
-        final localizations = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              (localizations?.exploreDiscussions ??
-                      'Explore {title} discussions')
-                  .toString()
-                  .replaceFirst('{title}', widget.title),
-            ),
-            backgroundColor: Colors.grey[800],
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ArticleDetailPage(
+              title: widget.article["title"],
+              content: widget.article["content"],
+              image: widget.article["image"],
             ),
           ),
         );
@@ -247,67 +261,110 @@ class _TrendingCardState extends State<_TrendingCard>
           return Transform.scale(
             scale: _scaleAnimation.value,
             child: Container(
-              width: 170,
-              padding: const EdgeInsets.all(16),
+              width: 280,
+              height: 180,
               decoration: BoxDecoration(
                 color: const Color(0xFF1C1C1E),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[850],
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          widget.icon,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[850],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          widget.trend,
-                          style: TextStyle(
-                            color: Colors.grey[400],
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
+                  // Article Image
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(15),
+                    ),
+                    child: Image.network(
+                      widget.article["image"],
+                      height: 90,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 90,
+                          color: Colors.grey[800],
+                          child: const Icon(
+                            Icons.article,
+                            color: Colors.grey,
+                            size: 40,
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  Text(
-                    widget.title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.1,
+                        );
+                      },
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    widget.subtitle,
-                    style: TextStyle(
-                      color: Colors.grey[500],
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
+                  // Article Content
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Category Badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[850],
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  widget.article["categoryIcon"] as IconData? ?? Icons.article,
+                                  size: 10,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(width: 3),
+                                Flexible(
+                                  child: Text(
+                                    widget.article["category"] ?? '',
+                                    style: TextStyle(
+                                      color: Colors.grey[400],
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          // Title
+                          Text(
+                            widget.article["title"] ?? '',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: -0.1,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          // Content Preview
+                          Expanded(
+                            child: Text(
+                              widget.article["content"] ?? '',
+                              style: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 10,
+                                fontWeight: FontWeight.w400,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],

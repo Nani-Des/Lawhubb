@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'hero_section.dart';
-import 'stats_section.dart';
 import 'services_grid.dart';
 import 'recent_activity.dart';
 import 'trending_topics.dart';
@@ -71,13 +70,7 @@ class _RedesignedHomeContentState extends State<RedesignedHomeContent>
           ),
           
           const SliverToBoxAdapter(
-            child: StatsSection(),
-          ),
-          
-          SliverToBoxAdapter(
-            child: ServicesGrid(
-              onTabChange: widget.onTabChange,
-            ),
+            child: ServicesGrid(),
           ),
           
           if (widget.currentUser != null)

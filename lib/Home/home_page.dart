@@ -44,9 +44,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 400),
     );
 
+    // Animation now goes from bottom to top (fully visible)
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 1),
-      end: const Offset(0, 0.3),
+      begin: const Offset(0, 1), // Start from bottom (off-screen)
+      end: const Offset(0, 0), // End at top (fully visible)
     ).animate(CurvedAnimation(
       parent: _drawerController!,
       curve: Curves.easeInOut,
@@ -125,11 +126,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   void _onAvatarTap() async {
     if (currentUser == null) {
-      await Navigator.push(
+      final result = await Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const AuthScreen()),
       );
-      _fetchUserData();
+      // Refresh user data after returning from auth screen
+      if (result == true || result == null) {
+        _fetchUserData();
+      }
     } else {
       _toggleProfileDrawer();
     }
@@ -178,10 +182,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
             ),
             if (_drawerController != null && _slideAnimation != null)
-              ProfileDrawer(
-                controller: _drawerController!,
-                slideAnimation: _slideAnimation!,
-                showProfileDrawer: showProfileDrawer,
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: ProfileDrawer(
+                  controller: _drawerController!,
+                  slideAnimation: _slideAnimation!,
+                  showProfileDrawer: showProfileDrawer,
+                ),
               ),
           ],
         ),

@@ -108,3 +108,79 @@ exports.sendBookingReminders = functions.pubsub
       }
     }
   });
+
+// Push notification for SocialHubb messages
+exports.onMessageCreated = functions.firestore
+  .document('Chats/{chatId}/Messages/{messageId}')
+  .onCreate(async (snap, context) => {
+    const messageData = snap.data();
+    const chatId = context.params.chatId;
+    const senderId = messageData.senderId;
+    const recipientId = messageData.recipientId;
+
+    // Don't send notification if user is sending to themselves
+    if (senderId === recipientId) return;
+
+    try {
+      // Get recipient user data
+      const recipientDoc = await admin.firestore()
+        .collection('Users')
+        .doc(recipientId)
+        .get();
+      
+      if (!recipientDoc.exists) return;
+
+      const recipientData = recipientDoc.data();
+      const fcmToken = recipientData?.fcmToken;
+
+      if (!fcmToken) return;
+
+      // Get sender user data for notification
+      const senderDoc = await admin.firestore()
+        .collection('Users')
+        .doc(senderId)
+        .get();
+      
+      const senderData = senderDoc.data();
+      const senderName = senderData ? `${senderData.Fname || ''} ${senderData.Lname || ''}`.trim() : 'Someone';
+      
+      // Get message content
+      const messageContent = messageData.content || '';
+      const messageType = messageData.type || 'text';
+      const preview = messageType === 'audio' ? '[Voice message]' : 
+                     (messageContent.length > 50 ? messageContent.substring(0, 50) + '...' : messageContent);
+
+      // Send notification
+      await admin.messaging().send({
+        token: fcmToken,
+        notification: {
+          title: senderName,
+          body: preview,
+        },
+        data: {
+          type: 'new_message',
+          chatId: chatId,
+          senderId: senderId,
+          recipientId: recipientId,
+          messageType: messageType,
+        },
+        apns: {
+          payload: {
+            aps: {
+              sound: 'default',
+              badge: 1,
+            },
+          },
+        },
+        android: {
+          priority: 'high',
+          notification: {
+            sound: 'default',
+            channelId: 'messages',
+          },
+        },
+      });
+    } catch (error) {
+      console.error('Error sending message notification:', error);
+    }
+  });

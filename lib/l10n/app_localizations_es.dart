@@ -111,7 +111,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sue_someone => '¿Qué debo hacer cuando quiero demandar a alguien?';
 
   @override
-  String get appTitle => 'LawHub';
+  String get appTitle => 'LawHubb';
 
   @override
   String get locationPermissionTitle => 'Necesitamos Tu Ubicación';
@@ -160,10 +160,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get goodEvening => 'Buenas Noches';
 
   @override
-  String get loggedInMessage => 'Tu viaje legal continúa aquí';
+  String get loggedInMessage => '¿Necesitas ayuda legal?';
 
   @override
-  String get notLoggedInMessage => 'Únete a miles de profesionales legales';
+  String get notLoggedInMessage => '¿Necesitas ayuda legal?';
 
   @override
   String get searchPlaceholder => 'Buscar abogados, despachos...';
@@ -179,13 +179,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get available24_7 => 'Disponible 24/7';
 
   @override
-  String get emergencyLegalHelp => 'Ayuda Legal de Emergencia';
+  String get emergencyLegalHelp => 'Asistente de IA';
 
   @override
   String get immediateAssistance => 'Asistencia inmediata';
 
   @override
-  String get bookConsultation => 'Reservar Consulta';
+  String get bookConsultation => 'Reservas/ Consultas';
 
   @override
   String get scheduleWithExperts => 'Programa con expertos';
@@ -204,7 +204,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Usa la navegación inferior para acceder a Social Hub';
 
   @override
-  String get legalResources => 'Recursos Legales';
+  String get legalResources => 'Librería';
 
   @override
   String get browseLibrary => 'Explorar biblioteca';

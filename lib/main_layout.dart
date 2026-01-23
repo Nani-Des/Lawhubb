@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'Home/home_page.dart';
 import 'Library/library_page.dart';
+import 'LawInsights/law_insights_page.dart';
 import 'wrappers/chambers_content.dart';
 import 'wrappers/social_content.dart';
+import 'wrappers/posts_content.dart';
+import 'wrappers/chats_content.dart';
 import 'Home/Widgets/custom_bottom_navbar.dart';
 import 'package:nhap/ChatModule/chat_module.dart';
 
@@ -52,11 +55,11 @@ class _MainLayoutState extends State<MainLayout> {
               },
             );
           case 1:
-            return ChambersContent(); // Chambers
+            return const LawInsightsPage(); // Law Insights
           case 2:
-            return const ChatHomePage(); // Chats
+            return const ChatsContent(); // Chats
           case 3:
-            return const SocialContent(initialTabIndex: 0); // SocialHubb
+            return const PostsContent(); // SocialHubb - Posts only
           default:
             return Navigator(
               onGenerateRoute: (settings) {
@@ -81,9 +84,9 @@ class _MainLayoutState extends State<MainLayout> {
               },
             );
           case 1:
-            return LibraryPage(); // Law Insights
+            return const ChatsContent(); // Chats
           case 2:
-            return const SocialContent(initialTabIndex: 1); // SocialHubb
+            return const PostsContent(); // SocialHubb - Posts only
           default:
             return Navigator(
               onGenerateRoute: (settings) {
@@ -108,9 +111,9 @@ class _MainLayoutState extends State<MainLayout> {
               },
             );
           case 1:
-            return LibraryPage(); // Law Insights
+            return const ChatsContent(); // Chats
           case 2:
-            return ChambersContent(); // Chambers
+            return const LawInsightsPage(); // Law Insights
           default:
             return Navigator(
               onGenerateRoute: (settings) {
@@ -135,9 +138,9 @@ class _MainLayoutState extends State<MainLayout> {
               },
             );
           case 1:
-            return ChambersContent(); // Chambers
+            return const LawInsightsPage(); // Law Insights
           case 2:
-            return const SocialContent(initialTabIndex: 1); // SocialHubb
+            return const PostsContent(); // SocialHubb - Posts only
           default:
             return Navigator(
               onGenerateRoute: (settings) {

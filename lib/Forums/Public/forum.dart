@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../Chat/live_stream.dart';
 import 'Services/forum_firebase_service.dart';
 import 'Widgets/post_card.dart';
+import '../../../Services/follow_service.dart';
 
 class Forum extends StatefulWidget {
   final String userId;
@@ -16,6 +17,7 @@ class Forum extends StatefulWidget {
 
 class _ForumPageState extends State<Forum> {
   final ForumFirebaseService _firebaseService = ForumFirebaseService();
+  final FollowService _followService = FollowService();
   List<Map<String, dynamic>> _posts = [];
 
   @override
@@ -30,6 +32,7 @@ class _ForumPageState extends State<Forum> {
     // 1. Fetch blocked users first
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
     Set<String> blockedUserIds = {};
+    Set<String> followedUserIds = {};
 
     if (currentUserId != null) {
       try {
@@ -40,8 +43,11 @@ class _ForumPageState extends State<Forum> {
             .get();
 
         blockedUserIds = blockedSnapshot.docs.map((doc) => doc.id).toSet();
+        
+        // Fetch followed users
+        followedUserIds = (await _followService.getFollowingList(currentUserId)).toSet();
       } catch (e) {
-        debugPrint("Error fetching blocked users: $e");
+        debugPrint("Error fetching blocked/followed users: $e");
       }
     }
 
@@ -55,6 +61,29 @@ class _ForumPageState extends State<Forum> {
         return !blockedUserIds.contains(postUserId);
       }).toList();
     }
+
+    // 4. Sort posts: followed users first, then by timestamp (newest first)
+    posts.sort((a, b) {
+      final aUserId = a['User ID'] as String? ?? '';
+      final bUserId = b['User ID'] as String? ?? '';
+      
+      final aIsFollowed = followedUserIds.contains(aUserId);
+      final bIsFollowed = followedUserIds.contains(bUserId);
+      
+      // If one is followed and the other isn't, prioritize followed
+      if (aIsFollowed && !bIsFollowed) return -1;
+      if (!aIsFollowed && bIsFollowed) return 1;
+      
+      // If both are followed or both aren't, sort by timestamp (newest first)
+      final aTimestamp = a['Timestamp'] as Timestamp?;
+      final bTimestamp = b['Timestamp'] as Timestamp?;
+      
+      if (aTimestamp == null && bTimestamp == null) return 0;
+      if (aTimestamp == null) return 1;
+      if (bTimestamp == null) return -1;
+      
+      return bTimestamp.compareTo(aTimestamp);
+    });
 
     setState(() {
       _posts = posts;
@@ -109,7 +138,7 @@ class _ForumPageState extends State<Forum> {
                 padding: EdgeInsets
                     .zero, // Remove default padding for edge-to-edge look
                 itemCount: _posts.length + 1,
-                itemBuilder: (context, index) {
+                itemBuilder: (BuildContext context, int index) {
                   // 🔹 Live Section Header
                   if (index == 0) {
                     return Container(

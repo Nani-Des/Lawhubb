@@ -373,6 +373,9 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
+    // Get bottom nav bar height from MediaQuery - kBottomNavigationBarHeight is typically 56-80px
+    // Adding safe area padding for devices with home indicator
+    final bottomNavBarHeight = kBottomNavigationBarHeight + MediaQuery.of(context).padding.bottom;
 
     if (!widget.showProfileDrawer) {
       return const SizedBox.shrink();
@@ -384,6 +387,10 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
         onVerticalDragEnd: (_) => widget.controller.reverse(),
         child: Container(
           width: double.infinity,
+          margin: EdgeInsets.only(bottom: bottomNavBarHeight),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.75,
+          ),
           decoration: BoxDecoration(
             color: Colors.grey[900], // Dark grey background
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),

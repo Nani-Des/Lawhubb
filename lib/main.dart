@@ -23,6 +23,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'Services/config_service.dart';
 import 'Services/language_provider.dart';
+import 'Services/notification_service.dart';
 import 'booking_page.dart';
 
 // #region agent log helper
@@ -55,11 +56,6 @@ void _debugLog({
 }
 // #endregion
 
-// Background message handler
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-  print('Handling background message: ${message.messageId}');
-}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -87,86 +83,13 @@ void main() async {
   final configService = ConfigService();
   await configService.init();
 
-  // Initialize FCM
+  // Initialize Notification Service
   try {
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-    FirebaseMessaging messaging = FirebaseMessaging.instance;
-    await messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-    await messaging.setForegroundNotificationPresentationOptions(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-
-    // Initialize local notifications
-    final FlutterLocalNotificationsPlugin localNotificationsPlugin =
-        FlutterLocalNotificationsPlugin();
-    const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const InitializationSettings initSettings =
-        InitializationSettings(android: androidSettings);
-    await localNotificationsPlugin.initialize(
-      initSettings,
-      onDidReceiveNotificationResponse: (response) async {
-        if (response.payload != null) {
-          final data = Map<String, dynamic>.from(jsonDecode(response.payload!));
-          final userId = FirebaseAuth.instance.currentUser?.uid;
-          if (userId != null &&
-              (data['type'] == 'new_booking' ||
-                  data['type'] == 'status_update' ||
-                  data['type'] == 'reminder')) {
-            Navigator.of(navigatorKey.currentContext!).pushReplacement(
-              MaterialPageRoute(
-                  builder: (context) => BookingPage(currentUserId: userId)),
-            );
-          }
-        }
-      },
-    );
-
-    // Store FCM token
-    String? token = await messaging.getToken();
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (token != null && userId != null) {
-      await FirebaseFirestore.instance.collection('Users').doc(userId).update({
-        'fcmToken': token,
-      });
-    }
-
-    // Handle initial message
-    RemoteMessage? initialMessage = await messaging.getInitialMessage();
-    if (initialMessage != null && userId != null) {
-      if (initialMessage.data['type'] == 'new_booking' ||
-          initialMessage.data['type'] == 'status_update' ||
-          initialMessage.data['type'] == 'reminder') {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          Navigator.of(navigatorKey.currentContext!).pushReplacement(
-            MaterialPageRoute(
-                builder: (context) => BookingPage(currentUserId: userId)),
-          );
-        });
-      }
-    }
-
-    // Handle message opened from background
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      final userId = FirebaseAuth.instance.currentUser?.uid;
-      if (userId != null &&
-          (message.data['type'] == 'new_booking' ||
-              message.data['type'] == 'status_update' ||
-              message.data['type'] == 'reminder')) {
-        Navigator.of(navigatorKey.currentContext!).pushReplacement(
-          MaterialPageRoute(
-              builder: (context) => BookingPage(currentUserId: userId)),
-        );
-      }
-    });
+    final notificationService = NotificationService();
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    await notificationService.initialize(navigatorKey: navigatorKey);
   } catch (e) {
-    print('Error initializing FCM: $e');
+    print('Error initializing NotificationService: $e');
   }
 
   // Initialize cached_network_image
@@ -257,7 +180,7 @@ class MyApp extends StatelessWidget {
       child: ShowCaseWidget(
         builder: (context) => Consumer<LanguageProvider>(
           builder: (context, langProvider, _) => MaterialApp(
-            title: AppLocalizations.of(context)?.appTitle ?? 'LawHub',
+            title: AppLocalizations.of(context)?.appTitle ?? 'LawHubb',
             locale: langProvider.currentLocale,
 
             // 2. Define supported locales

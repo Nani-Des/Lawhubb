@@ -5,6 +5,7 @@ import 'package:nhap/Forums/Chat/search_screen.dart';
 import '../../Home/Widgets/custom_bottom_navbar.dart';
 import '../../Hospital/doctor_profile.dart';
 import '../Public/forum.dart';
+import '../Public/Widgets/user_profile_screen.dart';
 import 'chat_list.dart';
 import 'live_stream.dart';
 
@@ -95,9 +96,8 @@ class HomeScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => DoctorProfileScreen(
+                      builder: (context) => UserProfileScreen(
                         userId: loggedInUserId,
-                        isReferral: false,
                       ),
                     ),
                   );

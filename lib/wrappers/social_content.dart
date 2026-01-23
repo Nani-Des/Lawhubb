@@ -5,6 +5,10 @@ import '../Forums/Chat/search_screen.dart';
 import '../Hospital/doctor_profile.dart';
 import '../Forums/Public/forum.dart';
 import '../Forums/Public/Widgets/create_post_dialog.dart';
+import '../Forums/Public/Widgets/user_profile_screen.dart';
+import '../LawInsights/law_insights_page.dart';
+import '../Forums/Chat/live_stream.dart';
+import '../Auth/auth_screen.dart';
 
 class SocialContent extends StatefulWidget {
   final int initialTabIndex;
@@ -15,10 +19,112 @@ class SocialContent extends StatefulWidget {
   State<SocialContent> createState() => _SocialContentState();
 }
 
-class _SocialContentState extends State<SocialContent> {
+class _SocialContentState extends State<SocialContent>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialTabIndex,
+    );
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _startPublicConsultation(BuildContext context) async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please log in to start a consultation')),
+          );
+        }
+        return;
+      }
+      final chatId =
+          'public_${currentUser.uid}_${DateTime.now().millisecondsSinceEpoch}';
+
+      final userDoc = await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(currentUser.uid)
+          .get();
+
+      final userData = userDoc.data() ?? {};
+      final fullName =
+          "${userData['Fname'] ?? ''} ${userData['Lname'] ?? ''}".trim();
+      final userPic = userData['User Pic'] ?? '';
+
+      final consultationRef =
+          FirebaseFirestore.instance.collection('Consultations').doc(chatId);
+
+      await consultationRef.set({
+        'chatId': chatId,
+        'initiatorId': currentUser.uid,
+        'initiatorName': fullName,
+        'initiatorPic': userPic,
+        'recipientId': 'public',
+        'status': 'active',
+        'viewerCount': 0,
+        'startTimestamp': FieldValue.serverTimestamp(),
+      });
+
+      if (context.mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LiveConsultationScreen(
+              channelName: chatId,
+              isInitiator: true,
+              chatId: chatId,
+              initiatorId: currentUser.uid,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error starting public consultation: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to start consultation: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final currentUser = FirebaseAuth.instance.currentUser!;
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      // Redirect to login page
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AuthScreen()),
+          ).then((_) {
+            // Refresh after login
+            if (mounted) {
+              setState(() {});
+            }
+          });
+        }
+      });
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+    }
     final loggedInUserId = currentUser.uid;
 
     return Scaffold(
@@ -48,14 +154,13 @@ class _SocialContentState extends State<SocialContent> {
           ),
           Padding(
             padding: const EdgeInsets.only(right: 12),
-            child: GestureDetector(
+              child: GestureDetector(
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => DoctorProfileScreen(
+                    builder: (context) => UserProfileScreen(
                       userId: loggedInUserId,
-                      isReferral: false,
                     ),
                   ),
                 );
@@ -84,18 +189,40 @@ class _SocialContentState extends State<SocialContent> {
           ),
         ],
       ),
-      body: Forum(userId: loggedInUserId),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 4,
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (context) => CreatePostDialog(userId: loggedInUserId),
-          ).then((_) {
-            setState(() {});
-          });
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          const LawInsightsPage(),
+          Forum(userId: loggedInUserId),
+        ],
+      ),
+      floatingActionButton: AnimatedBuilder(
+        animation: _tabController,
+        builder: (context, child) {
+          if (_tabController.index == 1) {
+            return FloatingActionButton(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.black,
+              elevation: 4,
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => CreatePostDialog(userId: loggedInUserId),
+                ).then((_) {
+                  setState(() {});
+                });
+              },
+              child: const Icon(Icons.add, size: 28),
+            );
+          } else {
+            return FloatingActionButton(
+              backgroundColor: Colors.grey[900],
+              foregroundColor: Colors.white,
+              elevation: 4,
+              onPressed: () => _startPublicConsultation(context),
+              child: const Icon(Icons.videocam, size: 26),
+            );
+          }
         },
         child: const Icon(Icons.add, size: 28),
       ),

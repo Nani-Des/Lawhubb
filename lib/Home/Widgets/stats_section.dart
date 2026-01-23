@@ -242,7 +242,7 @@ class _StatCardState extends State<_StatCard>
                     animation: widget.animation,
                     builder: (context, child) {
                       return Opacity(
-                        opacity: widget.animation.value,
+                        opacity: widget.animation.value.clamp(0.0, 1.0),
                         child: Text(
                           widget.title,
                           style: const TextStyle(
