@@ -1,20 +1,25 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nhap/Home/home_page.dart';
-import 'package:nhap/Login/login_screen1.dart';
 import '../../Auth/auth_screen.dart';
 import '../../Forums/Chat/HomeScreen.dart';
 import '../../Hospital/general_hospital_page.dart';
 import '../../Library/library_page.dart';
+import '../../ChatModule/chat_module.dart';
+import '../../wrappers/chambers_content.dart';
+import '../../wrappers/social_content.dart';
 
 class CustomBottomNavBar extends StatefulWidget {
   final int selectedIndex;
   final int setup; // Added parameter to control which setup to use
+  final Function(int)? onItemTapped; // Optional callback for parent to handle navigation
 
   const CustomBottomNavBar({
     Key? key,
     required this.selectedIndex,
     required this.setup,
+    this.onItemTapped,
   }) : super(key: key);
 
   @override
@@ -24,6 +29,14 @@ class CustomBottomNavBar extends StatefulWidget {
 class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
   late int _selectedIndex;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  @override
+  void didUpdateWidget(covariant CustomBottomNavBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedIndex != widget.selectedIndex) {
+      _selectedIndex = widget.selectedIndex;
+    }
+  }
 
   @override
   void initState() {
@@ -75,27 +88,74 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
     );
   }
 
+  // 🔹 Builds items dynamically based on setup
+  List<_NavItem> _buildNavItems() {
+    switch (widget.setup) {
+      case 1:
+        return const [
+          _NavItem(icon: Icons.home_filled, label: 'Home'),
+          _NavItem(icon: Icons.balance, label: 'Chambers'),
+          _NavItem(icon: Icons.chat_bubble_outline, label: 'Chats'),
+          _NavItem(icon: Icons.forum, label: 'SocialHubb'),
+        ];
+      case 2:
+        return const [
+          _NavItem(icon: Icons.home_filled, label: 'Home'),
+          _NavItem(icon: Icons.menu_book, label: 'Law Insights'),
+          _NavItem(icon: Icons.forum, label: 'SocialHubb'),
+        ];
+      case 3:
+        return const [
+          _NavItem(icon: Icons.home_filled, label: 'Home'),
+          _NavItem(icon: Icons.menu_book, label: 'Law Insights'),
+          _NavItem(icon: Icons.balance, label: 'Chambers'),
+        ];
+      case 4:
+        return const [
+          _NavItem(icon: Icons.search, label: 'Search'),
+          _NavItem(icon: Icons.create, label: 'Create Post'),
+          _NavItem(icon: Icons.videocam, label: 'Live'),
+        ];
+      case 5:
+        return const [
+          _NavItem(icon: Icons.home_filled, label: 'Home'),
+          _NavItem(icon: Icons.balance, label: 'Chambers'),
+          _NavItem(icon: Icons.forum, label: 'SocialHubb'),
+        ];
+      default:
+        return const [];
+    }
+  }
+
   // 🔹 Navigation logic for each item
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
 
+    // Use callback if provided (for MainLayout), otherwise use old navigation
+    if (widget.onItemTapped != null) {
+      widget.onItemTapped!(index);
+      return;
+    }
+
+    // Fallback to old navigation for backward compatibility
     switch (widget.setup) {
-      case 1: // Home
-        if (index == 0) _navigateBasedOnAuthStatus(context,  GeneralHospitalPage());
-        else if (index == 1) _navigateBasedOnAuthStatus(context,  LibraryPage());
-        else if (index == 2) _navigateBasedOnAuthStatus(context, const HomeScreen(initialTabIndex: 0));
+      case 1: // Home setup (default)
+        if (index == 0) _navigateBasedOnAuthStatus(context, const HomePage());
+        else if (index == 1) _navigateBasedOnAuthStatus(context, ChambersContent());
+        else if (index == 2) _navigateBasedOnAuthStatus(context, const ChatHomePage());
+        else if (index == 3) _navigateBasedOnAuthStatus(context, const SocialContent(initialTabIndex: 0));
         break;
 
       case 2: // Chambers
-        if (index == 0) _navigateBasedOnAuthStatus(context,  HomePage());
-        else if (index == 1) _navigateBasedOnAuthStatus(context,  LibraryPage());
+        if (index == 0) _navigateBasedOnAuthStatus(context, HomePage());
+        else if (index == 1) _navigateBasedOnAuthStatus(context, LibraryPage());
         else if (index == 2) _navigateBasedOnAuthStatus(context, const HomeScreen(initialTabIndex: 1));
         break;
 
       case 3: // Social
-        if (index == 0) _navigateBasedOnAuthStatus(context,  HomePage());
-        else if (index == 1) _navigateBasedOnAuthStatus(context,  LibraryPage());
-        else if (index == 2) _navigateBasedOnAuthStatus(context,  GeneralHospitalPage());
+        if (index == 0) _navigateBasedOnAuthStatus(context, HomePage());
+        else if (index == 1) _navigateBasedOnAuthStatus(context, LibraryPage());
+        else if (index == 2) _navigateBasedOnAuthStatus(context, GeneralHospitalPage());
         break;
 
       case 4: // Forum
@@ -105,86 +165,93 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
         break;
 
       case 5: // Law insights
-        if (index == 0) _navigateBasedOnAuthStatus(context,  HomePage());
-        else if (index == 1) _navigateBasedOnAuthStatus(context,  GeneralHospitalPage());
+        if (index == 0) _navigateBasedOnAuthStatus(context, HomePage());
+        else if (index == 1) _navigateBasedOnAuthStatus(context, GeneralHospitalPage());
         else if (index == 2) _navigateBasedOnAuthStatus(context, const HomeScreen(initialTabIndex: 1));
         break;
     }
   }
 
-  // 🔹 Builds items dynamically based on setup
-  List<BottomNavigationBarItem> _buildNavItems() {
-    switch (widget.setup) {
-      case 1:
-        return const [
-          BottomNavigationBarItem(icon: Icon(Icons.balance), label: 'Chambers'),
-          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Law Insights'),
-          BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'SocialHubb'),
-        ];
-      case 2:
-        return const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Law Insights'),
-          BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'SocialHubb'),
-        ];
-      case 3:
-        return const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Law Insights'),
-          BottomNavigationBarItem(icon: Icon(Icons.balance), label: 'Chambers'),
-        ];
-      case 4:
-        return const [
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-          BottomNavigationBarItem(icon: Icon(Icons.create), label: 'Create Post'),
-          BottomNavigationBarItem(icon: Icon(Icons.videocam), label: 'Live'),
-        ];
-      case 5:
-        return const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.balance), label: 'Chambers'),
-          BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'SocialHubb'),
-        ];
-      default:
-        return const [];
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final navItems = _buildNavItems();
+
     return SafeArea(
-      child: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8.0,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.grey[900],
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(16.0),
-              topRight: Radius.circular(16.0),
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black54,
-                blurRadius: 10,
-                offset: Offset(0, -1),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.75),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white12),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black54,
+                    blurRadius: 20,
+                    offset: Offset(0, 10),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: BottomNavigationBar(
-            items: _buildNavItems(),
-            currentIndex: _selectedIndex,
-            onTap: _onItemTapped,
-            selectedItemColor: Colors.white,
-            unselectedItemColor: Colors.grey[400],
-            selectedLabelStyle:
-            const TextStyle(fontSize: 10.0, fontWeight: FontWeight.bold),
-            unselectedLabelStyle: const TextStyle(fontSize: 8.0),
-            backgroundColor: Colors.transparent,
-            elevation: 0,
+              child: Row(
+                children: List.generate(navItems.length, (index) {
+                  final item = navItems[index];
+                  final isSelected = index == _selectedIndex;
+                  return Expanded(
+                    child: InkWell(
+                      onTap: () => _onItemTapped(index),
+                      borderRadius: BorderRadius.circular(14),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOut,
+                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                        decoration: BoxDecoration(
+                          color: isSelected ? Colors.white.withOpacity(0.08) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              item.icon,
+                              size: 22,
+                              color: isSelected ? Colors.white : Colors.white70,
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              item.label,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                color: isSelected ? Colors.white : Colors.white70,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
           ),
         ),
       ),
     );
   }
+}
+
+class _NavItem {
+  final IconData icon;
+  final String label;
+
+  const _NavItem({
+    required this.icon,
+    required this.label,
+  });
 }

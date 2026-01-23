@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -43,8 +44,21 @@ class _DoctorsRowItemState extends State<DoctorsRowItem> {
 
   /// Fetch the 2 closest hospitals
   Future<List<String>> _fetchClosestHospitals(Position userPosition) async {
+    // #region agent log
+    final logFile = File(r'c:\Users\HP\PROJECTS\flutter_projects\lawhubb\Lawhubb\.cursor\debug.log');
+    void debugLog(String hypothesisId, String message, Map<String, dynamic> data) {
+      try {
+        final entry = '{"hypothesisId":"$hypothesisId","location":"doctors_row_item.dart:_fetchClosestHospitals","message":"$message","data":${data.toString().replaceAll("'", '"')},"timestamp":${DateTime.now().millisecondsSinceEpoch},"sessionId":"debug-session"}\n';
+        logFile.writeAsStringSync(entry, mode: FileMode.append);
+      } catch (_) {}
+    }
+    debugLog('A', 'Fetching Chamber collection', {'userLat': userPosition.latitude, 'userLng': userPosition.longitude});
+    // #endregion
     try {
       QuerySnapshot snapshot = await _firestore.collection('Chamber').get();
+      // #region agent log
+      debugLog('A', 'Chamber query success', {'docCount': snapshot.docs.length});
+      // #endregion
       List<Map<String, dynamic>> hospitals = [];
 
       for (var doc in snapshot.docs) {
@@ -77,6 +91,13 @@ class _DoctorsRowItemState extends State<DoctorsRowItem> {
       hospitals.sort((a, b) => a['distance'].compareTo(b['distance']));
       return hospitals.take(2).map((h) => h['id'] as String).toList();
     } catch (e) {
+      // #region agent log
+      final logFile = File(r'c:\Users\HP\PROJECTS\flutter_projects\lawhubb\Lawhubb\.cursor\debug.log');
+      try {
+        final entry = '{"hypothesisId":"A","location":"doctors_row_item.dart:_fetchClosestHospitals","message":"Chamber query FAILED","data":{"error":"${e.toString()}"},"timestamp":${DateTime.now().millisecondsSinceEpoch},"sessionId":"debug-session"}\n';
+        logFile.writeAsStringSync(entry, mode: FileMode.append);
+      } catch (_) {}
+      // #endregion
       print('Error fetching closest Chambers: $e');
       return [];
     }

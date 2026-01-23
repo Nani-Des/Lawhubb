@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hive/hive.dart';
 import 'upload_pdf.dart';
 import 'pdf_reader_page.dart';
-import 'dart:math' as math;
 
 class LibraryPage extends StatefulWidget {
   const LibraryPage({super.key});
@@ -93,51 +92,134 @@ class _LibraryPageState extends State<LibraryPage> {
       onTap: () => _openReader(pdf),
       child: Hero(
         tag: 'book_$id',
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeOutCubic,
+        child: Container(
           decoration: BoxDecoration(
             color: Colors.grey[900],
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.45), blurRadius: 6, offset: const Offset(0,4)),
-              if (progress > 0) BoxShadow(color: Colors.redAccent.withOpacity(0.08), blurRadius: 8, spreadRadius: 1),
-            ],
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: Colors.grey[800]!,
+              width: 1,
+            ),
           ),
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _ProgressRing(progress: progress),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.picture_as_pdf, color: Colors.redAccent, size: 36),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[850],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.picture_as_pdf, color: Colors.white, size: 28),
+                  ),
+                  if (progress > 0)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[850],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${(progress * 100).toStringAsFixed(0)}%',
+                        style: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                 ],
               ),
-              const SizedBox(height: 10),
-              Text(pdf['title'] ?? 'Untitled', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold), maxLines: 2, overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 12),
+              Text(
+                pdf['title'] ?? 'Untitled',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                  letterSpacing: -0.2,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
               const SizedBox(height: 6),
-              Text(pdf['author'] ?? 'Unknown', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+              Text(
+                pdf['author'] ?? 'Unknown',
+                style: TextStyle(
+                  color: Colors.grey[500],
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
               const Spacer(),
+              if (progress > 0)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      backgroundColor: Colors.grey[850],
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      minHeight: 4,
+                    ),
+                  ),
+                ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('₵${price.toStringAsFixed(2)}', style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
-                  IconButton(
-                    icon: Icon(archiveBox.containsKey(id) ? Icons.bookmark : Icons.bookmark_add, color: archiveBox.containsKey(id) ? Colors.redAccent : Colors.white70),
-                    onPressed: () {
-                      if (archiveBox.containsKey(id)) archiveBox.delete(id);
-                      else archiveBox.put(id, {
-                        'url': pdf['url'],
-                        'title': pdf['title'] ?? 'Untitled',
-                        'progress': progress,
-                        'progressPage': saved?['progressPage'] ?? 1,
-                        'timestamp': DateTime.now().toIso8601String()
-                      });
+                  if (price > 0)
+                    Text(
+                      '₵${price.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: Colors.grey[400],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    )
+                  else
+                    Text(
+                      'Free',
+                      style: TextStyle(
+                        color: Colors.grey[400],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  GestureDetector(
+                    onTap: () {
+                      if (archiveBox.containsKey(id)) {
+                        archiveBox.delete(id);
+                      } else {
+                        archiveBox.put(id, {
+                          'url': pdf['url'],
+                          'title': pdf['title'] ?? 'Untitled',
+                          'progress': progress,
+                          'progressPage': saved?['progressPage'] ?? 1,
+                          'timestamp': DateTime.now().toIso8601String()
+                        });
+                      }
                       setState(() {});
                     },
-                  )
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: archiveBox.containsKey(id) ? Colors.white : Colors.grey[850],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        archiveBox.containsKey(id) ? Icons.bookmark : Icons.bookmark_border,
+                        color: archiveBox.containsKey(id) ? Colors.black : Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -151,36 +233,74 @@ class _LibraryPageState extends State<LibraryPage> {
     final cont = continueList;
     if (cont.isEmpty) return const SizedBox.shrink();
     return SizedBox(
-      height: 86,
+      height: 90,
       child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
         itemCount: cont.length,
         separatorBuilder: (_,__) => const SizedBox(width: 12),
         itemBuilder: (context, i) {
           final it = cont[i];
+          final progress = (it['progress'] as num?)?.toDouble() ?? 0.0;
           return GestureDetector(
             onTap: () => _openReader(it, page: it['progressPage']),
             child: Container(
-              width: 220,
+              width: 240,
               decoration: BoxDecoration(
                 color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white10),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.grey[800]!),
               ),
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
               child: Row(
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(it['title'] ?? 'Untitled', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold), maxLines: 2, overflow: TextOverflow.ellipsis),
-                      const SizedBox(height: 6),
-                      Text('${(it['progress']*100).toStringAsFixed(0)}% read', style: const TextStyle(color: Colors.white70)),
-                    ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          it['title'] ?? 'Untitled',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            letterSpacing: -0.2,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            backgroundColor: Colors.grey[850],
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            minHeight: 4,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${(progress * 100).toStringAsFixed(0)}% complete',
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const Spacer(),
-                  const Icon(Icons.play_circle_fill, color: Colors.redAccent, size: 28),
+                  const SizedBox(width: 12),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.play_arrow, color: Colors.black, size: 24),
+                  ),
                 ],
               ),
             ),
@@ -195,60 +315,163 @@ class _LibraryPageState extends State<LibraryPage> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.redAccent,
+        backgroundColor: Colors.black,
         elevation: 0,
-        title: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              const Text('Library', style: TextStyle(fontWeight: FontWeight.w600)),
-              const SizedBox(width: 12),
-              _buildBadge('Streak ${streakDays}d', Icons.whatshot, active: streakDays >= 3),
-              _buildBadge('Deep Diver', Icons.psychology, active: achieved['deep_diver'] ?? false),
-            ],
-          ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey[850],
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: Colors.grey[800]!,
+                ),
+              ),
+              child: const Icon(
+                Icons.menu_book,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Law Insights',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.3,
+              ),
+            ),
+          ],
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.upload_file, color: Colors.white), onPressed: () async {
-            await Navigator.push(context, MaterialPageRoute(builder: (_) => const UploadPDFPage()));
-            await _fetchPDFs();
-          }),
-          IconButton(icon: const Icon(Icons.notes, color: Colors.white), onPressed: () {
-            showModalBottomSheet(
-              context: context,
-              backgroundColor: Colors.grey[900],
-              builder: (_) => _notesModal(),
-            );
-          }),
+          IconButton(
+            icon: const Icon(Icons.upload_file, color: Colors.white),
+            onPressed: () async {
+              await Navigator.push(
+                  context, MaterialPageRoute(builder: (_) => const UploadPDFPage()));
+              await _fetchPDFs();
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.notes, color: Colors.white),
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                backgroundColor: Colors.grey[900],
+                builder: (_) => _notesModal(),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: loading
-          ? const Center(child: CircularProgressIndicator(color: Colors.redAccent))
+          ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(12),
-            child: TextField(
-              controller: searchController,
-              onChanged: _search,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: 'Search title/author/category',
-                hintStyle: const TextStyle(color: Colors.white54),
-                filled: true,
-                fillColor: Colors.grey[900],
-                prefixIcon: const Icon(Icons.search, color: Colors.white54),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-              ),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildStatChip('${pdfs.length} Books', Icons.library_books),
+                    _buildStatChip('Streak ${streakDays}d', Icons.local_fire_department),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: searchController,
+                  onChanged: _search,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Search title, author, category...',
+                    hintStyle: TextStyle(color: Colors.grey[600]),
+                    filled: true,
+                    fillColor: Colors.grey[900],
+                    prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[800]!),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[800]!),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[700]!),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  ),
+                ),
+              ],
             ),
           ),
-          _continueStrip(),
-          const SizedBox(height: 8),
+          if (continueList.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Continue Reading',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  Text(
+                    '${continueList.length} items',
+                    style: TextStyle(
+                      color: Colors.grey[500],
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            _continueStrip(),
+            const SizedBox(height: 16),
+          ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'All Documents',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                Text(
+                  '${filtered.length} items',
+                  style: TextStyle(
+                    color: Colors.grey[500],
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: GridView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2, mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 0.72),
+                  crossAxisCount: 2, mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 0.7),
               itemCount: filtered.length,
               itemBuilder: (context, i) => _bookCard(filtered[i]),
             ),
@@ -258,16 +481,27 @@ class _LibraryPageState extends State<LibraryPage> {
     );
   }
 
-  Widget _buildBadge(String label, IconData icon, {bool active = false}) {
+  Widget _buildStatChip(String label, IconData icon) {
     return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(color: active ? Colors.redAccent : Colors.grey[850], borderRadius: BorderRadius.circular(20)),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[800]!),
+      ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.white, size: 14),
+          Icon(icon, color: Colors.white, size: 16),
           const SizedBox(width: 6),
-          Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -276,17 +510,65 @@ class _LibraryPageState extends State<LibraryPage> {
   Widget _notesModal() {
     final keys = notesBox.keys.toList().reversed.toList();
     return Container(
-      height: 420,
-      padding: const EdgeInsets.all(12),
+      height: 500,
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('My Notes', style: TextStyle(color: Colors.redAccent, fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: Colors.grey[850]!),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'My Notes',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                Text(
+                  '${keys.length} notes',
+                  style: TextStyle(
+                    color: Colors.grey[500],
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: keys.isEmpty
-                ? const Center(child: Text('No notes yet', style: TextStyle(color: Colors.white70)))
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.note_outlined, color: Colors.grey[700], size: 48),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No notes yet',
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
                 : ListView.separated(
+              padding: const EdgeInsets.all(16),
               itemBuilder: (ctx, idx) {
                 final k = keys[idx];
                 final note = notesBox.get(k);
@@ -294,22 +576,66 @@ class _LibraryPageState extends State<LibraryPage> {
                   onTap: () => _openReader(note, fromNote: true, page: note['page']),
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: Colors.grey[850], borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white10)),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[850],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[800]!),
+                    ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.sticky_note_2, color: Colors.redAccent),
-                        const SizedBox(width: 10),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[800],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.sticky_note_2, color: Colors.white, size: 20),
+                        ),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(note['title'] ?? k, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
-                              const SizedBox(height: 4),
-                              Text(note['text'] ?? '', style: const TextStyle(color: Colors.white70, fontSize: 13), maxLines: 3, overflow: TextOverflow.ellipsis),
-                              const SizedBox(height: 4),
-                              Text('Page ${note['page'] ?? 0}', style: const TextStyle(color: Colors.redAccent, fontSize: 12)),
+                              Text(
+                                note['title'] ?? k,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                  letterSpacing: -0.2,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                note['text'] ?? '',
+                                style: TextStyle(
+                                  color: Colors.grey[400],
+                                  fontSize: 13,
+                                  height: 1.4,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[800],
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  'Page ${note['page'] ?? 0}',
+                                  style: TextStyle(
+                                    color: Colors.grey[400],
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -318,36 +644,10 @@ class _LibraryPageState extends State<LibraryPage> {
                   ),
                 );
               },
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
               itemCount: keys.length,
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-// Tiny progress ring
-class _ProgressRing extends StatelessWidget {
-  final double progress;
-  const _ProgressRing({required this.progress});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 44,
-      height: 44,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          CircularProgressIndicator(
-            value: progress,
-            strokeWidth: 4,
-            backgroundColor: Colors.white12,
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.redAccent),
-          ),
-          Text('${(progress * 100).toStringAsFixed(0)}%', style: const TextStyle(color: Colors.white, fontSize: 10)),
         ],
       ),
     );

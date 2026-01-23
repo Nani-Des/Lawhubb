@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:convert';
 
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -52,7 +51,8 @@ class TranslationService {
     String sourceLanguage = 'en',
   }) async {
     try {
-      print('Starting translation for text: $text to language: $targetLanguage');
+      print(
+          'Starting translation for text: $text to language: $targetLanguage');
 
       final url = Uri.parse('$API_URL?subscription-key=$API_KEY');
 
@@ -97,7 +97,8 @@ class TranslationService {
         }
       } else {
         final error = jsonDecode(decodedBody);
-        throw Exception('Translation failed: ${error['message'] ?? 'Unknown error'}');
+        throw Exception(
+            'Translation failed: ${error['message'] ?? 'Unknown error'}');
       }
     } catch (e) {
       print('Translation Error: $e');
@@ -116,7 +117,6 @@ class TranslationService {
   }
 }
 
-
 class ChatHomePage extends StatefulWidget {
   const ChatHomePage({super.key});
 
@@ -124,24 +124,13 @@ class ChatHomePage extends StatefulWidget {
   _ChatHomePageState createState() => _ChatHomePageState();
 }
 
-
-class _ChatHomePageState extends State<ChatHomePage>
-    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
-  late TabController _tabController;
-  final List<Widget> _pages = [ChatPage(), ForumPage()];
-  bool? isExpert; // Store user's expert status
+class _ChatHomePageState extends State<ChatHomePage> {
+  bool? isExpert;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    //CallService().initialize();
-    _fetchUserRole(); // Fetch user role when initializing
-    _tabController.addListener(() {
-      if (mounted) {
-        setState(() {}); // ✅ Ensures FAB updates correctly when switching tabs
-      }
-    });
+    _fetchUserRole();
   }
 
   Future<void> _fetchUserRole() async {
@@ -160,84 +149,28 @@ class _ChatHomePageState extends State<ChatHomePage>
   }
 
   @override
-  bool get wantKeepAlive => true;
-
-  @override
   Widget build(BuildContext context) {
-    super.build(context); // Call super.build to ensure the mixin works correctly
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(
-          _tabController.index == 0 ? 'Private Chats' : 'Open Forum',
-          style: TextStyle(color: Colors.white),
+        title: const Text(
+          'Chats',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.tealAccent,
+        backgroundColor: Colors.black,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: IndexedStack(
-        index: _tabController.index,
-        children: _pages,
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.teal.shade700, Colors.tealAccent.shade400],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(
-              icon: Icon(Icons.message, size: 28),
-              text: 'Private Chats',
-            ),
-            Tab(
-              icon: Icon(Icons.forum, size: 28),
-              text: 'Open Forum',
-            ),
-          ],
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.grey[300],
-          indicator: const UnderlineTabIndicator(
-            borderSide: BorderSide(
-              color: Colors.white,
-              width: 3,
-            ),
-            insets: EdgeInsets.symmetric(horizontal: 40),
-          ),
-          indicatorSize: TabBarIndicatorSize.tab,
-          labelStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
-          unselectedLabelStyle: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.normal,
-          ),
-        ),
-      ),
-      floatingActionButton: _tabController.index == 0
-          ? SpeedDial(
+      body: const ChatPage(),
+      floatingActionButton: SpeedDial(
         icon: Icons.add,
         activeIcon: Icons.close,
-        backgroundColor: Colors.teal,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
         children: [
           SpeedDialChild(
             child: const Icon(Icons.person_add),
-            backgroundColor: Colors.teal,
+            backgroundColor: Colors.white,
             label: 'Add User',
             onTap: () async {
               String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
@@ -246,7 +179,6 @@ class _ChatHomePageState extends State<ChatHomePage>
               }
             },
           ),
-          // Only show Health Insights if user is an expert
           if (isExpert == true)
             SpeedDialChild(
               child: const Icon(Icons.analytics),
@@ -262,22 +194,7 @@ class _ChatHomePageState extends State<ChatHomePage>
               },
             ),
         ],
-      )
-          : isExpert == true // Only show FAB in forum tab if expert
-          ? FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const HealthInsightsPage(),
-              fullscreenDialog: true,
-            ),
-          );
-        },
-        backgroundColor: Colors.teal,
-        child: const Icon(Icons.analytics, color: Colors.white),
-      )
-          : null, // Hide FAB if not expert // Hide FAB completely if not expert
+      ),
     );
   }
 }
@@ -311,12 +228,11 @@ class CustomFABLocation extends FloatingActionButtonLocation {
       return Offset.zero;
     }
 
-    final defaultOffset = FloatingActionButtonLocation.endFloat
-        .getOffset(scaffoldGeometry);
+    final defaultOffset =
+        FloatingActionButtonLocation.endFloat.getOffset(scaffoldGeometry);
     return Offset(defaultOffset.dx, defaultOffset.dy - 25);
   }
 }
-
 
 void _showUserList(BuildContext context, String currentUserId) {
   showModalBottomSheet(
@@ -325,7 +241,8 @@ void _showUserList(BuildContext context, String currentUserId) {
       return FutureBuilder<QuerySnapshot>(
         future: FirebaseFirestore.instance
             .collection('Users')
-            .where(FieldPath.documentId, isNotEqualTo: currentUserId) // Exclude current user
+            .where(FieldPath.documentId,
+                isNotEqualTo: currentUserId) // Exclude current user
             .get(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -370,26 +287,35 @@ void _showUserList(BuildContext context, String currentUserId) {
 
                     return ListTile(
                       leading: CircleAvatar(
-                        backgroundImage: userPic.isNotEmpty ? NetworkImage(userPic) : null,
+                        backgroundImage:
+                            userPic.isNotEmpty ? NetworkImage(userPic) : null,
                         child: userPic.isEmpty ? Text(userFname[0]) : null,
                       ),
                       title: Text(fullName),
                       //subtitle: Text(userPhone),
                       trailing: isOnline
-                          ? const Icon(Icons.circle, color: Colors.green, size: 12)
+                          ? const Icon(Icons.circle,
+                              color: Colors.green, size: 12)
                           : null,
                       onTap: () async {
                         Navigator.pop(context); // Close modal
 
                         // Get the current user details
-                        String? fromUid = FirebaseAuth.instance.currentUser?.uid;
+                        String? fromUid =
+                            FirebaseAuth.instance.currentUser?.uid;
                         if (fromUid == null) {
                           print("Error: fromUid is null");
                           return;
                         }
 
-                        DocumentSnapshot fromUserSnapshot = await FirebaseFirestore.instance.collection('Users').doc(fromUid).get();
-                        String fromName = '${fromUserSnapshot['Fname'] ?? 'Unknown'} ${fromUserSnapshot['Lname'] ?? ''}'.trim();
+                        DocumentSnapshot fromUserSnapshot =
+                            await FirebaseFirestore.instance
+                                .collection('Users')
+                                .doc(fromUid)
+                                .get();
+                        String fromName =
+                            '${fromUserSnapshot['Fname'] ?? 'Unknown'} ${fromUserSnapshot['Lname'] ?? ''}'
+                                .trim();
                         String fromPic = fromUserSnapshot['User Pic'] ?? '';
 
                         // Get the tapped user's details
@@ -397,7 +323,8 @@ void _showUserList(BuildContext context, String currentUserId) {
                         String toName = fullName;
                         String toPic = userPic ?? '';
 
-                        String chatId = await _getOrCreateChatThread(fromUid, fromName, fromPic, toUid, toName, toPic);
+                        String chatId = await _getOrCreateChatThread(
+                            fromUid, fromName, fromPic, toUid, toName, toPic);
 
                         if (chatId.isEmpty) {
                           print("Error: chatId is empty!");
@@ -406,7 +333,8 @@ void _showUserList(BuildContext context, String currentUserId) {
 
                         print("chatId retrieved: $chatId");
 
-                        if (!context.mounted) return; // Ensure the context is still active
+                        if (!context.mounted)
+                          return; // Ensure the context is still active
 
                         // Debug logs
                         print("Navigating to ChatThreadDetailsPage with:");
@@ -414,7 +342,6 @@ void _showUserList(BuildContext context, String currentUserId) {
                         print("toName: $toName");
                         print("toUid: $toUid");
                         print("fromUid: $fromUid");
-
 
                         // Navigate to ChatThreadDetailsPage
                         Navigator.push(
@@ -441,16 +368,13 @@ void _showUserList(BuildContext context, String currentUserId) {
   );
 }
 
-
-Future<String> _getOrCreateChatThread(
-    String fromUid, String fromName, String fromPic,
-    String toUid, String toName, String toPic) async {
+Future<String> _getOrCreateChatThread(String fromUid, String fromName,
+    String fromPic, String toUid, String toName, String toPic) async {
   final chatRef = FirebaseFirestore.instance.collection('ChatMessages');
 
   // Step 1: Check if a chat already exists
   QuerySnapshot existingChat = await chatRef
-      .where('participants', arrayContainsAny: [fromUid, toUid])
-      .get();
+      .where('participants', arrayContainsAny: [fromUid, toUid]).get();
 
   for (var doc in existingChat.docs) {
     List<dynamic> participants = doc['participants'];
@@ -483,10 +407,8 @@ Future<String> _getOrCreateChatThread(
 
   print("New chat created with ID: ${newChat.id}");
 
-
   return newChat.id; // Return the chat thread ID
 }
-
 
 String truncateMessage(String message, {int maxLength = 50}) {
   if (message.length <= maxLength) {
@@ -495,7 +417,6 @@ String truncateMessage(String message, {int maxLength = 50}) {
   return '${message.substring(0, maxLength)}...';
 }
 
-
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
 
@@ -503,7 +424,8 @@ class ChatPage extends StatefulWidget {
   _ChatPageState createState() => _ChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
+class _ChatPageState extends State<ChatPage>
+    with AutomaticKeepAliveClientMixin {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final Map<String, Map<String, dynamic>> _userCache = {};
   bool _isLoadingUsers = true;
@@ -531,7 +453,8 @@ class _ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin 
     final participantIds = <String>{};
     for (final chat in chatSnapshot.docs) {
       final participants = chat['participants'] as List<dynamic>;
-      participantIds.addAll(participants.where((id) => id != currentUserId).cast<String>());
+      participantIds.addAll(
+          participants.where((id) => id != currentUserId).cast<String>());
     }
 
     // Load all user data in batch
@@ -568,15 +491,13 @@ class _ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin 
   }
 
   // Get or create chat thread
-  Future<String> _getOrCreateChatThread(
-      String fromUid, String fromName, String fromPic,
-      String toUid, String toName, String toPic) async {
+  Future<String> _getOrCreateChatThread(String fromUid, String fromName,
+      String fromPic, String toUid, String toName, String toPic) async {
     final chatRef = FirebaseFirestore.instance.collection('ChatMessages');
 
     // Step 1: Check if a chat already exists
     QuerySnapshot existingChat = await chatRef
-        .where('participants', arrayContainsAny: [fromUid, toUid])
-        .get();
+        .where('participants', arrayContainsAny: [fromUid, toUid]).get();
 
     for (var doc in existingChat.docs) {
       List<dynamic> participants = doc['participants'];
@@ -610,7 +531,6 @@ class _ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin 
     print("New chat created with ID: ${newChat.id}");
     return newChat.id; // Return the chat thread ID
   }
-
 
   // Mark messages as read when the chat thread is opened
   Future<void> _markMessagesAsRead(String chatId, String currentUserId) async {
@@ -646,7 +566,7 @@ class _ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin 
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
+          return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.white)));
         }
 
         if (!snapshot.hasData || _isLoadingUsers) {
@@ -689,7 +609,8 @@ class _ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin 
             final lastMessage = chat['last_msg'] ?? '';
             final lastMessageType = chat['type'] ?? '';
             final isCurrentUserSender = chat['from_uid'] == currentUserId;
-            final otherParticipantId = isCurrentUserSender ? chat['to_uid'] : chat['from_uid'];
+            final otherParticipantId =
+                isCurrentUserSender ? chat['to_uid'] : chat['from_uid'];
             final userData = _userCache[otherParticipantId];
 
             // Skeleton loading if user data isn't loaded yet (shouldn't happen after preload)
@@ -711,14 +632,20 @@ class _ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin 
                   .where('read', isEqualTo: false)
                   .snapshots(),
               builder: (context, unreadSnapshot) {
-                final unreadCount = unreadSnapshot.hasData ? unreadSnapshot.data!.docs.length : 0;
+                final unreadCount = unreadSnapshot.hasData
+                    ? unreadSnapshot.data!.docs.length
+                    : 0;
 
                 return ListTile(
                   leading: CircleAvatar(
-                    backgroundImage: userPic != null ? NetworkImage(userPic) : null,
-                    child: userPic == null ? Text(firstName[0].toUpperCase()) : null,
+                    backgroundImage:
+                        userPic != null ? NetworkImage(userPic) : null,
+                    child: userPic == null
+                        ? Text(firstName[0].toUpperCase())
+                        : null,
                   ),
-                  title: Text(fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  title: Text(fullName,
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
                   subtitle: Row(
                     children: [
                       Expanded(
@@ -729,35 +656,38 @@ class _ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin 
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                           softWrap: false,
+                          style: TextStyle(color: Colors.grey[400]),
                         ),
                       ),
                     ],
                   ),
                   trailing: unreadCount > 0
                       ? AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black54.withOpacity(0.3),
-                          blurRadius: 6,
-                          spreadRadius: 2,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      unreadCount.toString(),
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
-                    ),
-                  )
+                          duration: const Duration(milliseconds: 300),
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black54.withOpacity(0.3),
+                                blurRadius: 6,
+                                spreadRadius: 2,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            unreadCount.toString(),
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 12),
+                          ),
+                        )
                       : Text(
-                    formatTimestamp(chat['last_time']),
-                    style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
-                  ),
+                          formatTimestamp(chat['last_time']),
+                          style: const TextStyle(
+                              fontSize: 12, color: Colors.grey),
+                        ),
                   onTap: () async {
                     await _markMessagesAsRead(chatId, currentUserId);
                     Navigator.push(
@@ -777,7 +707,6 @@ class _ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin 
             );
           },
         );
-
       },
     );
   }
@@ -825,9 +754,7 @@ class _ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin 
       subtitle: Text("Fetching user details..."),
     );
   }
-
 }
-
 
 class ForumPage extends StatefulWidget {
   const ForumPage({super.key});
@@ -836,7 +763,8 @@ class ForumPage extends StatefulWidget {
   _ForumPageState createState() => _ForumPageState();
 }
 
-class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
+class _ForumPageState extends State<ForumPage>
+    with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   bool? isExpert; // Store user's role
@@ -861,7 +789,8 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
     _animation = Tween<double>(begin: 0, end: 1).animate(_animationController)
       ..addListener(() {
         if (_disclaimerScrollController.hasClients) {
-          final maxScroll = _disclaimerScrollController.position.maxScrollExtent;
+          final maxScroll =
+              _disclaimerScrollController.position.maxScrollExtent;
           final currentScroll = maxScroll * _animation.value;
           _disclaimerScrollController.jumpTo(currentScroll);
         }
@@ -873,11 +802,13 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
   void _startAutoScroll() {
     Future.delayed(const Duration(seconds: 1), () {
       if (_disclaimerScrollController.hasClients) {
-        _disclaimerScrollController.animateTo(
-          _disclaimerScrollController.position.maxScrollExtent,
-          duration: const Duration(seconds: 20),
-          curve: Curves.linear,
-        ).then((_) => _startAutoScroll()); // Loop the animation
+        _disclaimerScrollController
+            .animateTo(
+              _disclaimerScrollController.position.maxScrollExtent,
+              duration: const Duration(seconds: 20),
+              curve: Curves.linear,
+            )
+            .then((_) => _startAutoScroll()); // Loop the animation
       }
     });
   }
@@ -890,7 +821,8 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
   }
 
   Widget _buildScrollingDisclaimer() {
-    const disclaimerText = " Disclaimer: This is a public forum. For professional medical advice, please consult a qualified health expert or visit a recognized healthcare facility.";
+    const disclaimerText =
+        " Disclaimer: This is a public forum. For professional medical advice, please consult a qualified health expert or visit a recognized healthcare facility.";
 
     return Container(
       height: 30,
@@ -998,7 +930,10 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
           ),
         ),
         child: StreamBuilder<QuerySnapshot>(
-          stream: _firestore.collection('ForumPosts').orderBy('timestamp', descending: true).snapshots(),
+          stream: _firestore
+              .collection('ForumPosts')
+              .orderBy('timestamp', descending: true)
+              .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return Center(child: Text('Error: ${snapshot.error}'));
@@ -1044,7 +979,9 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
                       ),
                       trailing: Text(
                         timestamp != null
-                            ? DateFormat.yMMMd().add_jm().format(timestamp.toDate())
+                            ? DateFormat.yMMMd()
+                                .add_jm()
+                                .format(timestamp.toDate())
                             : 'No Date',
                         style: TextStyle(
                           fontSize: 12,
@@ -1055,7 +992,8 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => PostDetailsPage(postId: postId, postTitle: post['content']),
+                            builder: (context) => PostDetailsPage(
+                                postId: postId, postTitle: post['content']),
                           ),
                         );
                       },
@@ -1069,7 +1007,6 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
       ),
     );
   }
-
 
   void _showPostMenu(BuildContext context, String postId) {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -1104,29 +1041,36 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
                     onTap: () async {
                       Navigator.pop(context);
                       final bool shouldDelete = await showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text('Delete Post'),
-                            content: const Text('Are you sure you want to delete this post?'),
-                            actions: [
-                              TextButton(
-                                child: const Text('No'),
-                                onPressed: () => Navigator.pop(context, false),
-                              ),
-                              TextButton(
-                                style: TextButton.styleFrom(
-                                  foregroundColor: Colors.red,
-                                ),
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text('Yes'),
-                              ),
-                            ],
-                          );
-                        },
-                      ) ?? false;
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text('Delete Post'),
+                                content: const Text(
+                                    'Are you sure you want to delete this post?'),
+                                actions: [
+                                  TextButton(
+                                    child: const Text('No'),
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
+                                  ),
+                                  TextButton(
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Colors.red,
+                                    ),
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
+                                    child: const Text('Yes'),
+                                  ),
+                                ],
+                              );
+                            },
+                          ) ??
+                          false;
                       if (shouldDelete) {
-                        await firestore.collection('ForumPosts').doc(postId).delete();
+                        await firestore
+                            .collection('ForumPosts')
+                            .doc(postId)
+                            .delete();
                       }
                     },
                   ),
@@ -1134,9 +1078,14 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
                   leading: const Icon(Icons.copy),
                   title: const Text('Copy Post'),
                   onTap: () {
-                    firestore.collection('ForumPosts').doc(postId).get().then((value) {
+                    firestore
+                        .collection('ForumPosts')
+                        .doc(postId)
+                        .get()
+                        .then((value) {
                       if (value.exists) {
-                        Clipboard.setData(ClipboardData(text: value['content']));
+                        Clipboard.setData(
+                            ClipboardData(text: value['content']));
                         Fluttertoast.showToast(
                           msg: 'Post copied to clipboard!',
                           toastLength: Toast.LENGTH_SHORT,
@@ -1157,10 +1106,12 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
                 ),
                 ListTile(
                   leading: const Icon(Icons.report, color: Colors.red),
-                  title: const Text('Report Post', style: TextStyle(color: Colors.red)),
+                  title: const Text('Report Post',
+                      style: TextStyle(color: Colors.red)),
                   onTap: () {
                     Navigator.pop(context);
-                    _showReportDialog(context, postId, postUserId, post['content']);
+                    _showReportDialog(
+                        context, postId, postUserId, post['content']);
                   },
                 ),
               ],
@@ -1171,7 +1122,8 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
     );
   }
 
-  void _showReportDialog(BuildContext context, String postId, String reportedUserId, String postContent) {
+  void _showReportDialog(BuildContext context, String postId,
+      String reportedUserId, String postContent) {
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
     if (currentUserId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1293,7 +1245,9 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
       };
 
       // Add to reports collection
-      await FirebaseFirestore.instance.collection('reportedPosts').add(reportData);
+      await FirebaseFirestore.instance
+          .collection('reportedPosts')
+          .add(reportData);
 
       // Also add to user's report history
       await FirebaseFirestore.instance
@@ -1309,20 +1263,20 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
           .collection('reportsReceived')
           .add(reportData);
 
-      Navigator.pop(context); // Close the dialog
+      Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Report submitted successfully')),
       );
     } catch (e) {
-      Navigator.pop(context); // Close the dialog
+      Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to submit report: ${e.toString()}')),
       );
     }
   }
 
-  void _showPostTranslationLanguageSelector(BuildContext context,
-      String postId) {
+  void _showPostTranslationLanguageSelector(
+      BuildContext context, String postId) {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -1345,8 +1299,7 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
                   title: Text(entry.value),
                   onTap: () {
                     Navigator.pop(context);
-                    _translatePostAndShowResult(
-                        postId, entry.key);
+                    _translatePostAndShowResult(postId, entry.key);
                   },
                 );
               }),
@@ -1357,13 +1310,12 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
     );
   }
 
-  Future<void> _translatePostAndShowResult(String postId,
-      String languageCode) async {
+  Future<void> _translatePostAndShowResult(
+      String postId, String languageCode) async {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
     try {
-      final postDoc = await firestore.collection('ForumPosts')
-          .doc(postId)
-          .get();
+      final postDoc =
+          await firestore.collection('ForumPosts').doc(postId).get();
       if (postDoc.exists) {
         final postContent = postDoc['content'];
         print('Translating post: "$postContent" to "$languageCode"');
@@ -1373,8 +1325,8 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
         );
         print('Translation Success: $translatedText');
 
-        late final ScaffoldFeatureController<SnackBar,
-            SnackBarClosedReason> controller;
+        late final ScaffoldFeatureController<SnackBar, SnackBarClosedReason>
+            controller;
 
         final snackBar = SnackBar(
           backgroundColor: Colors.teal[800],
@@ -1382,8 +1334,10 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Translated: $translatedText',
-                style: const TextStyle(fontSize: 18),),
+              Text(
+                'Translated: $translatedText',
+                style: const TextStyle(fontSize: 18),
+              ),
               const SizedBox(height: 20),
               Row(
                 children: [
@@ -1414,8 +1368,7 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
               ),
             ],
           ),
-          duration: const Duration(
-              days: 365),
+          duration: const Duration(days: 365),
         );
 
         controller = ScaffoldMessenger.of(context).showSnackBar(snackBar);
@@ -1467,7 +1420,10 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text('Cancel', style: TextStyle(color: Colors.teal[800]),),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.teal[800]),
+              ),
             ),
             TextButton(
               style: TextButton.styleFrom(
@@ -1478,7 +1434,10 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
                   final canPost = await WordFilterService()
                       .canSendMessage(postController.text.trim(), context);
                   if (!canPost) return;
-                  DocumentSnapshot userSnapshot = await _firestore.collection('Users').doc(currentUserId).get();
+                  DocumentSnapshot userSnapshot = await _firestore
+                      .collection('Users')
+                      .doc(currentUserId)
+                      .get();
                   if (!userSnapshot.exists) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("User data not found")),
@@ -1487,8 +1446,11 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
                   }
 
                   final userData = userSnapshot.data() as Map<String, dynamic>;
-                  final String fullName = "${userData['Fname'] ?? 'Unknown'} ${userData['Lname'] ?? ''}".trim();
-                  final String userRegion = userData['Region'] ?? 'Unknown Region';
+                  final String fullName =
+                      "${userData['Fname'] ?? 'Unknown'} ${userData['Lname'] ?? ''}"
+                          .trim();
+                  final String userRegion =
+                      userData['Region'] ?? 'Unknown Region';
 
                   await _firestore.collection('ForumPosts').add({
                     'content': postController.text.trim(),
@@ -1507,7 +1469,10 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
                   Navigator.pop(context);
                 }
               },
-              child: const Text('Post', style: TextStyle(color: Colors.white),),
+              child: const Text(
+                'Post',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -1515,32 +1480,93 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
     );
   }
 
-  Future<void> _processMessageForHealthInsights(String messageText, String userId, String userRegion) async {
+  Future<void> _processMessageForHealthInsights(
+      String messageText, String userId, String userRegion) async {
     final Map<String, List<String>> healthCategories = {
       'symptoms': [
-        'fever', 'pain', 'cough', 'fatigue', 'headache', 'nausea',
-        'dizziness', 'inflammation', 'rash', 'anxiety', 'malaria',
-        'typhoid', 'cholera', 'diarrhea', 'vomiting'
+        'fever',
+        'pain',
+        'cough',
+        'fatigue',
+        'headache',
+        'nausea',
+        'dizziness',
+        'inflammation',
+        'rash',
+        'anxiety',
+        'malaria',
+        'typhoid',
+        'cholera',
+        'diarrhea',
+        'vomiting'
       ],
       'conditions': [
-        'diabetes', 'hypertension', 'asthma', 'arthritis', 'depression',
-        'obesity', 'cancer', 'allergy', 'infection', 'insomnia',
-        'sickle cell', 'tuberculosis', 'HIV', 'hepatitis', 'stroke'
+        'diabetes',
+        'hypertension',
+        'asthma',
+        'arthritis',
+        'depression',
+        'obesity',
+        'cancer',
+        'allergy',
+        'infection',
+        'insomnia',
+        'sickle cell',
+        'tuberculosis',
+        'HIV',
+        'hepatitis',
+        'stroke'
       ],
       'treatments': [
-        'medication', 'therapy', 'surgery', 'exercise', 'diet',
-        'vaccination', 'rehabilitation', 'counseling', 'prescription', 'supplement',
-        'traditional medicine', 'herbs', 'physiotherapy', 'immunization', 'antibiotics'
+        'medication',
+        'therapy',
+        'surgery',
+        'exercise',
+        'diet',
+        'vaccination',
+        'rehabilitation',
+        'counseling',
+        'prescription',
+        'supplement',
+        'traditional medicine',
+        'herbs',
+        'physiotherapy',
+        'immunization',
+        'antibiotics'
       ],
       'lifestyle': [
-        'nutrition', 'fitness', 'sleep', 'stress', 'wellness',
-        'meditation', 'diet', 'exercise', 'hydration', 'mindfulness',
-        'traditional food', 'local diet', 'community', 'family health', 'work-life'
+        'nutrition',
+        'fitness',
+        'sleep',
+        'stress',
+        'wellness',
+        'meditation',
+        'diet',
+        'exercise',
+        'hydration',
+        'mindfulness',
+        'traditional food',
+        'local diet',
+        'community',
+        'family health',
+        'work-life'
       ],
       'preventive': [
-        'screening', 'checkup', 'vaccination', 'prevention', 'hygiene',
-        'immunization', 'monitoring', 'assessment', 'testing', 'evaluation',
-        'sanitation', 'clean water', 'mosquito nets', 'hand washing', 'nutrition'
+        'screening',
+        'checkup',
+        'vaccination',
+        'prevention',
+        'hygiene',
+        'immunization',
+        'monitoring',
+        'assessment',
+        'testing',
+        'evaluation',
+        'sanitation',
+        'clean water',
+        'mosquito nets',
+        'hand washing',
+        'nutrition'
       ],
     };
 
@@ -1551,12 +1577,14 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
       for (String keyword in keywords) {
         if (lowerCaseMessage.contains(keyword)) {
           matchedCategories.putIfAbsent(category, () => {});
-          matchedCategories[category]![keyword] = (matchedCategories[category]![keyword] ?? 0) + 1;
+          matchedCategories[category]![keyword] =
+              (matchedCategories[category]![keyword] ?? 0) + 1;
         }
       }
     });
 
-    final healthInsightsCollection = FirebaseFirestore.instance.collection('HealthInsights');
+    final healthInsightsCollection =
+        FirebaseFirestore.instance.collection('HealthInsights');
 
     for (String category in matchedCategories.keys) {
       for (String keyword in matchedCategories[category]!.keys) {
@@ -1571,7 +1599,8 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
           if (querySnapshot.docs.isNotEmpty) {
             final docId = querySnapshot.docs.first.id;
             await healthInsightsCollection.doc(docId).update({
-              'count': FieldValue.increment(matchedCategories[category]![keyword]!),
+              'count':
+                  FieldValue.increment(matchedCategories[category]![keyword]!),
               'lastUpdated': FieldValue.serverTimestamp(),
             });
           } else {
@@ -1586,7 +1615,8 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
             });
           }
         } catch (e) {
-          print('Error processing health insights for category $category and keyword $keyword: $e');
+          print(
+              'Error processing health insights for category $category and keyword $keyword: $e');
         }
       }
     }
@@ -1595,24 +1625,27 @@ class _ForumPageState extends State<ForumPage> with AutomaticKeepAliveClientMixi
   }
 }
 
-
 class PostDetailsPage extends StatefulWidget {
   final String postId;
   final String postTitle;
 
-  const PostDetailsPage({super.key, required this.postId, required this.postTitle});
+  const PostDetailsPage(
+      {super.key, required this.postId, required this.postTitle});
 
   @override
   _PostDetailsPageState createState() => _PostDetailsPageState();
 }
 
-class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProviderStateMixin {
-  final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+class _PostDetailsPageState extends State<PostDetailsPage>
+    with SingleTickerProviderStateMixin {
+  final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
   final ScrollController _scrollController = ScrollController();
   final TextEditingController commentController = TextEditingController();
   final FocusNode _focusNode = FocusNode(); // FocusNode to manage focus
   String? _replyingToUserId; // To track the user being replied to
-  String? _repliedContent; // To store the original message content being replied to
+  String?
+      _repliedContent; // To store the original message content being replied to
   String? _replyingToCommentId; // To track the comment being replied to
   String? _replyingToUserName; // To store the name of the user being replied to
 
@@ -1646,7 +1679,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
   Future<void> _fetchAndCacheUserData() async {
     try {
       // Fetch all users from Firestore
-      final usersSnapshot = await FirebaseFirestore.instance.collection('Users').get();
+      final usersSnapshot =
+          await FirebaseFirestore.instance.collection('Users').get();
       for (final userDoc in usersSnapshot.docs) {
         _userDataCache[userDoc.id] = userDoc.data() as Map<String, dynamic>;
       }
@@ -1661,7 +1695,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
     super.dispose();
   }
 
-  void _replyToMessage(BuildContext context, String shortUserName, String content, String replyUserId, String commentId) {
+  void _replyToMessage(BuildContext context, String shortUserName,
+      String content, String replyUserId, String commentId) {
     // Focus the reply TextField to activate the keyboard
     _focusNode.requestFocus();
 
@@ -1670,7 +1705,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
       _replyingToUserId = replyUserId;
       _repliedContent = content;
       _replyingToCommentId = commentId;
-      _replyingToUserName = shortUserName; // Store the name of the user being replied to
+      _replyingToUserName =
+          shortUserName; // Store the name of the user being replied to
     });
   }
 
@@ -1725,7 +1761,10 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
             ),
             child: Text(
               widget.postTitle,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.tealAccent[900]),
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.tealAccent[900]),
             ),
           ),
           Expanded(
@@ -1752,7 +1791,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
                 for (var comment in comments) {
                   final data = comment.data() as Map<String, dynamic>;
                   userIds.add(data['userId'] as String);
-                  if (data['repliedTo'] != null && data['repliedTo'].isNotEmpty) {
+                  if (data['repliedTo'] != null &&
+                      data['repliedTo'].isNotEmpty) {
                     userIds.add(data['repliedTo'] as String);
                   }
                 }
@@ -1761,7 +1801,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
                   // Pre-fetch all user data
                   future: _fetchUserData(userIds, userDataCache),
                   builder: (context, fetchSnapshot) {
-                    if (fetchSnapshot.connectionState == ConnectionState.waiting) {
+                    if (fetchSnapshot.connectionState ==
+                        ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
                     }
 
@@ -1771,7 +1812,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
                       cacheExtent: 1000, // Cache more items than default
                       itemCount: comments.length,
                       itemBuilder: (context, index) {
-                        final comment = comments[index].data() as Map<String, dynamic>;
+                        final comment =
+                            comments[index].data() as Map<String, dynamic>;
                         final userId = comment['userId'];
                         final commentId = comments[index].id;
                         final repliedTo = comment['repliedTo'] ?? '';
@@ -1789,8 +1831,10 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
                         return Column(
                           children: [
                             Card(
-                              key: ValueKey('comment_$commentId'), // Add a key for better list management
-                              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                              key: ValueKey(
+                                  'comment_$commentId'), // Add a key for better list management
+                              margin: const EdgeInsets.symmetric(
+                                  vertical: 8, horizontal: 16),
                               elevation: 2,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -1800,27 +1844,32 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (repliedTo.isNotEmpty) _buildReplyWidget(
-                                        repliedTo,
-                                        repliedContent,
-                                        userDataCache,
-                                        comment['repliedToCommentId'] ?? '', // Fixed: Provide empty string as fallback
-                                        comments
-                                    ),
+                                    if (repliedTo.isNotEmpty)
+                                      _buildReplyWidget(
+                                          repliedTo,
+                                          repliedContent,
+                                          userDataCache,
+                                          comment['repliedToCommentId'] ??
+                                              '', // Fixed: Provide empty string as fallback
+                                          comments),
                                     Row(
                                       children: [
                                         Expanded(
                                           child: ListTile(
                                             contentPadding: EdgeInsets.zero,
                                             title: Text(
-                                              comment['content'] ?? 'No Content',
-                                              style: const TextStyle(fontSize: 16),
+                                              comment['content'] ??
+                                                  'No Content',
+                                              style:
+                                                  const TextStyle(fontSize: 16),
                                             ),
                                             subtitle: Padding(
-                                              padding: const EdgeInsets.only(top: 8.0),
+                                              padding: const EdgeInsets.only(
+                                                  top: 8.0),
                                               child: Text(
                                                 'Posted by: $fullName\n${DateFormat('yyyy-MM-dd HH:mm').format(timestamp)}',
-                                                style: TextStyle(color: Colors.grey[600]),
+                                                style: TextStyle(
+                                                    color: Colors.grey[600]),
                                               ),
                                             ),
                                           ),
@@ -1829,24 +1878,39 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
                                         IconButton(
                                           icon: ScaleTransition(
                                             scale: _scaleAnimation,
-                                            child: const Icon(Icons.reply, color: Colors.tealAccent),
+                                            child: const Icon(Icons.reply,
+                                                color: Colors.tealAccent),
                                           ),
                                           onPressed: () {
                                             _animateReplyButton();
                                             _focusNode.requestFocus();
-                                            _replyToMessage(context, '$fname $lname', comment['content'], comment['userId'], commentId);
+                                            _replyToMessage(
+                                                context,
+                                                '$fname $lname',
+                                                comment['content'],
+                                                comment['userId'],
+                                                commentId);
                                           },
                                         ),
                                         // Vertical Dot Icon for Comment Menu
                                         IconButton(
-                                          icon: Icon(Icons.more_vert, color: Colors.grey[600]),
+                                          icon: Icon(Icons.more_vert,
+                                              color: Colors.grey[600]),
                                           onPressed: () {
                                             try {
-                                              final commentDoc = comments[index] as QueryDocumentSnapshot<Map<String, dynamic>>;
-                                              _showCommentMenu(context, scaffoldMessengerKey, commentDoc);
+                                              final commentDoc = comments[index]
+                                                  as QueryDocumentSnapshot<
+                                                      Map<String, dynamic>>;
+                                              _showCommentMenu(
+                                                  context,
+                                                  scaffoldMessengerKey,
+                                                  commentDoc);
                                             } catch (e) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text('Error loading comment: ${e.toString()}')),
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                    content: Text(
+                                                        'Error loading comment: ${e.toString()}')),
                                               );
                                             }
                                           },
@@ -1883,7 +1947,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
                 children: [
                   Text(
                     'Replying to $_replyingToUserName: ${_repliedContent != null && _repliedContent!.isNotEmpty ? '${_repliedContent!.substring(0, min(_repliedContent!.length, 15))}...' : _repliedContent ?? ''}',
-                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal[800]),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: Colors.teal[800]),
                   ),
                   const Spacer(),
                   IconButton(
@@ -1918,46 +1983,55 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
                       decoration: InputDecoration(
                         hintText: 'Type comment here...',
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
                         suffixIcon: Container(
                           width: 36,
                           height: 36,
-                          margin: const EdgeInsets.all(8), // Add some margin around the circle
+                          margin: const EdgeInsets.all(
+                              8), // Add some margin around the circle
                           decoration: BoxDecoration(
                             color: Colors.tealAccent, // teal background color
                             shape: BoxShape.circle, // Make it circular
                           ),
                           child: IconButton(
-                            icon: const Icon(Icons.send, color: Colors.white), // White icon for contrast
+                            icon: const Icon(Icons.send,
+                                color: Colors.white), // White icon for contrast
                             onPressed: () async {
                               if (commentController.text.trim().isNotEmpty) {
                                 if (currentUserId == null) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text("User not logged in")),
+                                    const SnackBar(
+                                        content: Text("User not logged in")),
                                   );
                                   return;
                                 }
 
-                                final canPost = await WordFilterService().canSendMessage(
-                                    commentController.text.trim(),
-                                    context
-                                );
+                                final canPost = await WordFilterService()
+                                    .canSendMessage(
+                                        commentController.text.trim(), context);
                                 if (!canPost) return;
 
-                                DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
-                                    .collection('Users')
-                                    .doc(currentUserId)
-                                    .get();
+                                DocumentSnapshot userSnapshot =
+                                    await FirebaseFirestore.instance
+                                        .collection('Users')
+                                        .doc(currentUserId)
+                                        .get();
                                 if (!userSnapshot.exists) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text("User data not found")),
+                                    const SnackBar(
+                                        content: Text("User data not found")),
                                   );
                                   return;
                                 }
 
-                                final userData = userSnapshot.data() as Map<String, dynamic>;
-                                final fullName = "${userData['Fname'] ?? 'Unknown'} ${userData['Lname'] ?? ''}".trim();
-                                final userRegion = userData['Region'] ?? 'Unknown Region';
+                                final userData =
+                                    userSnapshot.data() as Map<String, dynamic>;
+                                final fullName =
+                                    "${userData['Fname'] ?? 'Unknown'} ${userData['Lname'] ?? ''}"
+                                        .trim();
+                                final userRegion =
+                                    userData['Region'] ?? 'Unknown Region';
 
                                 // Prepare the comment data
                                 Map<String, dynamic> commentData = {
@@ -1970,8 +2044,10 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
                                 // Add reply details if replying to a comment
                                 if (_replyingToUserId != null) {
                                   commentData['repliedTo'] = _replyingToUserId;
-                                  commentData['repliedContent'] = _repliedContent;
-                                  commentData['repliedToCommentId'] = _replyingToCommentId;
+                                  commentData['repliedContent'] =
+                                      _repliedContent;
+                                  commentData['repliedToCommentId'] =
+                                      _replyingToCommentId;
                                 }
 
                                 // Add the comment to Firestore
@@ -1983,7 +2059,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
 
                                 // Process the message for health insights (for both regular comments and replies)
                                 await _processMessageForHealthInsights(
-                                  commentController.text, // Process the reply content
+                                  commentController
+                                      .text, // Process the reply content
                                   currentUserId,
                                   userRegion,
                                 );
@@ -2015,22 +2092,25 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
   }
 
 // Add this helper method to fetch all user data at once
-  Future<void> _fetchUserData(Set<String> userIds, Map<String, Map<String, dynamic>> cache) async {
+  Future<void> _fetchUserData(
+      Set<String> userIds, Map<String, Map<String, dynamic>> cache) async {
     List<Future> futures = [];
 
     for (String userId in userIds) {
       if (!cache.containsKey(userId)) {
-        futures.add(
-            FirebaseFirestore.instance.collection('Users').doc(userId).get().then((snapshot) {
-              if (snapshot.exists) {
-                cache[userId] = snapshot.data() as Map<String, dynamic>;
-              } else {
-                cache[userId] = {'Fname': 'Unknown', 'Lname': 'User'};
-              }
-            }).catchError((error) {
-              cache[userId] = {'Fname': 'Unknown', 'Lname': 'User'};
-            })
-        );
+        futures.add(FirebaseFirestore.instance
+            .collection('Users')
+            .doc(userId)
+            .get()
+            .then((snapshot) {
+          if (snapshot.exists) {
+            cache[userId] = snapshot.data() as Map<String, dynamic>;
+          } else {
+            cache[userId] = {'Fname': 'Unknown', 'Lname': 'User'};
+          }
+        }).catchError((error) {
+          cache[userId] = {'Fname': 'Unknown', 'Lname': 'User'};
+        }));
       }
     }
 
@@ -2040,7 +2120,12 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
   }
 
 // Add this helper method for the reply widget
-  Widget _buildReplyWidget(String repliedTo, String repliedContent, Map<String, Map<String, dynamic>> userDataCache, String repliedToCommentId, List<QueryDocumentSnapshot> comments) {
+  Widget _buildReplyWidget(
+      String repliedTo,
+      String repliedContent,
+      Map<String, Map<String, dynamic>> userDataCache,
+      String repliedToCommentId,
+      List<QueryDocumentSnapshot> comments) {
     final repliedUserData = userDataCache[repliedTo];
     final repliedFname = repliedUserData?['Fname'] ?? 'Unknown';
     final repliedLname = repliedUserData?['Lname'] ?? 'User';
@@ -2071,7 +2156,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
   }
 
   // Scroll to the message when user clicks on the user ID
-  void _scrollToMessage(String commentId, List<QueryDocumentSnapshot> comments) {
+  void _scrollToMessage(
+      String commentId, List<QueryDocumentSnapshot> comments) {
     final index = _getCommentIndexById(commentId, comments);
     if (index != -1) {
       _scrollController.animateTo(
@@ -2082,16 +2168,17 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
     }
   }
 
-  int _getCommentIndexById(String commentId, List<QueryDocumentSnapshot> comments) {
+  int _getCommentIndexById(
+      String commentId, List<QueryDocumentSnapshot> comments) {
     // Find the index of the comment by ID (this will be used to scroll to that specific comment)
     return comments.indexWhere((comment) => comment.id == commentId);
   }
 
   void _showCommentMenu(
-      BuildContext context,
-      GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey,
-      QueryDocumentSnapshot<Map<String, dynamic>> comment,
-      ) {
+    BuildContext context,
+    GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey,
+    QueryDocumentSnapshot<Map<String, dynamic>> comment,
+  ) {
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
     final commentUserId = comment['userId'];
 
@@ -2110,27 +2197,29 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
                 onTap: () async {
                   Navigator.pop(context);
                   final bool shouldDelete = await showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: const Text('Delete Comment'),
-                        content: const Text('Are you sure you want to delete this comment?'),
-                        actions: [
-                          TextButton(
-                            child: const Text('No'),
-                            onPressed: () => Navigator.pop(context, false),
-                          ),
-                          TextButton(
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.red,
-                            ),
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Yes'),
-                          ),
-                        ],
-                      );
-                    },
-                  ) ?? false;
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text('Delete Comment'),
+                            content: const Text(
+                                'Are you sure you want to delete this comment?'),
+                            actions: [
+                              TextButton(
+                                child: const Text('No'),
+                                onPressed: () => Navigator.pop(context, false),
+                              ),
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.red,
+                                ),
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('Yes'),
+                              ),
+                            ],
+                          );
+                        },
+                      ) ??
+                      false;
 
                   if (shouldDelete) {
                     await comment.reference.delete();
@@ -2165,7 +2254,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
             ),
             ListTile(
               leading: const Icon(Icons.report, color: Colors.red),
-              title: const Text('Report Comment', style: TextStyle(color: Colors.red)),
+              title: const Text('Report Comment',
+                  style: TextStyle(color: Colors.red)),
               onTap: () {
                 Navigator.pop(context);
                 _showCommentReportDialog(
@@ -2207,7 +2297,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
       context: context,
       builder: (context) {
         return Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -2220,7 +2311,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
-                  const Text('Please select a reason for reporting this comment:'),
+                  const Text(
+                      'Please select a reason for reporting this comment:'),
                   const SizedBox(height: 10),
                   DropdownButtonFormField<String>(
                     value: selectedReason,
@@ -2285,7 +2377,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
 
                           if (selectedReason == 'Other' && reason.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Please provide a reason")),
+                              const SnackBar(
+                                  content: Text("Please provide a reason")),
                             );
                             return;
                           }
@@ -2346,7 +2439,9 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
       };
 
       // Add to reports collection
-      await FirebaseFirestore.instance.collection('reportedComments').add(reportData);
+      await FirebaseFirestore.instance
+          .collection('reportedComments')
+          .add(reportData);
 
       // Also add to user's report history
       await FirebaseFirestore.instance
@@ -2369,7 +2464,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Report submitted successfully! Our team will review it.'),
+          content: const Text(
+              'Report submitted successfully! Our team will review it.'),
           duration: const Duration(seconds: 3),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -2395,11 +2491,12 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
   }
 
   void _showCommentTranslationLanguageSelector(
-      BuildContext context,
-      GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey,
-      QueryDocumentSnapshot<Map<String, dynamic>> comment,
-      ) {
-    final postId = comment.reference.parent.parent?.id; // Get the postId from the comment's parent
+    BuildContext context,
+    GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey,
+    QueryDocumentSnapshot<Map<String, dynamic>> comment,
+  ) {
+    final postId = comment.reference.parent.parent
+        ?.id; // Get the postId from the comment's parent
     final commentId = comment.id; // Get the commentId
 
     if (postId == null) {
@@ -2445,10 +2542,10 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
   }
 
   Future<void> _translateCommentAndShowResult(
-      String postId,
-      String commentId,
-      String languageCode,
-      ) async {
+    String postId,
+    String commentId,
+    String languageCode,
+  ) async {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
     try {
       // Fetch the comment document from the sub-collection
@@ -2469,7 +2566,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
         print('Translation Success: $translatedText');
 
         // Declare the controller as a late variable
-        late final ScaffoldFeatureController<SnackBar, SnackBarClosedReason> controller;
+        late final ScaffoldFeatureController<SnackBar, SnackBarClosedReason>
+            controller;
 
         // Create the SnackBar content
         final snackBar = SnackBar(
@@ -2512,7 +2610,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
               ),
             ],
           ),
-          duration: const Duration(days: 365), // Keep the SnackBar open indefinitely
+          duration:
+              const Duration(days: 365), // Keep the SnackBar open indefinitely
         );
 
         // Assign the controller after showing the SnackBar
@@ -2528,19 +2627,43 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
     }
   }
 
-  Future<void> _processMessageForHealthInsights(String messageText,
-      String userId, String userRegion) async {
+  Future<void> _processMessageForHealthInsights(
+      String messageText, String userId, String userRegion) async {
     // Define health categories and keywords
     final Map<String, List<String>> healthCategories = {
       'symptoms': [
-        'fever', 'pain', 'cough', 'fatigue', 'headache', 'nausea',
-        'dizziness', 'inflammation', 'rash', 'anxiety', 'malaria',
-        'typhoid', 'cholera', 'diarrhea', 'vomiting'
+        'fever',
+        'pain',
+        'cough',
+        'fatigue',
+        'headache',
+        'nausea',
+        'dizziness',
+        'inflammation',
+        'rash',
+        'anxiety',
+        'malaria',
+        'typhoid',
+        'cholera',
+        'diarrhea',
+        'vomiting'
       ],
       'conditions': [
-        'diabetes', 'hypertension', 'asthma', 'arthritis', 'depression',
-        'obesity', 'cancer', 'allergy', 'infection', 'insomnia',
-        'sickle cell', 'tuberculosis', 'HIV', 'hepatitis', 'stroke'
+        'diabetes',
+        'hypertension',
+        'asthma',
+        'arthritis',
+        'depression',
+        'obesity',
+        'cancer',
+        'allergy',
+        'infection',
+        'insomnia',
+        'sickle cell',
+        'tuberculosis',
+        'HIV',
+        'hepatitis',
+        'stroke'
       ],
       'treatments': [
         'medication',
@@ -2611,8 +2734,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
     });
 
     // Get reference to the HealthInsights collection
-    final healthInsightsCollection = FirebaseFirestore.instance.collection(
-        'HealthInsights');
+    final healthInsightsCollection =
+        FirebaseFirestore.instance.collection('HealthInsights');
 
     // Update or create documents for each matched category and keyword
     for (String category in matchedCategories.keys) {
@@ -2630,8 +2753,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> with SingleTickerProv
             // Document exists, update the count
             final docId = querySnapshot.docs.first.id;
             await healthInsightsCollection.doc(docId).update({
-              'count': FieldValue.increment(
-                  matchedCategories[category]![keyword]!),
+              'count':
+                  FieldValue.increment(matchedCategories[category]![keyword]!),
               'lastUpdated': FieldValue.serverTimestamp(),
             });
           } else {
@@ -2667,7 +2790,6 @@ String _truncateText(String? text, int maxLength) {
   return '${text.substring(0, maxLength)}...'; // Truncate and append '...'
 }
 
-
 class AudioPlaybackState {
   final String url;
   bool isPlaying = false;
@@ -2676,7 +2798,6 @@ class AudioPlaybackState {
 
   AudioPlaybackState(this.url);
 }
-
 
 class ChatThreadDetailsPage extends StatefulWidget {
   final String chatId;
@@ -2710,7 +2831,6 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
   bool _isUserBlocked = false;
   bool _isCheckingBlockStatus = true;
 
-
   bool _isRecording = false;
   Duration _recordingDuration = Duration.zero;
   Timer? _recordingTimer;
@@ -2726,8 +2846,8 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
 
   // Track current audio position for each message
   final Map<String, Duration> _currentPositions = {};
-  final Map<String,
-      StreamSubscription<PlaybackDisposition>> _positionSubscriptions = {};
+  final Map<String, StreamSubscription<PlaybackDisposition>>
+      _positionSubscriptions = {};
   final Map<String, Duration> _durations = {};
 
   // Add ScrollController for scroll-to-bottom functionality
@@ -2819,8 +2939,8 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
   }
 
   Future<void> _initializePlayer() async {
-    _player.openPlayer();  // No await
-    _player.setLogLevel(Level.info);  // No await
+    _player.openPlayer(); // No await
+    _player.setLogLevel(Level.info); // No await
   }
 
   @override
@@ -2887,7 +3007,8 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
     ]).then((statuses) {
       if (statuses[0].isGranted && statuses[1].isGranted) {
         // If permissions are granted, start the call
-        CallService().startCall(context, widget.toUid, widget.toName, widget.chatId);
+        CallService()
+            .startCall(context, widget.toUid, widget.toName, widget.chatId);
       } else {
         // If permissions are denied, show a message
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2900,7 +3021,6 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
       }
     });
   }
-
 
   void _onScroll() {
     if (_scrollController.hasClients) {
@@ -2944,27 +3064,29 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
                   Navigator.pop(context); // Close the menu
 
                   final bool shouldDelete = await showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: const Text('Delete Message'),
-                        content: const Text('Are you sure you want to delete this message?'),
-                        actions: [
-                          TextButton(
-                            child: const Text('No'),
-                            onPressed: () => Navigator.pop(context, false),
-                          ),
-                          TextButton(
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.red,
-                            ),
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Yes'),
-                          ),
-                        ],
-                      );
-                    },
-                  ) ?? false;
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text('Delete Message'),
+                            content: const Text(
+                                'Are you sure you want to delete this message?'),
+                            actions: [
+                              TextButton(
+                                child: const Text('No'),
+                                onPressed: () => Navigator.pop(context, false),
+                              ),
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.red,
+                                ),
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('Yes'),
+                              ),
+                            ],
+                          );
+                        },
+                      ) ??
+                      false;
 
                   if (shouldDelete) {
                     await message.reference.delete();
@@ -2995,7 +3117,6 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
       },
     );
   }
-
 
   void _showTranslationLanguageSelector(
       QueryDocumentSnapshot<Map<String, dynamic>> message) {
@@ -3035,8 +3156,7 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
     );
   }
 
-  Future<void> _translateAndShowResult(String text,
-      String languageCode) async {
+  Future<void> _translateAndShowResult(String text, String languageCode) async {
     try {
       print('Translating: "$text" to "$languageCode"');
       final translatedText = await TranslationService.translateText(
@@ -3046,8 +3166,8 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
       print('Translation Success: $translatedText');
 
       // Declare the controller as a late variable
-      late final ScaffoldFeatureController<SnackBar,
-          SnackBarClosedReason> controller;
+      late final ScaffoldFeatureController<SnackBar, SnackBarClosedReason>
+          controller;
 
       // Create the SnackBar content
       final snackBar = SnackBar(
@@ -3056,8 +3176,10 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Translated: $translatedText',
-              style: const TextStyle(fontSize: 18),),
+            Text(
+              'Translated: $translatedText',
+              style: const TextStyle(fontSize: 18),
+            ),
             const SizedBox(height: 20),
             // Add spacing between text and buttons
             Row(
@@ -3089,8 +3211,8 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
             ),
           ],
         ),
-        duration: const Duration(
-            days: 365), // Keep the SnackBar open indefinitely
+        duration:
+            const Duration(days: 365), // Keep the SnackBar open indefinitely
       );
 
       // Assign the controller after showing the SnackBar
@@ -3102,7 +3224,6 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
       );
     }
   }
-
 
   Future _playAudio(String audioUrl) async {
     try {
@@ -3171,7 +3292,7 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
     print('Starting progress listener for $audioUrl');
     _playerSubscription?.cancel(); // Cancel any existing subscription
     _playerSubscription = _player.onProgress?.listen(
-          (event) {
+      (event) {
         if (mounted) {
           setState(() {
             _audioPlaybackDurations[audioUrl] =
@@ -3204,11 +3325,8 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
       final status = await Permission.microphone.request();
       if (status.isGranted) {
         final dir = await getApplicationDocumentsDirectory();
-        _audioPath = '${dir.path}/${DateTime
-            .now()
-            .millisecondsSinceEpoch}.aac';
-        await _recorder.startRecorder(
-            toFile: _audioPath, codec: Codec.aacADTS);
+        _audioPath = '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.aac';
+        await _recorder.startRecorder(toFile: _audioPath, codec: Codec.aacADTS);
 
         setState(() {
           _isRecording = true;
@@ -3286,12 +3404,14 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
             'timestamp': FieldValue.serverTimestamp(),
             'type': 'audio',
             'file_url': fileUrl,
-            'audio_duration': audioDuration.inSeconds, // Store duration in seconds
+            'audio_duration':
+                audioDuration.inSeconds, // Store duration in seconds
             'status': 'sent',
           });
 
           // Update the last message in the chat thread
-          await _firestore.collection('ChatMessages')
+          await _firestore
+              .collection('ChatMessages')
               .doc(widget.chatId)
               .update({
             'last_msg': '🎤 Voice Message (${_formatDuration(audioDuration)})',
@@ -3304,10 +3424,9 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
           });
           await file.delete();
 
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Voice recording sent!'),
-              )
-          );
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Voice recording sent!'),
+          ));
         } catch (e) {
           print('Error uploading audio: $e');
           ScaffoldMessenger.of(context).showSnackBar(
@@ -3319,9 +3438,7 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
   }
 
   void _sendMessage() async {
-    if (_messageController.text
-        .trim()
-        .isEmpty) return;
+    if (_messageController.text.trim().isEmpty) return;
 
     if (_isUserBlocked) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -3341,7 +3458,8 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
 
     String messageText = _messageController.text.trim();
 
-    final canSend = await WordFilterService().canSendMessage(messageText, context);
+    final canSend =
+        await WordFilterService().canSendMessage(messageText, context);
     if (!canSend) return;
 
     final message = {
@@ -3401,7 +3519,8 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Your message contains inappropriate language and cannot be sent.'),
+            const Text(
+                'Your message contains inappropriate language and cannot be sent.'),
             const SizedBox(height: 16),
             Text(
               'Banned words detected: ${bannedWords.join(', ')}',
@@ -3422,24 +3541,48 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
     );
   }
 
-  Future<void> _processMessageForHealthInsights(String messageText,
-      String userId) async {
+  Future<void> _processMessageForHealthInsights(
+      String messageText, String userId) async {
     // Fetch user's region from the Users collection
-    DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection(
-        'Users').doc(userId).get();
+    DocumentSnapshot userDoc =
+        await FirebaseFirestore.instance.collection('Users').doc(userId).get();
     String userRegion = userDoc['Region'] ?? 'Unknown';
 
     // Define health categories and keywords
     final Map<String, List<String>> healthCategories = {
       'symptoms': [
-        'fever', 'pain', 'cough', 'fatigue', 'headache', 'nausea',
-        'dizziness', 'inflammation', 'rash', 'anxiety', 'malaria',
-        'typhoid', 'cholera', 'diarrhea', 'vomiting'
+        'fever',
+        'pain',
+        'cough',
+        'fatigue',
+        'headache',
+        'nausea',
+        'dizziness',
+        'inflammation',
+        'rash',
+        'anxiety',
+        'malaria',
+        'typhoid',
+        'cholera',
+        'diarrhea',
+        'vomiting'
       ],
       'conditions': [
-        'diabetes', 'hypertension', 'asthma', 'arthritis', 'depression',
-        'obesity', 'cancer', 'allergy', 'infection', 'insomnia',
-        'sickle cell', 'tuberculosis', 'HIV', 'hepatitis', 'stroke'
+        'diabetes',
+        'hypertension',
+        'asthma',
+        'arthritis',
+        'depression',
+        'obesity',
+        'cancer',
+        'allergy',
+        'infection',
+        'insomnia',
+        'sickle cell',
+        'tuberculosis',
+        'HIV',
+        'hepatitis',
+        'stroke'
       ],
       'treatments': [
         'medication',
@@ -3502,8 +3645,7 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
     healthCategories.forEach((category, keywords) {
       for (String keyword in keywords) {
         if (lowerCaseMessage.contains(keyword)) {
-          matchedCategories[category] =
-              (matchedCategories[category] ?? 0) + 1;
+          matchedCategories[category] = (matchedCategories[category] ?? 0) + 1;
         }
       }
     });
@@ -3549,7 +3691,6 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
 
     print("Processed message for health insights: $matchedCategories");
   }
-
 
   String _formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
@@ -3618,7 +3759,8 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
     );
   }
 
-  void _showCallDetailsDialog(BuildContext context, String callId, Duration duration, String status) {
+  void _showCallDetailsDialog(
+      BuildContext context, String callId, Duration duration, String status) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -3629,7 +3771,8 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
           children: [
             Text('Duration: ${_formatDuration(duration)}'),
             if (status == 'ended') const SizedBox(height: 8),
-            if (status == 'ended') Text('Call ID: ${callId.substring(0, 8)}...'),
+            if (status == 'ended')
+              Text('Call ID: ${callId.substring(0, 8)}...'),
           ],
         ),
         actions: [
@@ -3647,29 +3790,30 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
     if (currentUserId == null) return;
 
     final shouldBlock = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(_isUserBlocked ? 'Unblock User' : 'Block User'),
-        content: Text(
-          _isUserBlocked
-              ? 'Are you sure you want to unblock ${widget.toName}?'
-              : 'Are you sure you want to block ${widget.toName}? They will no longer be able to message or call you.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(_isUserBlocked ? 'Unblock' : 'Block'),
-            style: TextButton.styleFrom(
-              foregroundColor: _isUserBlocked ? Colors.green : Colors.red,
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(_isUserBlocked ? 'Unblock User' : 'Block User'),
+            content: Text(
+              _isUserBlocked
+                  ? 'Are you sure you want to unblock ${widget.toName}?'
+                  : 'Are you sure you want to block ${widget.toName}? They will no longer be able to message or call you.',
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(_isUserBlocked ? 'Unblock' : 'Block'),
+                style: TextButton.styleFrom(
+                  foregroundColor: _isUserBlocked ? Colors.green : Colors.red,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
 
     if (shouldBlock) {
       await _toggleBlockUser(!_isUserBlocked);
@@ -3725,66 +3869,66 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
         leadingWidth: 30,
         title: _isLoadingUserData
             ? Row(
-          children: [
-            const CircleAvatar(
-              radius: 20,
-              child: Icon(Icons.person, size: 24),
-            ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.toName,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                children: [
+                  const CircleAvatar(
+                    radius: 20,
+                    child: Icon(Icons.person, size: 24),
                   ),
-                ),
-                const Text(
-                  "Loading...",
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.black,
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.toName,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Text(
+                        "Loading...",
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-          ],
-        )
+                ],
+              )
             : Row(
-          children: [
-            CircleAvatar(
-              radius: 20,
-              backgroundImage: _cachedUserPic != null
-                  ? NetworkImage(_cachedUserPic!)
-                  : null,
-              child: _cachedUserPic == null
-                  ? const Icon(Icons.person, size: 24)
-                  : null,
-            ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.toName,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundImage: _cachedUserPic != null
+                        ? NetworkImage(_cachedUserPic!)
+                        : null,
+                    child: _cachedUserPic == null
+                        ? const Icon(Icons.person, size: 24)
+                        : null,
                   ),
-                ),
-                /*Text(
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.toName,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      /*Text(
                       _cachedIsOnline == true ? "Active now" : "Offline",
                       style: const TextStyle(
                         fontSize: 13,
                         color: Colors.black,
                       ),
                     ),*/
-              ],
-            ),
-          ],
-        ),
+                    ],
+                  ),
+                ],
+              ),
         backgroundColor: Colors.teal,
         actions: [
           IconButton(
@@ -3797,13 +3941,15 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
           ),
         ],
       ),
-
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.teal[50]!, Colors.grey[100]!], // Consistent background
+            colors: [
+              Colors.teal[50]!,
+              Colors.grey[100]!
+            ], // Consistent background
           ),
         ),
         child: Column(
@@ -3820,12 +3966,10 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
                         .snapshots(),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
-                        return Center(child: Text('Error: ${snapshot
-                            .error}'));
+                        return Center(child: Text('Error: ${snapshot.error}'));
                       }
                       if (!snapshot.hasData) {
-                        return const Center(
-                            child: CircularProgressIndicator());
+                        return const Center(child: CircularProgressIndicator());
                       }
 
                       final messages = snapshot.data!.docs;
@@ -3833,12 +3977,16 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
                       // Detect new messages when already scrolled up
                       if (_scrollController.hasClients &&
                           _scrollController.position.pixels <
-                              _scrollController.position.maxScrollExtent - 100) {
+                              _scrollController.position.maxScrollExtent -
+                                  100) {
                         WidgetsBinding.instance.addPostFrameCallback((_) {
                           setState(() {
                             _newMessagesCount = messages.length -
                                 (_scrollController.position.pixels /
-                                    (_scrollController.position.maxScrollExtent / messages.length)).floor();
+                                        (_scrollController
+                                                .position.maxScrollExtent /
+                                            messages.length))
+                                    .floor();
                           });
                         });
                       }
@@ -3853,8 +4001,8 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
                           if (message['type'] == 'call') {
                             return _buildCallEvent(message.data());
                           }
-                          final isSentByUser = message['from_uid'] ==
-                              widget.fromUid;
+                          final isSentByUser =
+                              message['from_uid'] == widget.fromUid;
 
                           return GestureDetector(
                             onLongPress: () => _showMessageMenu(message),
@@ -3864,10 +4012,7 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
                                   : Alignment.centerLeft,
                               child: ConstrainedBox(
                                 constraints: BoxConstraints(
-                                  maxWidth: MediaQuery
-                                      .of(context)
-                                      .size
-                                      .width *
+                                  maxWidth: MediaQuery.of(context).size.width *
                                       0.7, // Max width for text bubbles
                                 ),
                                 child: CustomPaint(
@@ -3878,8 +4023,8 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
                                   child: Padding(
                                     padding: const EdgeInsets.all(12.0),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment
-                                          .start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         if (message['type'] == 'text') ...[
                                           Text(
@@ -3892,30 +4037,31 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
                                               // Make the text bold
                                               fontSize: 15,
                                               // Optional: Set a font size for better readability
-                                              color: isSentByUser ? Colors
-                                                  .black87 : Colors
-                                                  .black87, // Optional: Adjust text color based on sender
+                                              color: isSentByUser
+                                                  ? Colors.black87
+                                                  : Colors
+                                                      .black87, // Optional: Adjust text color based on sender
                                             ),
                                           ),
-                                        ] else
-                                          if (message['type'] == 'audio') ...[
-                                            _buildAudioMessage(
-                                                message.data()),
-                                          ],
+                                        ] else if (message['type'] ==
+                                            'audio') ...[
+                                          _buildAudioMessage(message.data()),
+                                        ],
                                         const SizedBox(height: 5),
                                         Align(
                                           alignment: Alignment.bottomRight,
                                           child: Text(
                                             message['timestamp'] != null
                                                 ? DateFormat.jm().format(
-                                              (message['timestamp'] as Timestamp)
-                                                  .toDate(),
-                                            )
+                                                    (message['timestamp']
+                                                            as Timestamp)
+                                                        .toDate(),
+                                                  )
                                                 : 'Sending...',
                                             style: TextStyle(
                                               fontSize: 10,
-                                              color: Colors
-                                                  .grey[800], // Deep grey color to match the send icon
+                                              color: Colors.grey[
+                                                  800], // Deep grey color to match the send icon
                                             ),
                                           ),
                                         ),
@@ -3942,7 +4088,6 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
                         child: const Icon(Icons.arrow_downward),
                       ),
                     ),
-
                 ],
               ),
             ),
@@ -3982,73 +4127,77 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
                     Container(
                       width: 36, // Adjust the width of the container
                       height: 36, // Adjust the height of the container
-                      margin: const EdgeInsets.all(4), // Adjust margin to fit the smaller size
+                      margin: const EdgeInsets.all(
+                          4), // Adjust margin to fit the smaller size
                       decoration: BoxDecoration(
                         color: Colors.teal, // teal background color
                         shape: BoxShape.circle, // Make it circular
                       ),
                       child: IconButton(
                         iconSize: 20, // Adjust the size of the icon
-                        icon: const Icon(Icons.send, color: Colors.white), // White icon for contrast
-                        onPressed: _stopRecordingAndUpload, // Your existing onPressed function
+                        icon: const Icon(Icons.send,
+                            color: Colors.white), // White icon for contrast
+                        onPressed:
+                            _stopRecordingAndUpload, // Your existing onPressed function
                       ),
                     ),
-                  ] else
-                    ...[
-                      GestureDetector(
-                        onTap: _startRecording,
-                        child: const Icon(
-                          Icons.mic,
-                          color: Colors.teal,
-                        ),
+                  ] else ...[
+                    GestureDetector(
+                      onTap: _startRecording,
+                      child: const Icon(
+                        Icons.mic,
+                        color: Colors.teal,
                       ),
-                      const SizedBox(width: 8),
-                      // Add space between microphone and text box
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(
-                                30), // Oval shape
-                          ),
-                          constraints: const BoxConstraints(
-                            maxHeight: 120, // Maximum height for the text box
-                          ),
-                          child: SingleChildScrollView(
-                            // Enable scrolling for multi-line text
-                            child: TextField(
-                              controller: _messageController,
-                              decoration: const InputDecoration(
-                                hintText: 'Type a message...',
-                                border: InputBorder.none,
-                                // Remove default border
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 12),
-                              ),
-                              maxLines: null, // Allow multiple lines
-                              keyboardType: TextInputType
-                                  .multiline, // Enable multi-line input
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Add space between text box and send button
-                      Container(
-                        width: 36, // Adjust the width of the container
-                        height: 36, // Adjust the height of the container
-                        margin: const EdgeInsets.all(4), // Adjust margin to fit the smaller size
+                    ),
+                    const SizedBox(width: 8),
+                    // Add space between microphone and text box
+                    Expanded(
+                      child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.teal, // teal background color
-                          shape: BoxShape.circle, // Make it circular
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(30), // Oval shape
                         ),
-                        child: IconButton(
-                          iconSize: 20, // Adjust the size of the icon
-                          icon: const Icon(Icons.send, color: Colors.white), // White icon for contrast
-                          onPressed: _sendMessage, // Your existing onPressed function
+                        constraints: const BoxConstraints(
+                          maxHeight: 120, // Maximum height for the text box
+                        ),
+                        child: SingleChildScrollView(
+                          // Enable scrolling for multi-line text
+                          child: TextField(
+                            controller: _messageController,
+                            decoration: const InputDecoration(
+                              hintText: 'Type a message...',
+                              border: InputBorder.none,
+                              // Remove default border
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 12),
+                            ),
+                            maxLines: null, // Allow multiple lines
+                            keyboardType: TextInputType
+                                .multiline, // Enable multi-line input
+                          ),
                         ),
                       ),
-                    ],
+                    ),
+                    const SizedBox(width: 8),
+                    // Add space between text box and send button
+                    Container(
+                      width: 36, // Adjust the width of the container
+                      height: 36, // Adjust the height of the container
+                      margin: const EdgeInsets.all(
+                          4), // Adjust margin to fit the smaller size
+                      decoration: BoxDecoration(
+                        color: Colors.teal, // teal background color
+                        shape: BoxShape.circle, // Make it circular
+                      ),
+                      child: IconButton(
+                        iconSize: 20, // Adjust the size of the icon
+                        icon: const Icon(Icons.send,
+                            color: Colors.white), // White icon for contrast
+                        onPressed:
+                            _sendMessage, // Your existing onPressed function
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -4179,7 +4328,7 @@ class VideoCallScreen extends StatefulWidget {
   final String callId;
   final String remoteName;
   final String remoteUid;
-  final String chatId;  // Add this line
+  final String chatId; // Add this line
   final bool isIncoming;
   final Map<String, dynamic>? offerSdp;
 
@@ -4188,7 +4337,7 @@ class VideoCallScreen extends StatefulWidget {
     required this.callId,
     required this.remoteName,
     required this.remoteUid,
-    required this.chatId,  // Add this parameter
+    required this.chatId, // Add this parameter
     required this.isIncoming,
     this.offerSdp,
   });
@@ -4241,7 +4390,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         final fullName = '$fname $lname'.trim();
 
         setState(() {
-          remoteUserFullName = fullName.isNotEmpty ? fullName : widget.remoteName;
+          remoteUserFullName =
+              fullName.isNotEmpty ? fullName : widget.remoteName;
         });
       }
     } catch (e) {
@@ -4269,7 +4419,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     };
 
     try {
-      _localStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
+      _localStream =
+          await navigator.mediaDevices.getUserMedia(mediaConstraints);
       _localRenderer.srcObject = _localStream;
 
       // Add tracks to peer connection
@@ -4331,7 +4482,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
           'credential': 'muazkh'
         }
       ],
-      'sdpSemantics': 'unified-plan' // Explicitly use unified plan for compatibility
+      'sdpSemantics':
+          'unified-plan' // Explicitly use unified plan for compatibility
     };
 
     final constraints = {
@@ -4406,7 +4558,12 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     print('Stored offer in Firestore');
 
     // Also notify the user by adding a document to their notifications collection
-    await _firestore.collection('Users').doc(widget.remoteUid).collection('callNotifications').doc(widget.callId).set({
+    await _firestore
+        .collection('Users')
+        .doc(widget.remoteUid)
+        .collection('callNotifications')
+        .doc(widget.callId)
+        .set({
       'callId': widget.callId,
       'callerUid': FirebaseAuth.instance.currentUser!.uid,
       'callerName': await _getCurrentUserName(),
@@ -4449,7 +4606,11 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   }
 
   void _listenForCallUpdates() {
-    _callSubscription = _firestore.collection('calls').doc(widget.callId).snapshots().listen((snapshot) async {
+    _callSubscription = _firestore
+        .collection('calls')
+        .doc(widget.callId)
+        .snapshots()
+        .listen((snapshot) async {
       try {
         if (!mounted) return;
 
@@ -4466,7 +4627,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         }
 
         // Handle call status changes
-        if (data['status'] == 'accepted' && !widget.isIncoming && data.containsKey('answer')) {
+        if (data['status'] == 'accepted' &&
+            !widget.isIncoming &&
+            data.containsKey('answer')) {
           try {
             // Verify answer data is valid before using it
             final answerData = data['answer'];
@@ -4474,7 +4637,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                 answerData['sdp'] != null &&
                 answerData['type'] != null &&
                 _peerConnection != null) {
-
               print('Received answer from Firestore: ${data['answer']}');
               final answer = RTCSessionDescription(
                 answerData['sdp'],
@@ -4505,8 +4667,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                 if (candidateData != null &&
                     candidateData['isProcessed'] == false &&
                     candidateData['candidate'] != null) {
-
-                  print('Processing ICE candidate: ${candidateData['candidate']}');
+                  print(
+                      'Processing ICE candidate: ${candidateData['candidate']}');
 
                   try {
                     final candidate = RTCIceCandidate(
@@ -4521,22 +4683,31 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 
                       // Mark as processed using a transaction
                       try {
-                        await FirebaseFirestore.instance.runTransaction((transaction) async {
-                          final callDoc = await _firestore.collection('calls').doc(widget.callId).get();
+                        await FirebaseFirestore.instance
+                            .runTransaction((transaction) async {
+                          final callDoc = await _firestore
+                              .collection('calls')
+                              .doc(widget.callId)
+                              .get();
                           if (!callDoc.exists) return;
 
                           final callData = callDoc.data();
-                          if (callData == null || !callData.containsKey('candidates')) return;
+                          if (callData == null ||
+                              !callData.containsKey('candidates')) return;
 
-                          final updatedCandidates = List<Map<String, dynamic>>.from(callData['candidates']);
+                          final updatedCandidates =
+                              List<Map<String, dynamic>>.from(
+                                  callData['candidates']);
                           updatedCandidates.removeWhere((c) =>
-                          c['candidate'] == candidateData['candidate'] &&
+                              c['candidate'] == candidateData['candidate'] &&
                               c['sdpMid'] == candidateData['sdpMid'] &&
-                              c['sdpMLineIndex'] == candidateData['sdpMLineIndex']
-                          );
-                          updatedCandidates.add({...candidateData, 'isProcessed': true});
+                              c['sdpMLineIndex'] ==
+                                  candidateData['sdpMLineIndex']);
+                          updatedCandidates
+                              .add({...candidateData, 'isProcessed': true});
 
-                          transaction.update(callDoc.reference, {'candidates': updatedCandidates});
+                          transaction.update(callDoc.reference,
+                              {'candidates': updatedCandidates});
                         });
                       } catch (e) {
                         print('Error updating candidate status: $e');
@@ -4563,12 +4734,14 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   Future<void> _addIceCandidate(RTCIceCandidate candidate) async {
     print('Adding ICE candidate: ${candidate.candidate}');
     await _firestore.collection('calls').doc(widget.callId).update({
-      'candidates': FieldValue.arrayUnion([{
-        'candidate': candidate.candidate,
-        'sdpMid': candidate.sdpMid,
-        'sdpMLineIndex': candidate.sdpMLineIndex,
-        'isProcessed': false,
-      }]),
+      'candidates': FieldValue.arrayUnion([
+        {
+          'candidate': candidate.candidate,
+          'sdpMid': candidate.sdpMid,
+          'sdpMLineIndex': candidate.sdpMLineIndex,
+          'isProcessed': false,
+        }
+      ]),
     });
     print('Added ICE candidate to Firestore');
   }
@@ -4589,7 +4762,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 
   Future<String> _getCurrentUserName() async {
     final userId = FirebaseAuth.instance.currentUser!.uid;
-    final userDoc = await FirebaseFirestore.instance.collection('Users').doc(userId).get();
+    final userDoc =
+        await FirebaseFirestore.instance.collection('Users').doc(userId).get();
 
     final fname = userDoc.data()?['Fname'] ?? '';
     final lname = userDoc.data()?['Lname'] ?? '';
@@ -4780,26 +4954,27 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             // Remote video (full screen)
             _isConnected && _isRemoteVideoReceived
                 ? RTCVideoView(
-              _remoteRenderer,
-              objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-            )
+                    _remoteRenderer,
+                    objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                  )
                 : Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const CircularProgressIndicator(color: Colors.white),
-                  const SizedBox(height: 16),
-                  Text(
-                    _isConnected
-                        ? "Connected but waiting for video..."
-                        : widget.isIncoming
-                        ? 'Connecting...'
-                        : 'Calling ${widget.remoteName}...',
-                    style: const TextStyle(color: Colors.white, fontSize: 18),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const CircularProgressIndicator(color: Colors.white),
+                        const SizedBox(height: 16),
+                        Text(
+                          _isConnected
+                              ? "Connected but waiting for video..."
+                              : widget.isIncoming
+                                  ? 'Connecting...'
+                                  : 'Calling ${widget.remoteName}...',
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 18),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-            ),
 
             // Local video (picture-in-picture)
             Positioned(
@@ -4816,16 +4991,18 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                   borderRadius: BorderRadius.circular(6),
                   child: _isCameraOff
                       ? Container(
-                    color: Colors.grey[900],
-                    child: const Center(
-                      child: Icon(Icons.videocam_off, color: Colors.white),
-                    ),
-                  )
+                          color: Colors.grey[900],
+                          child: const Center(
+                            child:
+                                Icon(Icons.videocam_off, color: Colors.white),
+                          ),
+                        )
                       : RTCVideoView(
-                    _localRenderer,
-                    mirror: true,
-                    objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-                  ),
+                          _localRenderer,
+                          mirror: true,
+                          objectFit:
+                              RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                        ),
                 ),
               ),
             ),
@@ -4845,11 +5022,13 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                   children: [
                     Text(
                       'Connection: ${_isConnected ? "Yes" : "No"}',
-                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                      style:
+                          const TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                     Text(
                       'Video: ${_isRemoteVideoReceived ? "Yes" : "No"}',
-                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                      style:
+                          const TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                   ],
                 ),
@@ -4864,7 +5043,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    remoteUserFullName.isNotEmpty ? remoteUserFullName : widget.remoteName,
+                    remoteUserFullName.isNotEmpty
+                        ? remoteUserFullName
+                        : widget.remoteName,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -4873,7 +5054,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _isConnected ? _formatDuration(_callDuration) : 'Connecting...',
+                    _isConnected
+                        ? _formatDuration(_callDuration)
+                        : 'Connecting...',
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.8),
                       fontSize: 16,
@@ -4896,7 +5079,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                     // Mute/Unmute
                     CircleAvatar(
                       radius: 28,
-                      backgroundColor: _isMicMuted ? Colors.red : Colors.white.withOpacity(0.3),
+                      backgroundColor: _isMicMuted
+                          ? Colors.red
+                          : Colors.white.withOpacity(0.3),
                       child: IconButton(
                         icon: Icon(
                           _isMicMuted ? Icons.mic_off : Icons.mic,
@@ -4909,7 +5094,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                     // Camera on/off
                     CircleAvatar(
                       radius: 28,
-                      backgroundColor: _isCameraOff ? Colors.red : Colors.white.withOpacity(0.3),
+                      backgroundColor: _isCameraOff
+                          ? Colors.red
+                          : Colors.white.withOpacity(0.3),
                       child: IconButton(
                         icon: Icon(
                           _isCameraOff ? Icons.videocam_off : Icons.videocam,
@@ -4985,7 +5172,6 @@ class NavigationManager {
     _previousRoute = route;
   }
 }
-
 
 class IncomingCallScreen extends StatefulWidget {
   final String callId;
@@ -5088,7 +5274,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
           callId: widget.callId,
           remoteName: widget.callerName,
           remoteUid: widget.callerUid,
-          chatId: widget.callId,  // Or pass the actual chatId if available
+          chatId: widget.callId, // Or pass the actual chatId if available
           isIncoming: true,
           offerSdp: widget.offerSdp,
         ),
@@ -5110,7 +5296,8 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
     } catch (e) {
       debugPrint('Error in _rejectCall: $e');
       if (mounted) {
-        _navigateBackAfterRejection(context); // Ensure we navigate back even on error
+        _navigateBackAfterRejection(
+            context); // Ensure we navigate back even on error
       }
     }
   }
@@ -5141,7 +5328,8 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
     final batch = FirebaseFirestore.instance.batch();
 
     // Update call status
-    final callDoc = FirebaseFirestore.instance.collection('calls').doc(widget.callId);
+    final callDoc =
+        FirebaseFirestore.instance.collection('calls').doc(widget.callId);
     batch.update(callDoc, {
       'status': 'rejected',
       'endedAt': FieldValue.serverTimestamp(),
@@ -5187,20 +5375,22 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
               // Caller avatar with profile image
               isLoading
                   ? const CircleAvatar(
-                radius: 60,
-                backgroundColor: Colors.teal,
-                child: CircularProgressIndicator(color: Colors.white),
-              )
+                      radius: 60,
+                      backgroundColor: Colors.teal,
+                      child: CircularProgressIndicator(color: Colors.white),
+                    )
                   : CircleAvatar(
-                radius: 60,
-                backgroundColor: Colors.teal,
-                backgroundImage: profileImageUrl != null && profileImageUrl!.isNotEmpty
-                    ? NetworkImage(profileImageUrl!)
-                    : null,
-                child: profileImageUrl == null || profileImageUrl!.isEmpty
-                    ? const Icon(Icons.person, size: 80, color: Colors.white)
-                    : null,
-              ),
+                      radius: 60,
+                      backgroundColor: Colors.teal,
+                      backgroundImage:
+                          profileImageUrl != null && profileImageUrl!.isNotEmpty
+                              ? NetworkImage(profileImageUrl!)
+                              : null,
+                      child: profileImageUrl == null || profileImageUrl!.isEmpty
+                          ? const Icon(Icons.person,
+                              size: 80, color: Colors.white)
+                          : null,
+                    ),
 
               const SizedBox(height: 24),
 
@@ -5324,7 +5514,9 @@ class CallService {
         .limit(1)
         .snapshots()
         .listen((snapshot) async {
-      if (snapshot.docs.isNotEmpty && _context != null && Navigator.of(_context!).mounted) {
+      if (snapshot.docs.isNotEmpty &&
+          _context != null &&
+          Navigator.of(_context!).mounted) {
         final latestCall = snapshot.docs.first;
         final callData = latestCall.data();
         final callId = callData['callId'];
@@ -5348,11 +5540,11 @@ class CallService {
   }
 
   void _handleIncomingCall(
-      String callId,
-      String callerName,
-      String callerUid,
-      Map<String, dynamic> offerSdp,
-      ) {
+    String callId,
+    String callerName,
+    String callerUid,
+    Map<String, dynamic> offerSdp,
+  ) {
     if (_context == null || !Navigator.of(_context!).mounted) return;
 
     Navigator.of(_context!).push(
@@ -5367,15 +5559,13 @@ class CallService {
     );
   }
 
-
-
   Future<void> _showIncomingCallScreen(
-      BuildContext context,
-      String callId,
-      String callerName,
-      String callerUid,
-      Map<String, dynamic> offerSdp,
-      ) async {
+    BuildContext context,
+    String callId,
+    String callerName,
+    String callerUid,
+    Map<String, dynamic> offerSdp,
+  ) async {
     // Show notification only if context is still valid
     if (!context.mounted) return;
 
@@ -5419,8 +5609,8 @@ class CallService {
     );
   }
 
-
-  Future<void> startCall(BuildContext context, String remoteUid, String remoteName, String chatId) async {
+  Future<void> startCall(BuildContext context, String remoteUid,
+      String remoteName, String chatId) async {
     final callId = const Uuid().v4();
 
     // Store the current route globally
@@ -5435,7 +5625,7 @@ class CallService {
           callId: callId,
           remoteName: remoteName,
           remoteUid: remoteUid,
-          chatId: chatId,  // Add this
+          chatId: chatId, // Add this
           isIncoming: false,
         ),
       ),
@@ -5476,7 +5666,8 @@ class WordFilterService {
     if (_isInitialized) return;
 
     try {
-      final snapshot = await _firestore.collection('bannedWords').doc('wordList').get();
+      final snapshot =
+          await _firestore.collection('bannedWords').doc('wordList').get();
       if (snapshot.exists) {
         _bannedWords = List<String>.from(snapshot.data()?['words'] ?? []);
         _isInitialized = true;
@@ -5492,7 +5683,8 @@ class WordFilterService {
 
     final lowerText = text.toLowerCase();
     return _bannedWords.where((word) {
-      return RegExp('\\b${RegExp.escape(word.toLowerCase())}\\b').hasMatch(lowerText);
+      return RegExp('\\b${RegExp.escape(word.toLowerCase())}\\b')
+          .hasMatch(lowerText);
     }).toList();
   }
 
@@ -5506,10 +5698,10 @@ class WordFilterService {
   }
 
   Future<void> _showBannedWordWarning(
-      BuildContext context,
-      String originalText,
-      List<String> bannedWords,
-      ) async {
+    BuildContext context,
+    String originalText,
+    List<String> bannedWords,
+  ) async {
     // Try to get current language (implement your own logic)
     final currentLanguage = 'en'; // Default to English
 

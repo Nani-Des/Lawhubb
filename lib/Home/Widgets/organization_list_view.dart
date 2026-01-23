@@ -8,8 +8,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../Auth/auth_screen.dart';
 import '../../Hospital/hospital_page.dart';
 import '../../Hospital/hospital_profile_screen.dart';
-import '../../Hospital/specialty_details.dart';
-import '../../Login/login_screen1.dart';
 
 class OrganizationListView extends StatefulWidget {
   final bool showSearchBar;
@@ -28,7 +26,6 @@ class OrganizationListView extends StatefulWidget {
 class _OrganizationListViewState extends State<OrganizationListView> {
   String searchQuery = "";
   late final Stream<QuerySnapshot> _hospitalsStream;
-  final _auth = FirebaseAuth.instance;
   late ScrollController _scrollController;
   bool _isOffline = false;
   List<Map<String, dynamic>> _cachedHospitals = [];
@@ -173,17 +170,9 @@ class _OrganizationListViewState extends State<OrganizationListView> {
               _cacheData(hospitalDataList, _cachedRatings);
 
               return Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey[600],  // Dark grey background
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black54,  // Darker shadow
-                      spreadRadius: 2,
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                decoration: const BoxDecoration(
+                  color: Colors.transparent,
                 ),
                 child: Scrollbar(
                   controller: _scrollController,
@@ -227,17 +216,9 @@ class _OrganizationListViewState extends State<OrganizationListView> {
   Widget _buildOfflineHospitalList() {
     final filteredHospitals = _filterCachedHospitals(_cachedHospitals);
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[600],  // Dark grey background
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black54,  // Darker shadow
-            spreadRadius: 2,
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: const BoxDecoration(
+        color: Colors.transparent,
       ),
       child: Scrollbar(
         controller: _scrollController,
@@ -376,84 +357,171 @@ class HospitalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayName = hospitalName.length > 20
-        ? '${hospitalName.substring(0, 20)}...'
+    final displayName = hospitalName.length > 25
+        ? '${hospitalName.substring(0, 25)}...'
         : hospitalName;
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 5.0),
-      elevation: 8.0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
-      color: Colors.grey[900],  // Dark grey card background
-      child: GestureDetector(
-        onTap: onTap,
-        child: Column(
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(15.0)),
-              child: CachedNetworkImage(
-                imageUrl: backgroundImage,
-                height: 100,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white))),  // White progress indicator
-                errorWidget: (context, url, error) => Image.asset(
-                  'assets/Images/background_default.jpg',
-                  height: 100,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1C1C1E),
+        borderRadius: BorderRadius.circular(20.0),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20.0),
+          onTap: onTap,
+          child: Column(
+            children: [
+              Stack(
                 children: [
-                  cachedRating != null
-                      ? _RatingWidget(rating: cachedRating)
-                      : FutureBuilder<double>(
-                    future: _getAverageRating(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const _RatingWidget(loading: true);
-                      }
-                      final rating = snapshot.data ?? 4.5;
-                      // Cache the rating
-                      _OrganizationListViewState? state = context.findAncestorStateOfType<_OrganizationListViewState>();
-                      state?._cachedRatings[hospitalId] = rating;
-                      state?._cacheData(state._cachedHospitals, state._cachedRatings);
-                      return _RatingWidget(rating: rating);
-                    },
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        displayName,
-                        style: const TextStyle(
-                          fontSize: 14.0,
-                          color: Colors.white,  // White text
-                          fontWeight: FontWeight.bold,
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20.0)),
+                    child: CachedNetworkImage(
+                      imageUrl: backgroundImage,
+                      height: 120,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                        ),
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
                         ),
                       ),
-                      Text(
-                        contact,
-                        style: const TextStyle(
-                          fontSize: 12.0,
-                          fontStyle: FontStyle.italic,
-                          color: Colors.grey,  // Light grey for contrast
+                      errorWidget: (context, url, error) => Container(
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.balance,
+                            color: Colors.white,
+                            size: 40,
+                          ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                  TextButton(
-                    onPressed: () => _navigateToReviews(context),
-                    child: const Text("Reviews", style: TextStyle(color: Colors.white)),  // White text
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: cachedRating != null
+                          ? _RatingWidget(rating: cachedRating)
+                          : FutureBuilder<double>(
+                        future: _getAverageRating(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const _RatingWidget(loading: true);
+                          }
+                          final rating = snapshot.data ?? 4.5;
+                          _OrganizationListViewState? state = context.findAncestorStateOfType<_OrganizationListViewState>();
+                          state?._cachedRatings[hospitalId] = rating;
+                          state?._cacheData(state._cachedHospitals, state._cachedRatings);
+                          return _RatingWidget(rating: rating);
+                        },
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                displayName,
+                                style: const TextStyle(
+                                  fontSize: 18.0,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.phone_rounded,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      contact,
+                                      style: TextStyle(
+                                        fontSize: 14.0,
+                                        color: Colors.white.withOpacity(0.8),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[900],
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(16),
+                              onTap: () => _navigateToReviews(context),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.reviews_rounded,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    const Text(
+                                      "Reviews",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -469,15 +537,20 @@ class _RatingWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.star, color: Colors.white, size: 16),  // White star icon
-        const SizedBox(width: 5),
+        Icon(
+          Icons.star_rounded,
+          color: loading ? Colors.white.withOpacity(0.5) : const Color(0xFFFFD700),
+          size: 16,
+        ),
+        const SizedBox(width: 4),
         Text(
           loading ? "..." : rating!.toStringAsFixed(1),
           style: const TextStyle(
-            fontSize: 14.0,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,  // White text
+            fontSize: 13.0,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
           ),
         ),
       ],

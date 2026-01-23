@@ -25,8 +25,10 @@ if (flutterVersionName == null) {
 
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file('key.properties')
+def keystoreStoreFile = null
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+    keystoreStoreFile = keystoreProperties['storeFile']
 }
 
 android {
@@ -61,10 +63,12 @@ android {
 
     signingConfigs {
         release {
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-            storeFile file(keystoreProperties['storeFile'])
-            storePassword keystoreProperties['storePassword']
+            if (keystoreStoreFile != null) {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreStoreFile)
+                storePassword keystoreProperties['storePassword']
+            }
         }
     }
     buildTypes {
@@ -72,7 +76,9 @@ android {
             debuggable true
         }
         release {
-            signingConfig signingConfigs.release
+            if (keystoreStoreFile != null) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'

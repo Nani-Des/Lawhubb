@@ -1,227 +1,191 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:nhap/ChatModule/constants.dart';
-import 'package:nhap/news_stand.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 import '../Auth/auth_screen.dart';
-import '../ChatModule/chat_module.dart';
-import '../Emergency/emergency_page.dart';
-import '../Forums/Public/forum.dart';
-import '../Login/login_screen1.dart';
-import '../bot/chat_bot.dart';
 import 'Widgets/profile_drawer.dart';
-import 'Widgets/custom_bottom_navbar.dart';
-import 'Widgets/homepage_content.dart';
-import 'package:nhap/ml_ui/screens/disease_prediction_screen.dart';
+import 'Widgets/redesigned_home_content.dart';
+import 'Widgets/app_bar.dart';
 
 class HomePage extends StatefulWidget {
+  final Function(int)? onTabChange;
+
+  const HomePage({
+    super.key,
+    this.onTabChange,
+  });
+
   @override
-  _HomePageState createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   User? currentUser;
   String? userImageUrl;
   bool showProfileDrawer = false;
-  late AnimationController _controller;
-  late Animation<Offset> _slideAnimation;
+  AnimationController? _drawerController;
+  Animation<Offset>? _slideAnimation;
   final GlobalKey _fabKey = GlobalKey();
-
-  late AnimationController _textAnimationController;
-  late Animation<double> _textFadeAnimation;
-  late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
+    _initializeAnimations();
+    _setupCallService();
+    _fetchUserData();
+    _setupShowcase();
+  }
 
-    // Initialize animation controllers in order
-    _controller = AnimationController(
+  void _initializeAnimations() {
+    _drawerController = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 400),
     );
 
     _slideAnimation = Tween<Offset>(
-      begin: Offset(0, 1),
-      end: Offset(0, 0.3),
-    ).animate(_controller);
+      begin: const Offset(0, 1),
+      end: const Offset(0, 0.3),
+    ).animate(CurvedAnimation(
+      parent: _drawerController!,
+      curve: Curves.easeInOut,
+    ));
+  }
 
-    _textAnimationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 1200),
-    )..repeat(reverse: true);
-
-    _textFadeAnimation = Tween<double>(
-      begin: 0.2,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _textAnimationController,
-        curve: Curves.easeInOut,
-      ),
-    );
-
-    _animationController = AnimationController(
-      vsync: this,
-      duration: Duration(seconds: 2),
-    )..repeat(reverse: true);
-
+  void _setupCallService() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      CallService().setContext(context);
+      // CallService().setContext(context);
     });
+  }
 
-    _fetchUserData();
-
+  void _setupShowcase() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final prefs = await SharedPreferences.getInstance();
-      final bool hasSeenWalkthrough = prefs.getBool('hasSeenEmergencyWalkthrough') ?? false;
+      final bool hasSeenWalkthrough =
+          prefs.getBool('hasSeenEmergencyWalkthrough') ?? false;
       if (!hasSeenWalkthrough && mounted) {
-        ShowCaseWidget.of(context)?.startShowCase([_fabKey]);
+        ShowCaseWidget.of(context).startShowCase([_fabKey]);
         await prefs.setBool('hasSeenEmergencyWalkthrough', true);
       }
     });
   }
 
-  // Method to fetch user data and refresh avatar image
   Future<void> _fetchUserData() async {
+    final logFile = File(
+        r'c:\Users\HP\PROJECTS\flutter_projects\lawhubb\Lawhubb\.cursor\debug.log');
+    void debugLog(
+        String hypothesisId, String message, Map<String, dynamic> data) {
+      try {
+        final entry =
+            '{"hypothesisId":"$hypothesisId","location":"home_page.dart:_fetchUserData","message":"$message","data":${data.toString().replaceAll("'", '"')},"timestamp":${DateTime.now().millisecondsSinceEpoch},"sessionId":"debug-session"}\n';
+        logFile.writeAsStringSync(entry, mode: FileMode.append);
+      } catch (_) {}
+    }
+
     User? user = FirebaseAuth.instance.currentUser;
+    debugLog('A', 'Auth state check', {
+      'userIsNull': user == null,
+      'userId': user?.uid ?? 'null',
+      'isEmailVerified': user?.emailVerified ?? false
+    });
+
     if (user != null) {
-      final docSnapshot = await FirebaseFirestore.instance.collection('Users').doc(user.uid).get();
-      setState(() {
-        currentUser = user;
-        userImageUrl = docSnapshot['User Pic'] ?? '';  // Load user image if available
-      });
+      debugLog('B', 'Before Firestore query',
+          {'userId': user.uid, 'collection': 'Users'});
+      try {
+        final docSnapshot = await FirebaseFirestore.instance
+            .collection('Users')
+            .doc(user.uid)
+            .get();
+        debugLog('C', 'Firestore query success',
+            {'docExists': docSnapshot.exists, 'userId': user.uid});
+
+        if (mounted) {
+          setState(() {
+            currentUser = user;
+            userImageUrl = docSnapshot.data()?['User Pic'] ?? '';
+          });
+        }
+      } catch (e) {
+        debugLog('A', 'Firestore query FAILED',
+            {'error': e.toString(), 'userId': user.uid});
+        print('Unknown error: $e');
+      }
     } else {
-      setState(() {
-        currentUser = null;
-        userImageUrl = null;  // If not logged in, clear user image
-      });
+      debugLog('B', 'No authenticated user', {'userIsNull': true});
+      if (mounted) {
+        setState(() {
+          currentUser = null;
+          userImageUrl = null;
+        });
+      }
     }
   }
 
-  // Method to check login status before performing the action
   void _onAvatarTap() async {
     if (currentUser == null) {
-      // If no user is logged in, navigate to the login page
       await Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => AuthScreen()),
+        MaterialPageRoute(builder: (context) => const AuthScreen()),
       );
-
-      // After login, fetch user data
       _fetchUserData();
     } else {
-      // If user is logged in, toggle the profile drawer
       _toggleProfileDrawer();
     }
   }
 
   void _toggleProfileDrawer() async {
     if (!showProfileDrawer) {
-      await _fetchUserData(); // Fetch latest data before opening
+      await _fetchUserData();
     }
 
-    setState(() {
-      showProfileDrawer = !showProfileDrawer;
-      showProfileDrawer ? _controller.forward() : _controller.reverse();
-    });
+    if (_drawerController != null) {
+      setState(() {
+        showProfileDrawer = !showProfileDrawer;
+        showProfileDrawer
+            ? _drawerController!.forward()
+            : _drawerController!.reverse();
+      });
+    }
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
-    _textAnimationController.dispose();
-    _controller.dispose();
+    _drawerController?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,  // Changed to black background
-      appBar: AppBar(
-        title: Text(
-          'Find your legal Ally',
-          style: TextStyle(
-            color: Colors.white,  // Changed to white for contrast
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.grey[900],  // Dark grey for app bar
-        actions: [
-          GestureDetector(
-            onTap: _onAvatarTap,
-            child: CircleAvatar(
-              backgroundImage: userImageUrl != null && userImageUrl!.isNotEmpty
-                  ? NetworkImage(userImageUrl!)
-                  : null,
-              child: userImageUrl == null || userImageUrl!.isEmpty
-                  ? Icon(Icons.person, color: Colors.black)  // Changed to white
-                  : null,
-            ),
-          ),
-          SizedBox(width: 16),
-        ],
-        automaticallyImplyLeading: false,
+      backgroundColor: Colors.black,
+      appBar: CustomAppBar(
+        userImageUrl: userImageUrl,
+        onAvatarTap: _onAvatarTap,
       ),
       body: RefreshIndicator(
         onRefresh: _fetchUserData,
+        color: Colors.white,
+        backgroundColor: Colors.grey[900],
         child: Stack(
           children: [
             Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.grey[900]!, Colors.black],  // Dark grey to black gradient
-                ),
-              ),
-              child: Column(
-                children: [
-                  Expanded(child: HomePageContent()),
-                ],
+              color: Colors.black,
+              child: RedesignedHomeContent(
+                onTabChange: widget.onTabChange,
+                currentUser: currentUser,
               ),
             ),
-            ProfileDrawer(
-              controller: _controller,
-              slideAnimation: _slideAnimation,
-              showProfileDrawer: showProfileDrawer,
-            ),
+            if (_drawerController != null && _slideAnimation != null)
+              ProfileDrawer(
+                controller: _drawerController!,
+                slideAnimation: _slideAnimation!,
+                showProfileDrawer: showProfileDrawer,
+              ),
           ],
         ),
       ),
-      bottomNavigationBar: CustomBottomNavBar(selectedIndex:1, setup: 1),
-      floatingActionButton: Showcase(
-        key: _fabKey,
-        description: 'Tap to ask questions on various topics.',
-        child: GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ChatBotScreen()),
-            );
-          },
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              FloatingActionButton(
-                onPressed: null, // Disable since the whole row is tappable
-                child: Icon(Icons.question_mark, color: Colors.black),
-                backgroundColor: Colors.white,
-                elevation: 20,
-                tooltip: 'Chat Bot',
-              ),
-
-            ],
-          ),
-        ),
-      ),
-
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 }
