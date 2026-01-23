@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nhap/bot/widget/chat_service.dart';
 import 'package:nhap/bot/widget/openai_service.dart';
+import 'package:nhap/main.dart';
 
 class ChatBotScreen extends StatefulWidget {
   const ChatBotScreen({super.key});
@@ -134,20 +135,23 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
           Expanded(
             child: chatStream != null
                 ? StreamBuilder<QuerySnapshot>(
-              stream: chatStream,
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+                    stream: chatStream,
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                final docs = snapshot.data!.docs;
-                final messages = docs
-                    .map((d) => {"docId": d.id, ...d.data() as Map<String, dynamic>})
-                    .toList();
+                      final docs = snapshot.data!.docs;
+                      final messages = docs
+                          .map((d) => {
+                                "docId": d.id,
+                                ...d.data() as Map<String, dynamic>
+                              })
+                          .toList();
 
-                return _buildMessageList(messages, isFirestore: true);
-              },
-            )
+                      return _buildMessageList(messages, isFirestore: true);
+                    },
+                  )
                 : _buildMessageList(_guestMessages),
           ),
           _buildInputArea(),
@@ -159,24 +163,24 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
   Widget _buildWalkthroughGrid() {
     final guides = [
       {
-        "title": "Book Appointment",
+        "title": appLocalization!.bookAppointment,
         "icon": Icons.calendar_today,
-        "query": "How do I book an appointment with a lawyer?"
+        "query": appLocalization!.book_appointment
       },
       {
-        "title": "Find Lawyer",
+        "title": appLocalization!.findLawyer,
         "icon": Icons.person_search,
-        "query": "How do I know what type of lawyer I need?"
+        "query": appLocalization!.type_of_lawyer
       },
       {
-        "title": "Law Services",
+        "title": appLocalization!.lawServices,
         "icon": Icons.local_hospital,
-        "query": "What services does the chamber of law provide?"
+        "query": appLocalization!.services_provided
       },
       {
-        "title": "Help",
+        "title": appLocalization!.help,
         "icon": Icons.warning,
-        "query": "What should I do when I want to sue someone?"
+        "query": appLocalization!.sue_someone
       },
     ];
 
@@ -210,7 +214,8 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                   Expanded(
                     child: Text(
                       guide["title"] as String,
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w600),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -265,7 +270,8 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (!isUser) const Text("🤖 ", style: TextStyle(fontSize: 16)),
+                  if (!isUser)
+                    const Text("🤖 ", style: TextStyle(fontSize: 16)),
                   Flexible(
                     child: Text(
                       msg["text"] ?? "",
@@ -316,7 +322,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                   borderSide: BorderSide.none,
                 ),
                 contentPadding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 suffixIcon: IconButton(
                   icon: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 200),

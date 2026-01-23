@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 
 class TrendingTopics extends StatefulWidget {
   const TrendingTopics({super.key});
@@ -12,32 +13,7 @@ class _TrendingTopicsState extends State<TrendingTopics>
   late AnimationController _controller;
   late List<Animation<Offset>> _slideAnimations;
 
-  final List<Map<String, dynamic>> _topics = [
-    {
-      'title': 'Employment Law',
-      'subtitle': '245 discussions',
-      'icon': Icons.work_outline,
-      'trend': '+12%',
-    },
-    {
-      'title': 'Property Rights',
-      'subtitle': '189 discussions',
-      'icon': Icons.home_outlined,
-      'trend': '+8%',
-    },
-    {
-      'title': 'Family Law',
-      'subtitle': '156 discussions',
-      'icon': Icons.family_restroom_outlined,
-      'trend': '+15%',
-    },
-    {
-      'title': 'Business Law',
-      'subtitle': '134 discussions',
-      'icon': Icons.business_center_outlined,
-      'trend': '+6%',
-    },
-  ];
+  late List<Map<String, dynamic>> _topics;
 
   @override
   void initState() {
@@ -46,6 +22,41 @@ class _TrendingTopicsState extends State<TrendingTopics>
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final localizations = AppLocalizations.of(context);
+
+    _topics = [
+      {
+        'title': localizations?.employmentLaw ?? 'Employment Law',
+        'subtitle':
+            localizations?.employmentLawDiscussions ?? '245 discussions',
+        'icon': Icons.work_outline,
+        'trend': '+12%',
+      },
+      {
+        'title': localizations?.propertyRights ?? 'Property Rights',
+        'subtitle':
+            localizations?.propertyRightsDiscussions ?? '189 discussions',
+        'icon': Icons.home_outlined,
+        'trend': '+8%',
+      },
+      {
+        'title': localizations?.familyLaw ?? 'Family Law',
+        'subtitle': localizations?.familyLawDiscussions ?? '156 discussions',
+        'icon': Icons.family_restroom_outlined,
+        'trend': '+15%',
+      },
+      {
+        'title': localizations?.businessLaw ?? 'Business Law',
+        'subtitle': localizations?.businessLawDiscussions ?? '134 discussions',
+        'icon': Icons.business_center_outlined,
+        'trend': '+6%',
+      },
+    ];
 
     _slideAnimations = List.generate(_topics.length, (index) {
       return Tween<Offset>(
@@ -61,7 +72,9 @@ class _TrendingTopicsState extends State<TrendingTopics>
       ));
     });
 
-    _controller.forward();
+    if (!_controller.isAnimating) {
+      _controller.forward();
+    }
   }
 
   @override
@@ -72,6 +85,8 @@ class _TrendingTopicsState extends State<TrendingTopics>
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -81,9 +96,9 @@ class _TrendingTopicsState extends State<TrendingTopics>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Trending Legal Topics',
-                style: TextStyle(
+              Text(
+                localizations?.trendingLegalTopics ?? 'Trending Legal Topics',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -91,7 +106,8 @@ class _TrendingTopicsState extends State<TrendingTopics>
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
                   color: Colors.grey[850],
                   borderRadius: BorderRadius.circular(12),
@@ -109,7 +125,7 @@ class _TrendingTopicsState extends State<TrendingTopics>
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'Hot',
+                      localizations?.hot ?? 'Hot',
                       style: TextStyle(
                         color: Colors.grey[400],
                         fontSize: 11,
@@ -204,9 +220,15 @@ class _TrendingCardState extends State<_TrendingCard>
       onTapUp: (_) {
         setState(() => _isPressed = false);
         _hoverController.reverse();
+        final localizations = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Explore ${widget.title} discussions'),
+            content: Text(
+              (localizations?.exploreDiscussions ??
+                      'Explore {title} discussions')
+                  .toString()
+                  .replaceFirst('{title}', widget.title),
+            ),
             backgroundColor: Colors.grey[800],
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -297,6 +319,3 @@ class _TrendingCardState extends State<_TrendingCard>
     );
   }
 }
-
-
-

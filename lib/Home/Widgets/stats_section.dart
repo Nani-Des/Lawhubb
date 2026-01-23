@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 
 class StatsSection extends StatefulWidget {
   const StatsSection({super.key});
@@ -47,6 +48,8 @@ class _StatsSectionState extends State<StatsSection>
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -56,9 +59,9 @@ class _StatsSectionState extends State<StatsSection>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Platform Overview',
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -66,7 +69,8 @@ class _StatsSectionState extends State<StatsSection>
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
                   color: Colors.grey[850],
                   borderRadius: BorderRadius.circular(12),
@@ -84,7 +88,7 @@ class _StatsSectionState extends State<StatsSection>
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'Growing',
+                      localizations?.growing ?? 'Growing',
                       style: TextStyle(
                         color: Colors.grey[400],
                         fontSize: 11,
@@ -270,6 +274,3 @@ class _StatCardState extends State<_StatCard>
     );
   }
 }
-
-
-

@@ -53,6 +53,8 @@ class _RecentActivityState extends State<RecentActivity>
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -62,9 +64,9 @@ class _RecentActivityState extends State<RecentActivity>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Recent Activity',
-                style: TextStyle(
+              Text(
+                localizations?.recentActivity ?? 'Recent Activity',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -72,7 +74,8 @@ class _RecentActivityState extends State<RecentActivity>
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.grey[850],
                   borderRadius: BorderRadius.circular(12),
@@ -84,7 +87,7 @@ class _RecentActivityState extends State<RecentActivity>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'View All',
+                      localizations?.viewAll ?? 'View All',
                       style: TextStyle(
                         color: Colors.grey[400],
                         fontSize: 12,
@@ -217,9 +220,7 @@ class _ActivityItemState extends State<_ActivityItem> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _isHovered
-              ? Colors.grey[850]
-              : Colors.transparent,
+          color: _isHovered ? Colors.grey[850] : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -278,6 +279,3 @@ class _ActivityItemState extends State<_ActivityItem> {
     );
   }
 }
-
-
-
