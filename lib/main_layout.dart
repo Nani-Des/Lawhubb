@@ -7,6 +7,7 @@ import 'wrappers/social_content.dart';
 import 'wrappers/posts_content.dart';
 import 'wrappers/chats_content.dart';
 import 'Home/Widgets/custom_bottom_navbar.dart';
+import 'package:nhap/ChatModule/chat_module.dart';
 
 class MainLayout extends StatefulWidget {
   final int initialIndex;
@@ -44,7 +45,15 @@ class _MainLayoutState extends State<MainLayout> {
       case 1: // Home setup (default)
         switch (index) {
           case 0:
-            return const HomePage(); // Home
+            return Navigator(
+              onGenerateRoute: (settings) {
+                return MaterialPageRoute(
+                  builder: (_) => HomePage(
+                    onTabChange: _onItemTapped,
+                  ),
+                );
+              },
+            );
           case 1:
             return const LawInsightsPage(); // Law Insights
           case 2:
@@ -52,43 +61,107 @@ class _MainLayoutState extends State<MainLayout> {
           case 3:
             return const PostsContent(); // SocialHubb - Posts only
           default:
-            return const HomePage();
+            return Navigator(
+              onGenerateRoute: (settings) {
+                return MaterialPageRoute(
+                  builder: (_) => HomePage(
+                    onTabChange: _onItemTapped,
+                  ),
+                );
+              },
+            );
         }
       case 2: // Chambers setup
         switch (index) {
           case 0:
-            return const HomePage(); // Home
+            return Navigator(
+              onGenerateRoute: (settings) {
+                return MaterialPageRoute(
+                  builder: (_) => HomePage(
+                    onTabChange: _onItemTapped,
+                  ),
+                );
+              },
+            );
           case 1:
             return const ChatsContent(); // Chats
           case 2:
             return const PostsContent(); // SocialHubb - Posts only
           default:
-            return const HomePage();
+            return Navigator(
+              onGenerateRoute: (settings) {
+                return MaterialPageRoute(
+                  builder: (_) => HomePage(
+                    onTabChange: _onItemTapped,
+                  ),
+                );
+              },
+            );
         }
       case 3: // Social setup
         switch (index) {
           case 0:
-            return const HomePage(); // Home
+            return Navigator(
+              onGenerateRoute: (settings) {
+                return MaterialPageRoute(
+                  builder: (_) => HomePage(
+                    onTabChange: _onItemTapped,
+                  ),
+                );
+              },
+            );
           case 1:
             return const ChatsContent(); // Chats
           case 2:
             return const LawInsightsPage(); // Law Insights
           default:
-            return const HomePage();
+            return Navigator(
+              onGenerateRoute: (settings) {
+                return MaterialPageRoute(
+                  builder: (_) => HomePage(
+                    onTabChange: _onItemTapped,
+                  ),
+                );
+              },
+            );
         }
       case 5: // Law insights setup
         switch (index) {
           case 0:
-            return const HomePage(); // Home
+            return Navigator(
+              onGenerateRoute: (settings) {
+                return MaterialPageRoute(
+                  builder: (_) => HomePage(
+                    onTabChange: _onItemTapped,
+                  ),
+                );
+              },
+            );
           case 1:
             return const LawInsightsPage(); // Law Insights
           case 2:
             return const PostsContent(); // SocialHubb - Posts only
           default:
-            return const HomePage();
+            return Navigator(
+              onGenerateRoute: (settings) {
+                return MaterialPageRoute(
+                  builder: (_) => HomePage(
+                    onTabChange: _onItemTapped,
+                  ),
+                );
+              },
+            );
         }
       default:
-        return const HomePage();
+        return Navigator(
+          onGenerateRoute: (settings) {
+            return MaterialPageRoute(
+              builder: (_) => HomePage(
+                onTabChange: _onItemTapped,
+              ),
+            );
+          },
+        );
     }
   }
 

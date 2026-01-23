@@ -48,7 +48,7 @@ class ChambersContent extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: const Color(0xFF1C1C1E),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -81,7 +81,7 @@ class ChambersContent extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: const Color(0xFF1C1C1E),
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: Row(
@@ -112,7 +112,7 @@ class ChambersContent extends StatelessWidget {
                   icon: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: const Color(0xFF1C1C1E),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.more_vert, color: Colors.white),
@@ -165,7 +165,7 @@ class ChambersContent extends StatelessWidget {
                   margin: const EdgeInsets.all(20),
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: const Color(0xFF1C1C1E),
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: Row(
@@ -173,7 +173,7 @@ class ChambersContent extends StatelessWidget {
                       Expanded(
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
+                            color: Colors.grey[900],
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: TextField(
@@ -205,7 +205,7 @@ class ChambersContent extends StatelessWidget {
                       const SizedBox(width: 8),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
+                          color: const Color(0xFF1C1C1E),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Material(

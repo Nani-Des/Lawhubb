@@ -264,11 +264,8 @@ class _ArticleCardState extends State<_ArticleCard>
               width: 280,
               height: 180,
               decoration: BoxDecoration(
-                color: Colors.grey[900],
+                color: const Color(0xFF1C1C1E),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: _isPressed ? Colors.grey[700]! : Colors.grey[800]!,
-                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

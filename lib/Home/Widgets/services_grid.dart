@@ -8,11 +8,17 @@ import '../../Library/library_page.dart';
 import '../../LawInsights/law_insights_page.dart';
 import '../../Hospital/general_hospital_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../Library/library_page.dart';
 
 import '../../bot/chat_bot.dart';
 
 class ServicesGrid extends StatelessWidget {
-  const ServicesGrid({super.key});
+  final Function(int)? onTabChange;
+
+  const ServicesGrid({
+    super.key,
+    this.onTabChange,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -216,12 +222,8 @@ class _ServiceCardState extends State<_ServiceCard>
             child: Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Colors.grey[900],
+                color: const Color(0xFF1C1C1E),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: _isPressed ? Colors.grey[700]! : Colors.grey[800]!,
-                  width: 1,
-                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

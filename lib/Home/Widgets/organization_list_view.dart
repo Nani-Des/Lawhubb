@@ -140,25 +140,76 @@ class _OrganizationListViewState extends State<OrganizationListView> {
           child: _isOffline && _cachedHospitals.isNotEmpty
               ? _buildOfflineHospitalList()
               : StreamBuilder<QuerySnapshot>(
-                  stream: _hospitalsStream,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white)), // White progress indicator
-                            const SizedBox(height: 16),
-                            Text(
-                              "Loading ${_isOffline ? ' (Offline)' : ''}...",
-                              style: const TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white), // White text
-                            ),
-                          ],
-                        ),
+            stream: _hospitalsStream,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),  // White progress indicator
+                      const SizedBox(height: 16),
+                      Text(
+                        "Loading ${_isOffline ? ' (Offline)' : ''}...",
+                        style: const TextStyle(fontSize: 16, color: Colors.white),  // White text
+                      ),                   ],
+                  ),
+                );
+              }
+
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return const Center(child: Text("No Chamber found", style: TextStyle(color: Colors.white)));  // White text
+              }
+
+              final hospitals = _filterHospitals(snapshot.data!.docs);
+              final hospitalDataList = hospitals.map((doc) {
+                final data = doc.data() as Map<String, dynamic>;
+                return {
+                  'id': doc.id,
+                  'Chamber Name': data['Chamber Name'] ?? '',
+                  'City': data['City'] ?? 'Unknown City',
+                  'Contact': data['Contact'] ?? 'No Contact Info',
+                  'Background Image': data['Background Image']?.isNotEmpty == true
+                      ? data['Background Image']
+                      : 'assets/Images/background_default.jpg',
+                };
+              }).toList();
+
+              // Cache hospital data
+              _cacheData(hospitalDataList, _cachedRatings);
+
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                decoration: const BoxDecoration(
+                  color: Colors.transparent,
+                ),
+                child: Scrollbar(
+                  controller: _scrollController,
+                  thumbVisibility: true,
+                  thickness: 8,
+                  radius: const Radius.circular(12),
+                  trackVisibility: true,
+                  child: ListView.builder(
+                    key: const PageStorageKey<String>('hospital_list'),
+                    controller: _scrollController,
+                    shrinkWrap: true,
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.all(8),
+                    itemCount: hospitals.length,
+                    itemBuilder: (context, index) {
+                      final hospital = hospitals[index];
+                      final hospitalData = hospital.data() as Map<String, dynamic>;
+                      final backgroundImage = hospitalData['Background Image']?.isNotEmpty == true
+                          ? hospitalData['Background Image']
+                          : 'assets/Images/background_default.jpg';
+
+                      return HospitalCard(
+                        backgroundImage: backgroundImage,
+                        hospitalName: hospitalData['Chamber Name'] ?? 'Unknown Chamber',
+                        contact: hospitalData['Contact'] ?? 'No Contact Info',
+                        hospitalId: hospital.id,
+                        onTap: () => _navigateToHospitalPage(context, hospital.id),
+                        cachedRating: _cachedRatings[hospital.id],
                       );
                     }
 
@@ -242,9 +293,8 @@ class _OrganizationListViewState extends State<OrganizationListView> {
     final filteredHospitals = _filterCachedHospitals(_cachedHospitals);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(24),
+      decoration: const BoxDecoration(
+        color: Colors.transparent,
       ),
       child: Scrollbar(
         controller: _scrollController,
@@ -397,7 +447,7 @@ class HospitalCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: const Color(0xFF1C1C1E),
         borderRadius: BorderRadius.circular(20.0),
       ),
       child: Material(
@@ -522,7 +572,7 @@ class HospitalCard extends StatelessWidget {
                         ),
                         Container(
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
+                            color: Colors.grey[900],
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Material(

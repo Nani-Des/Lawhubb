@@ -37,12 +37,8 @@ class _HeroSectionState extends State<HeroSection> {
             width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.grey[900],
+              color: const Color(0xFF1C1C1E),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.grey[800]!,
-                width: 1,
-              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

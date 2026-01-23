@@ -157,21 +157,15 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: CustomScrollView(
         slivers: [
           _buildSliverAppBar(),
           SliverToBoxAdapter(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Colors.black,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 5,
-                    blurRadius: 10,
-                  ),
-                ],
               ),
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -272,28 +266,28 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                       data['Chamber Name'],
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        Icon(Icons.location_on, size: 18, color: Colors.grey[600]),
+                        Icon(Icons.location_on, size: 18, color: Colors.grey[400]),
                         const SizedBox(width: 5),
                         Text(
                           data['City'],
-                          style: TextStyle(color: Colors.grey[600]),
+                          style: TextStyle(color: Colors.grey[400]),
                         ),
                       ],
                     ),
                     const SizedBox(height: 5),
                     Row(
                       children: [
-                        Icon(Icons.phone, size: 18, color: Colors.grey[600]),
+                        Icon(Icons.phone, size: 18, color: Colors.grey[400]),
                         const SizedBox(width: 5),
                         Text(
                           data['Contact'],
-                          style: TextStyle(color: Colors.grey[600]),
+                          style: TextStyle(color: Colors.grey[400]),
                         ),
                       ],
                     ),
@@ -316,7 +310,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: const Color(0xFF1C1C1E),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -324,7 +318,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
         children: [
           Text(
             'Rate this Chamber',
-            style: Theme.of(context).textTheme.titleLarge,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),
           ),
           const SizedBox(height: 12),
           Row(
@@ -342,7 +336,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                     max: 5,
                     divisions: 10,
                     activeColor: Colors.teal,
-                    inactiveColor: Colors.grey[300],
+                    inactiveColor: Colors.grey[800],
                     label: _hospitalRating.toStringAsFixed(1),
                     onChanged: _hasRated
                         ? null // Disable slider if user has rated
@@ -377,7 +371,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
             children: [
               Text(
                 '${_averageRating.toStringAsFixed(1)} ★ ($_ratingCount ratings)',
-                style: const TextStyle(fontSize: 16),
+                style: const TextStyle(fontSize: 16, color: Colors.white),
               ),
               if (!_hasRated)
                 ElevatedButton(
@@ -395,15 +389,17 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Write a Review', style: Theme.of(context).textTheme.titleLarge),
+        Text('Write a Review', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
         const SizedBox(height: 12),
         TextField(
           controller: _reviewController,
           maxLines: 4,
+          style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             hintText: 'Share your experience...',
+            hintStyle: TextStyle(color: Colors.grey[400]),
             filled: true,
-            fillColor: Colors.grey[100],
+            fillColor: Colors.grey[900],
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
@@ -444,13 +440,13 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Reviews', style: Theme.of(context).textTheme.titleLarge),
+            Text('Reviews', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
             const SizedBox(height: 16),
             snapshot.data!.docs.isEmpty
                 ? Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: const Color(0xFF1C1C1E),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Center(
@@ -487,11 +483,11 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
           margin: const EdgeInsets.only(bottom: 10),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: const Color(0xFF1C1C1E),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.black.withOpacity(0.2),
                 spreadRadius: 1,
                 blurRadius: 5,
               ),
@@ -513,11 +509,11 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                       children: [
                         Text(
                           '${userData['Fname']} ${userData['Lname']}',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
                         ),
                         Text(
                           _formatTimestamp(review['timestamp']),
-                          style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                          style: TextStyle(color: Colors.grey[400], fontSize: 12),
                         ),
                       ],
                     ),
@@ -525,7 +521,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              Text(review['content'], style: const TextStyle(fontSize: 15)),
+              Text(review['content'], style: const TextStyle(fontSize: 15, color: Colors.white)),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -547,7 +543,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                     onPressed: () => _showReplyDialog(context, reviewId),
                     child: const Text(
                       'Reply',
-                      style: TextStyle(color: Colors.black),
+                      style: TextStyle(color: Colors.white),
                     ),
                   ),
                 ],
@@ -585,7 +581,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.grey[50],
+                      color: Colors.grey[900],
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -605,18 +601,18 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                                 style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
+                                  color: Colors.white,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 reply['content'],
-                                style: const TextStyle(fontSize: 14),
+                                style: const TextStyle(fontSize: 14, color: Colors.white70),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 _formatTimestamp(reply['timestamp']),
-                                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                               ),
                             ],
                           ),
@@ -697,6 +693,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
     showDialog(
       context: context,
       builder: (context) => Dialog(
+        backgroundColor: const Color(0xFF1C1C1E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -705,15 +702,17 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
             children: [
               const Text(
                 'Reply to Review',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: replyController,
+                style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: 'Write your reply...',
+                  hintStyle: TextStyle(color: Colors.grey[400]),
                   filled: true,
-                  fillColor: Colors.grey[100],
+                  fillColor: Colors.grey[900],
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,

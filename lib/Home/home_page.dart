@@ -10,7 +10,12 @@ import 'Widgets/redesigned_home_content.dart';
 import 'Widgets/app_bar.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final Function(int)? onTabChange;
+
+  const HomePage({
+    super.key,
+    this.onTabChange,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -170,14 +175,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         child: Stack(
           children: [
             Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.grey[900]!, Colors.black],
-                ),
+              color: Colors.black,
+              child: RedesignedHomeContent(
+                onTabChange: widget.onTabChange,
+                currentUser: currentUser,
               ),
-              child: const RedesignedHomeContent(),
             ),
             if (_drawerController != null && _slideAnimation != null)
               Align(
