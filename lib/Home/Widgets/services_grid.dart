@@ -3,9 +3,15 @@ import 'package:nhap/l10n/app_localizations.dart';
 import '../../Emergency/emergency_page.dart';
 import '../../booking_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../Library/library_page.dart';
 
 class ServicesGrid extends StatelessWidget {
-  const ServicesGrid({super.key});
+  final Function(int)? onTabChange;
+
+  const ServicesGrid({
+    super.key,
+    this.onTabChange,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -110,33 +116,23 @@ class ServicesGrid extends StatelessWidget {
                 subtitle:
                     localizations?.connectAndDiscuss ?? 'Connect & discuss',
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(localizations?.useSocialHub ??
-                          'Use bottom navigation to access Social Hub'),
-                      backgroundColor: Colors.grey[800],
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  );
+                  if (onTabChange != null) {
+                    // Switch to Social Hub (Index 3 usually, but depends on setup. MainLayout says Case 1 Index 3 is SocialHubb)
+                    // Let's assume default setup for now, or check usage.
+                    // MainLayout: case 1 -> index 3 is Social content.
+                    onTabChange!(3);
+                  }
                 },
               ),
               _ServiceCard(
                 icon: Icons.menu_book_outlined,
-                title: localizations?.legalResources ?? 'Legal Resources',
-                subtitle: localizations?.browseLibrary ?? 'Browse library',
+                title: 'Law Insights',
+                subtitle: 'Browse library',
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(localizations?.useLawInsights ??
-                          'Use bottom navigation to access Law Insights'),
-                      backgroundColor: Colors.grey[800],
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => LibraryPage(),
                     ),
                   );
                 },
@@ -219,12 +215,8 @@ class _ServiceCardState extends State<_ServiceCard>
             child: Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Colors.grey[900],
+                color: const Color(0xFF1C1C1E),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: _isPressed ? Colors.grey[700]! : Colors.grey[800]!,
-                  width: 1,
-                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

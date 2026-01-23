@@ -168,6 +168,7 @@ class _EmergencyHomePageContentState extends State<EmergencyHomePageContent> wit
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
                         GestureDetector(
@@ -233,19 +234,7 @@ class _EmergencyHomePageContentState extends State<EmergencyHomePageContent> wit
         width: 200,
         height: 200,
         decoration: BoxDecoration(
-          color: Colors.lightGreen[50],
-          border: Border.all(
-            color: Colors.teal,
-            width: 4,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.teal.withOpacity(0.2),
-              spreadRadius: 2,
-              blurRadius: 8,
-              offset: Offset(0, 4),
-            ),
-          ],
+          color: Color(0xFF1E1E1E),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Container(

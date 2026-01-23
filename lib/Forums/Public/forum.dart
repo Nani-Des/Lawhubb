@@ -120,17 +120,10 @@ class _ForumPageState extends State<Forum> {
 
                       // Minimalistic dark gradient
                       decoration: BoxDecoration(
+                        color: const Color(0xFF1C1C1E),
                         border: Border(
                             bottom:
                                 BorderSide(color: Colors.grey[900]!, width: 1)),
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.black,
-                            Colors.grey[900]!,
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
                       ),
 
                       child: Column(
