@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hive/hive.dart';
 import 'upload_pdf.dart';
 import 'pdf_reader_page.dart';
@@ -45,6 +46,45 @@ class _LibraryPageState extends State<LibraryPage> {
     pdfs = snapshot.docs.map((d) => {...d.data(), 'id': d.id}).toList();
     filtered = pdfs;
     setState(() => loading = false);
+  }
+
+  Future<bool> _isLawyer() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+
+    final userDoc = await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(user.uid)
+        .get();
+
+    if (!userDoc.exists) return false;
+    return (userDoc.data() as Map<String, dynamic>?)?['Role'] == true;
+  }
+
+  void _showAccessDeniedDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'Access Denied',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Only Lawyers can upload books to the library.',
+          style: TextStyle(color: Colors.grey),
+        ),
+        backgroundColor: Colors.grey[900],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'OK',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _search(String q) {
@@ -350,6 +390,11 @@ class _LibraryPageState extends State<LibraryPage> {
           IconButton(
             icon: const Icon(Icons.upload_file, color: Colors.white),
             onPressed: () async {
+              final isLawyer = await _isLawyer();
+              if (!isLawyer) {
+                _showAccessDeniedDialog();
+                return;
+              }
               await Navigator.push(
                   context, MaterialPageRoute(builder: (_) => const UploadPDFPage()));
               await _fetchPDFs();

@@ -15,9 +15,20 @@ class SearchBar1 extends StatefulWidget {
 class _SearchBar1State extends State<SearchBar1> {
   final TextEditingController _controller = TextEditingController();
   bool _isLoading = false;
+  bool _hasText = false;
 
   List<Map<String, dynamic>> _lawyerSuggestions = [];
   String? _botResponse; // AI-matched practice name
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(() {
+      setState(() {
+        _hasText = _controller.text.isNotEmpty;
+      });
+    });
+  }
 
   @override
   void dispose() {
@@ -203,10 +214,15 @@ class _SearchBar1State extends State<SearchBar1> {
                         const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
                   ),
                   style: const TextStyle(color: Colors.white),
-                  onChanged: (value) => _fetchLawyerSuggestions(value),
+                  onChanged: (value) {
+                    setState(() {
+                      _hasText = value.isNotEmpty;
+                    });
+                    _fetchLawyerSuggestions(value);
+                  },
                 ),
               ),
-              if (_controller.text.isNotEmpty && !_isLoading)
+              if (_hasText && !_isLoading)
                 IconButton(
                   icon: const Icon(Icons.send, color: Colors.white),
                   onPressed: _onSendPressed,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../Forums/Chat/HomeScreen.dart';
+import '../../wrappers/posts_content.dart';
 import '../../Library/library_page.dart';
 import '../../Hospital/general_hospital_page.dart';
 
@@ -34,7 +35,7 @@ class FeatureCardsSection extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const HomeScreen(initialTabIndex: 1),
+                  builder: (context) => const PostsContent(),
                 ),
               );
             },

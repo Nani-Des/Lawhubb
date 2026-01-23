@@ -2,11 +2,15 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nhap/Home/home_page.dart';
-import 'package:nhap/main.dart';
 import '../../Auth/auth_screen.dart';
 import '../../Forums/Chat/HomeScreen.dart';
 import '../../Hospital/general_hospital_page.dart';
 import '../../Library/library_page.dart';
+import '../../Services/unread_message_service.dart';
+import '../../main_layout.dart';
+import '../../wrappers/posts_content.dart';
+import '../../wrappers/chats_content.dart';
+import '../../LawInsights/law_insights_page.dart';
 
 class CustomBottomNavBar extends StatefulWidget {
   final int selectedIndex;
@@ -28,6 +32,8 @@ class CustomBottomNavBar extends StatefulWidget {
 class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
   late int _selectedIndex;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final UnreadMessageService _unreadService = UnreadMessageService();
+  int _unreadCount = 0;
 
   @override
   void didUpdateWidget(covariant CustomBottomNavBar oldWidget) {
@@ -41,6 +47,38 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
   void initState() {
     super.initState();
     _selectedIndex = widget.selectedIndex;
+    _loadUnreadCount();
+  }
+
+  void _loadUnreadCount() {
+    final currentUser = _auth.currentUser;
+    if (currentUser != null) {
+      _unreadService.getTotalUnreadCount().listen((count) {
+        if (mounted) {
+          setState(() {
+            _unreadCount = count;
+          });
+        }
+      });
+    }
+  }
+
+  // Helper method to get SocialHubb index based on setup
+  int? _getSocialHubbIndex() {
+    switch (widget.setup) {
+      case 1:
+        return 3; // SocialHubb is at index 3
+      case 2:
+        return 2; // SocialHubb is at index 2
+      case 3:
+        return null; // No SocialHubb in setup 3
+      case 4:
+        return null; // No SocialHubb in setup 4
+      case 5:
+        return 2; // SocialHubb is at index 2
+      default:
+        return null;
+    }
   }
 
   // 🔹 Authentication check before navigation
@@ -93,21 +131,21 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
       case 1:
         return const [
           _NavItem(icon: Icons.home_filled, label: 'Home'),
-          _NavItem(icon: Icons.balance, label: 'Chambers'),
-          _NavItem(icon: Icons.menu_book, label: 'Law Insights'),
+          _NavItem(icon: Icons.menu_book_outlined, label: 'Law Insights'),
+          _NavItem(icon: Icons.chat, label: 'Chats'),
           _NavItem(icon: Icons.forum, label: 'SocialHubb'),
         ];
       case 2:
         return const [
           _NavItem(icon: Icons.home_filled, label: 'Home'),
-          _NavItem(icon: Icons.menu_book, label: 'Law Insights'),
+          _NavItem(icon: Icons.chat, label: 'Chats'),
           _NavItem(icon: Icons.forum, label: 'SocialHubb'),
         ];
       case 3:
         return const [
           _NavItem(icon: Icons.home_filled, label: 'Home'),
-          _NavItem(icon: Icons.menu_book, label: 'Law Insights'),
-          _NavItem(icon: Icons.balance, label: 'Chambers'),
+          _NavItem(icon: Icons.chat, label: 'Chats'),
+          _NavItem(icon: Icons.menu_book_outlined, label: 'Law Insights'),
         ];
       case 4:
         return const [
@@ -118,7 +156,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
       case 5:
         return const [
           _NavItem(icon: Icons.home_filled, label: 'Home'),
-          _NavItem(icon: Icons.balance, label: 'Chambers'),
+          _NavItem(icon: Icons.menu_book_outlined, label: 'Law Insights'),
           _NavItem(icon: Icons.forum, label: 'SocialHubb'),
         ];
       default:
@@ -137,36 +175,45 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
     }
 
     // Fallback to old navigation for backward compatibility
+    // When tapping Home (index 0), always navigate to MainLayout to ensure bottom nav is visible
+    if (index == 0) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MainLayout(
+            initialIndex: 0,
+            setup: widget.setup,
+          ),
+        ),
+        (route) => false, // Remove all previous routes
+      );
+      return;
+    }
+
     switch (widget.setup) {
       case 1: // Home setup (default)
-        if (index == 0)
-          _navigateBasedOnAuthStatus(context, const HomePage());
-        else if (index == 1)
-          _navigateBasedOnAuthStatus(context, GeneralHospitalPage());
+        if (index == 1)
+          _navigateBasedOnAuthStatus(context, const LawInsightsPage());
         else if (index == 2)
-          _navigateBasedOnAuthStatus(context, LibraryPage());
+          _navigateBasedOnAuthStatus(context, const ChatsContent());
         else if (index == 3)
           _navigateBasedOnAuthStatus(
-              context, const HomeScreen(initialTabIndex: 0));
+              context, const PostsContent());
         break;
 
       case 2: // Chambers
-        if (index == 0)
-          _navigateBasedOnAuthStatus(context, HomePage());
-        else if (index == 1)
-          _navigateBasedOnAuthStatus(context, LibraryPage());
+        if (index == 1)
+          _navigateBasedOnAuthStatus(context, const ChatsContent());
         else if (index == 2)
           _navigateBasedOnAuthStatus(
-              context, const HomeScreen(initialTabIndex: 1));
+              context, const PostsContent());
         break;
 
       case 3: // Social
-        if (index == 0)
-          _navigateBasedOnAuthStatus(context, HomePage());
-        else if (index == 1)
-          _navigateBasedOnAuthStatus(context, LibraryPage());
+        if (index == 1)
+          _navigateBasedOnAuthStatus(context, const ChatsContent());
         else if (index == 2)
-          _navigateBasedOnAuthStatus(context, GeneralHospitalPage());
+          _navigateBasedOnAuthStatus(context, const LawInsightsPage());
         break;
 
       case 4: // Forum
@@ -178,15 +225,55 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
         break;
 
       case 5: // Law insights
-        if (index == 0)
-          _navigateBasedOnAuthStatus(context, HomePage());
-        else if (index == 1)
-          _navigateBasedOnAuthStatus(context, GeneralHospitalPage());
+        if (index == 1)
+          _navigateBasedOnAuthStatus(context, const LawInsightsPage());
         else if (index == 2)
           _navigateBasedOnAuthStatus(
-              context, const HomeScreen(initialTabIndex: 1));
+              context, const PostsContent());
         break;
     }
+  }
+
+  Widget _buildNavIcon(IconData icon, bool isSelected, int index) {
+    final socialHubbIndex = _getSocialHubbIndex();
+    final showBadge = socialHubbIndex != null && index == socialHubbIndex && _unreadCount > 0;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Icon(
+          icon,
+          size: 22,
+          color: isSelected ? Colors.white : Colors.white70,
+        ),
+        if (showBadge)
+          Positioned(
+            right: -6,
+            top: -6,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.redAccent,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.black, width: 1.5),
+              ),
+              constraints: const BoxConstraints(
+                minWidth: 16,
+                minHeight: 16,
+              ),
+              child: Text(
+                _unreadCount > 99 ? '99+' : _unreadCount.toString(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+      ],
+    );
   }
 
   @override
@@ -236,11 +323,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              item.icon,
-                              size: 22,
-                              color: isSelected ? Colors.white : Colors.white70,
-                            ),
+                            _buildNavIcon(item.icon, isSelected, index),
                             const SizedBox(height: 6),
                             Text(
                               item.label,

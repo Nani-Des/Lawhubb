@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../../Services/config_service.dart';
 
 class LiveConsultationScreen1 extends StatefulWidget {
   final String channelName;
@@ -33,10 +34,14 @@ class _LiveConsultationScreen1State extends State<LiveConsultationScreen1> {
     // Request mic/camera permissions
     await [Permission.microphone, Permission.camera].request();
 
+    final configService = ConfigService();
+    final appId = configService.agoraAppId;
+    if (appId.isEmpty) {
+      throw Exception('Agora App ID is not configured');
+    }
+    
     _engine = createAgoraRtcEngine();
-    await _engine.initialize(const RtcEngineContext(
-      appId: "13631764d3a94ae1861100ff75044e38", // replace with your Agora App ID
-    ));
+    await _engine.initialize(RtcEngineContext(appId: appId));
 
     _engine.registerEventHandler(
       RtcEngineEventHandler(

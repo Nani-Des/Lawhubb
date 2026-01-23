@@ -301,7 +301,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'LawHub'**
+  /// **'LawHubb'**
   String get appTitle;
 
   /// No description provided for @locationPermissionTitle.
@@ -397,13 +397,13 @@ abstract class AppLocalizations {
   /// No description provided for @loggedInMessage.
   ///
   /// In en, this message translates to:
-  /// **'Your legal journey continues here'**
+  /// **'Do you need any legal aid ?'**
   String get loggedInMessage;
 
   /// No description provided for @notLoggedInMessage.
   ///
   /// In en, this message translates to:
-  /// **'Join thousands of legal professionals'**
+  /// **'Do you need any legal aid ?'**
   String get notLoggedInMessage;
 
   /// No description provided for @searchPlaceholder.
@@ -433,7 +433,7 @@ abstract class AppLocalizations {
   /// No description provided for @emergencyLegalHelp.
   ///
   /// In en, this message translates to:
-  /// **'Emergency Legal Help'**
+  /// **'AI Assistant / Help'**
   String get emergencyLegalHelp;
 
   /// No description provided for @immediateAssistance.
@@ -445,7 +445,7 @@ abstract class AppLocalizations {
   /// No description provided for @bookConsultation.
   ///
   /// In en, this message translates to:
-  /// **'Book Consultation'**
+  /// **'Bookings/ Consultation'**
   String get bookConsultation;
 
   /// No description provided for @scheduleWithExperts.
@@ -481,7 +481,7 @@ abstract class AppLocalizations {
   /// No description provided for @legalResources.
   ///
   /// In en, this message translates to:
-  /// **'Legal Resources'**
+  /// **'Bookshop'**
   String get legalResources;
 
   /// No description provided for @browseLibrary.

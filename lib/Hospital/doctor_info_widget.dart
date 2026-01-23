@@ -3,10 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nhap/Hospital/specialty_details.dart';
 import '../Forums/Chat/chat_screen.dart';
+import '../Forums/Chat/voice_call_screen.dart';
 import 'doctor_availability_calendar.dart';
 import 'hospital_page.dart';
 import 'package:uuid/uuid.dart';
 import 'package:provider/provider.dart';
+import '../Services/follow_service.dart';
 
 class DoctorInfoWidget extends StatelessWidget {
   final Map<String, dynamic> doctorDetails;
@@ -30,167 +32,252 @@ class DoctorInfoWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 10,
-            spreadRadius: 5,
-          ),
-        ],
-      ),
-      margin: const EdgeInsets.all(16.0),
-      child: Stack(
-        children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                _buildProfileSection(context),
-                const SizedBox(height: 24),
-                _buildInfoGrid(context),
-                const SizedBox(height: 24),
-              ],
-            ),
-          ),
-          Positioned(
-            bottom: 0,
-            left: 16,
-            right: 16,
-            child: _buildActionButtons(context),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProfileSection(BuildContext context) {
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 60,
-          backgroundColor: Colors.grey[800],
-          backgroundImage: doctorDetails['User Pic']?.isNotEmpty ?? false
-              ? NetworkImage(doctorDetails['User Pic'])
-              : const AssetImage('assets/Images/placeholder.png') as ImageProvider,
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          "${doctorDetails['Lname'] ?? ''} ${doctorDetails['Fname'] ?? ''} ${doctorDetails['Title'] ?? ''}",
-          style: const TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        Text(
-          doctorDetails['status'] ?? 'Available',
-          style: TextStyle(
-            fontSize: 12,
-            color: doctorDetails['status'] == 'Available' ? Colors.green : Colors.red,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInfoGrid(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 2,
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      children: [
-        _buildInfoBox(
-          Icons.gavel_outlined,
-          'Bar',
-          hospitalName,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => HospitalPage(
-                  hospitalId: hospitalId,
-                  isReferral: isReferral,
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Header Section with Gradient
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.grey[900]!,
+                      Colors.black,
+                    ],
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Column(
+                  children: [
+                    // Profile Avatar with Status
+                    Stack(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white,
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.3),
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: CircleAvatar(
+                            radius: 40,
+                            backgroundColor: Colors.grey[800],
+                            backgroundImage: doctorDetails['User Pic']?.isNotEmpty ?? false
+                                ? NetworkImage(doctorDetails['User Pic'])
+                                : null,
+                            child: doctorDetails['User Pic']?.isEmpty ?? true
+                                ? const Icon(Icons.person, size: 40, color: Colors.grey)
+                                : null,
+                          ),
+                        ),
+                        // Status Indicator
+                        Positioned(
+                          bottom: 2,
+                          right: 2,
+                          child: Container(
+                            width: 14,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: (doctorDetails['status'] == 'Available' || doctorDetails['isOnline'] == true)
+                                  ? Colors.grey[300]
+                                  : Colors.grey[600],
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.black, width: 2),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // Name
+                    Text(
+                      "${doctorDetails['Title'] ?? ''} ${doctorDetails['Fname'] ?? ''} ${doctorDetails['Lname'] ?? ''}".trim(),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: -0.3,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 6),
+                    // Status Badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[850],
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: (doctorDetails['status'] == 'Available' || doctorDetails['isOnline'] == true)
+                              ? Colors.grey[600]!
+                              : Colors.grey[700]!,
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        (doctorDetails['status'] == 'Available' || doctorDetails['isOnline'] == true)
+                            ? 'Available'
+                            : 'Offline',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: (doctorDetails['status'] == 'Available' || doctorDetails['isOnline'] == true)
+                              ? Colors.grey[300]
+                              : Colors.grey[500],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            );
-          },
-        ),
-        _buildInfoBox(
-          Icons.business,
-          'Practice',
-          departmentName,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => SpecialtyDetails(
-                  hospitalId: hospitalId,
-                  isReferral: isReferral,
-                  initialDepartmentId: departmentId,
+              
+              // Info Cards Section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Section Title
+                    const Text(
+                      'Information',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    
+                    // Info Cards Grid
+                    GridView.count(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      childAspectRatio: 1.3,
+                      children: [
+                        _buildModernInfoCard(
+                          context,
+                          icon: Icons.gavel_rounded,
+                          title: 'Chamber',
+                          value: hospitalName,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => HospitalPage(
+                                  hospitalId: hospitalId,
+                                  isReferral: isReferral,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        _buildModernInfoCard(
+                          context,
+                          icon: Icons.business_center_rounded,
+                          title: 'Practice Area',
+                          value: departmentName,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SpecialtyDetails(
+                                  hospitalId: hospitalId,
+                                  isReferral: isReferral,
+                                  initialDepartmentId: departmentId,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Action Buttons
+                    _buildActionButtons(context),
+                    const SizedBox(height: 12),
+                  ],
                 ),
               ),
-            );
-          },
+            ],
+          ),
         ),
-        _buildInfoBox(
-          Icons.location_on,
-          'Region',
-          doctorDetails['Region'],
-          onTap: () => _showInfoDialog(context, 'Region', doctorDetails['Region']),
-        ),
-        _buildInfoBox(
-          Icons.calendar_month_outlined,
-          'Year of Call',
-          "${doctorDetails['Experience'] ?? 'N/A'}",
-          onTap: () => _showInfoDialog(context, 'Experience', "${doctorDetails['Experience'] ?? 'N/A'}"),
-        ),
-      ],
+      ),
     );
   }
 
-  Widget _buildInfoBox(IconData icon, String label, String? value, {VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.grey[850],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[700]!),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: Colors.white, size: 28),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              value ?? 'Not available',
-              style: TextStyle(fontSize: 14, color: Colors.grey[400]),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+  Widget _buildModernInfoCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String? value,
+    VoidCallback? onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.grey[850],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[700]!, width: 1),
+          ),
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.grey[800],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: Colors.white, size: 18),
+              ),
+              const Spacer(),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[400],
+                  letterSpacing: 0.1,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value ?? 'N/A',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -202,13 +289,23 @@ class DoctorInfoWidget extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(title, style: TextStyle(color: Colors.white)),
-          content: Text(value, style: TextStyle(color: Colors.grey[300])),
           backgroundColor: Colors.grey[900],
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            title,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            value,
+            style: TextStyle(color: Colors.grey[300], fontSize: 16),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Close', style: TextStyle(color: Colors.white)),
+              child: const Text(
+                'Close',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              ),
             ),
           ],
         );
@@ -217,81 +314,189 @@ class DoctorInfoWidget extends StatelessWidget {
   }
 
   Widget _buildActionButtons(BuildContext context) {
-    final currentUser = FirebaseAuth.instance.currentUser!;
+    final currentUser = FirebaseAuth.instance.currentUser;
 
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            icon: const Icon(Icons.message, color: Colors.black),
-            label: const Text('Message Lawyer', style: TextStyle(color: Colors.black)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-              elevation: 4,
-            ),
-            onPressed: () async {
-              final String otherUserId = doctorDetails['User ID'];
-              final chatRef = FirebaseFirestore.instance.collection('Chats');
-
-              // Find existing chat
-              final existingChat = await chatRef
-                  .where('participants', arrayContains: currentUser.uid)
-                  .get();
-
-              DocumentSnapshot? foundChat;
-              for (var doc in existingChat.docs) {
-                if ((doc['participants'] as List).contains(otherUserId)) {
-                  foundChat = doc;
-                  break;
-                }
-              }
-
-              // If chat doesn’t exist, create one
-              if (foundChat == null) {
-                final newChatRef = await chatRef.add({
-                  'participants': [currentUser.uid, otherUserId],
-                  'createdAt': FieldValue.serverTimestamp(),
-                });
-
-                // Fetch the created document as a snapshot
-                foundChat = await newChatRef.get();
-              }
-
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChatScreen(
-                    chatId: foundChat!.id,
-                    recipientId: otherUserId,
-                    recipientName:
-                    "${doctorDetails['Fname'] ?? ''} ${doctorDetails['Lname'] ?? ''}",
-                    recipientPic: doctorDetails['User Pic'] ?? '',
-                    recipientRole: doctorDetails['Role'] is bool
-                        ? doctorDetails['Role']
-                        : (doctorDetails['Role']?.toString().toLowerCase() == 'true'),
-
-                  ),
+        // Primary Action: Voice Call
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: currentUser == null ? () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please log in to make voice calls'),
+                  backgroundColor: Colors.red,
                 ),
               );
+            } : () {
+              final String otherUserId = doctorDetails['User ID'];
+              final recipientName = "${doctorDetails['Fname'] ?? ''} ${doctorDetails['Lname'] ?? ''}".trim();
+              
+              // Generate unique channel name using UUID (max 64 chars)
+              final uuid = const Uuid();
+              final channelName = uuid.v4().replaceAll('-', '').substring(0, 32);
+              
+              if (context.mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => VoiceCallScreen(
+                      channelName: channelName,
+                      recipientId: otherUserId,
+                      recipientName: recipientName.isNotEmpty ? recipientName : 'Lawyer',
+                      isInitiator: true,
+                    ),
+                  ),
+                );
+              }
             },
-
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 2,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.phone_rounded, size: 18, color: Colors.black),
+                SizedBox(width: 8),
+                Text(
+                  'Voice Call',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: ElevatedButton.icon(
-            icon: const Icon(Icons.calendar_month, color: Colors.black),
-            label: const Text('Book', style: TextStyle(color: Colors.black)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isReferral ? Colors.grey[700] : Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-              elevation: isReferral ? 0 : 4,
-            ),
-            onPressed: isReferral ? null : () => _showCalendarDialog(context),
+        
+        const SizedBox(height: 8),
+        
+        // Follow Button
+        if (currentUser != null && currentUser.uid != doctorDetails['User ID'])
+          _FollowButton(
+            currentUserId: currentUser!.uid,
+            targetUserId: doctorDetails['User ID'],
           ),
+        
+        if (currentUser != null && currentUser.uid != doctorDetails['User ID'])
+          const SizedBox(height: 8),
+        
+        // Secondary Actions Row
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: currentUser == null ? () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please log in to message lawyers'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                } : () async {
+                  final String otherUserId = doctorDetails['User ID'];
+                  final chatRef = FirebaseFirestore.instance.collection('Chats');
+
+                  // Find existing chat
+                  final existingChat = await chatRef
+                      .where('participants', arrayContains: currentUser!.uid)
+                      .get();
+
+                  DocumentSnapshot? foundChat;
+                  for (var doc in existingChat.docs) {
+                    if ((doc['participants'] as List).contains(otherUserId)) {
+                      foundChat = doc;
+                      break;
+                    }
+                  }
+
+                  // If chat doesn't exist, create one
+                  if (foundChat == null) {
+                    final newChatRef = await chatRef.add({
+                      'participants': [currentUser.uid, otherUserId],
+                      'createdAt': FieldValue.serverTimestamp(),
+                    });
+
+                    // Fetch the created document as a snapshot
+                    foundChat = await newChatRef.get();
+                  }
+
+                  if (context.mounted) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatScreen(
+                          chatId: foundChat!.id,
+                          recipientId: otherUserId,
+                          recipientName:
+                          "${doctorDetails['Fname'] ?? ''} ${doctorDetails['Lname'] ?? ''}",
+                          recipientPic: doctorDetails['User Pic'] ?? '',
+                          recipientRole: doctorDetails['Role'] is bool
+                              ? doctorDetails['Role']
+                              : (doctorDetails['Role']?.toString().toLowerCase() == 'true'),
+                        ),
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 2,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.message_rounded, size: 18),
+                    SizedBox(width: 6),
+                    Text(
+                      'Message',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: isReferral ? null : () => _showCalendarDialog(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isReferral ? Colors.grey[800] : Colors.white,
+                  foregroundColor: isReferral ? Colors.grey[500] : Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: isReferral ? 0 : 2,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.calendar_today_rounded, size: 18),
+                    SizedBox(width: 6),
+                    Text(
+                      'Book',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -319,6 +524,112 @@ class DoctorInfoWidget extends StatelessWidget {
         return DoctorAvailabilityCalendar(
           doctorId: doctorId,
           hospitalId: hospitalId,
+        );
+      },
+    );
+  }
+}
+
+class _FollowButton extends StatefulWidget {
+  final String currentUserId;
+  final String targetUserId;
+
+  const _FollowButton({
+    required this.currentUserId,
+    required this.targetUserId,
+  });
+
+  @override
+  State<_FollowButton> createState() => _FollowButtonState();
+}
+
+class _FollowButtonState extends State<_FollowButton> {
+  late Future<bool> _isFollowingFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _isFollowingFuture = FollowService().isFollowing(widget.currentUserId, widget.targetUserId);
+  }
+
+  void _refreshFollowStatus() {
+    setState(() {
+      _isFollowingFuture = FollowService().isFollowing(widget.currentUserId, widget.targetUserId);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: _isFollowingFuture,
+      builder: (context, snapshot) {
+        final isFollowing = snapshot.data ?? false;
+        
+        return SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: () async {
+              final followService = FollowService();
+              
+              try {
+                if (isFollowing) {
+                  await followService.unfollowUser(widget.currentUserId, widget.targetUserId);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Unfollowed'),
+                        backgroundColor: Colors.grey,
+                      ),
+                    );
+                  }
+                } else {
+                  await followService.followUser(widget.currentUserId, widget.targetUserId);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Following'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                }
+                _refreshFollowStatus();
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.white,
+              side: BorderSide(color: isFollowing ? Colors.grey[700]! : Colors.white),
+              backgroundColor: isFollowing ? Colors.grey[800] : Colors.transparent,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  isFollowing ? Icons.person_remove : Icons.person_add,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  isFollowing ? 'Following' : 'Follow',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );

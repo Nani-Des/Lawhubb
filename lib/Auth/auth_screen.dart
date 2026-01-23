@@ -89,10 +89,8 @@ class _AuthScreenState extends State<AuthScreen> {
     }
 
     if (success) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
+      // Navigate back instead of replacing to maintain navigation stack
+      Navigator.pop(context, true);
     }
   }
 

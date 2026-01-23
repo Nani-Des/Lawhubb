@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:nhap/l10n/app_localizations.dart';
 import '../../Emergency/emergency_page.dart';
+import '../../Forums/Chat/HomeScreen.dart';
+import '../../wrappers/posts_content.dart';
 import '../../booking_page.dart';
+import '../../Library/library_page.dart';
+import '../../LawInsights/law_insights_page.dart';
+import '../../Hospital/general_hospital_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
+import '../../bot/chat_bot.dart';
 
 class ServicesGrid extends StatelessWidget {
   const ServicesGrid({super.key});
@@ -62,21 +69,34 @@ class ServicesGrid extends StatelessWidget {
               _ServiceCard(
                 icon: Icons.emergency_outlined,
                 title:
-                    localizations?.emergencyLegalHelp ?? 'Emergency Legal Help',
+                    localizations?.emergencyLegalHelp ?? 'AI Assistant / Help',
                 subtitle: localizations?.immediateAssistance ??
                     'Immediate assistance',
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => EmergencyPage(),
+                      builder: (context) => ChatBotScreen(),
+                    ),
+                  );
+                },
+              ),
+              _ServiceCard(
+                icon: Icons.menu_book_outlined,
+                title: localizations?.legalResources ?? 'Books Shop',
+                subtitle: localizations?.browseLibrary ?? 'Browse library',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LibraryPage(),
                     ),
                   );
                 },
               ),
               _ServiceCard(
                 icon: Icons.calendar_today_outlined,
-                title: localizations?.bookConsultation ?? 'Book Consultation',
+                title: localizations?.bookConsultation ?? 'Bookings/ Consultation',
                 subtitle: localizations?.scheduleWithExperts ??
                     'Schedule with experts',
                 onTap: () {
@@ -105,42 +125,19 @@ class ServicesGrid extends StatelessWidget {
                 },
               ),
               _ServiceCard(
-                icon: Icons.forum_outlined,
+                icon: Icons.balance,
                 title: localizations?.legalCommunity ?? 'Legal Community',
-                subtitle:
-                    localizations?.connectAndDiscuss ?? 'Connect & discuss',
+                subtitle: localizations?.connectAndDiscuss ?? 'Connect & discuss',
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(localizations?.useSocialHub ??
-                          'Use bottom navigation to access Social Hub'),
-                      backgroundColor: Colors.grey[800],
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => GeneralHospitalPage(),
                     ),
                   );
                 },
               ),
-              _ServiceCard(
-                icon: Icons.menu_book_outlined,
-                title: localizations?.legalResources ?? 'Legal Resources',
-                subtitle: localizations?.browseLibrary ?? 'Browse library',
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(localizations?.useLawInsights ??
-                          'Use bottom navigation to access Law Insights'),
-                      backgroundColor: Colors.grey[800],
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  );
-                },
-              ),
+
             ],
           ),
           const SizedBox(height: 8),

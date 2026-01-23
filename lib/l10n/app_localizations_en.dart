@@ -110,7 +110,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sue_someone => 'What should I do when I want to sue someone?';
 
   @override
-  String get appTitle => 'LawHub';
+  String get appTitle => 'LawHubb';
 
   @override
   String get locationPermissionTitle => 'We Need Your Location';
@@ -159,10 +159,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goodEvening => 'Good Evening';
 
   @override
-  String get loggedInMessage => 'Your legal journey continues here';
+  String get loggedInMessage => 'Do you need any legal aid ?';
 
   @override
-  String get notLoggedInMessage => 'Join thousands of legal professionals';
+  String get notLoggedInMessage => 'Do you need any legal aid ?';
 
   @override
   String get searchPlaceholder => 'Search lawyers, chambers...';
@@ -178,13 +178,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get available24_7 => '24/7 Available';
 
   @override
-  String get emergencyLegalHelp => 'Emergency Legal Help';
+  String get emergencyLegalHelp => 'AI Assistant / Help';
 
   @override
   String get immediateAssistance => 'Immediate assistance';
 
   @override
-  String get bookConsultation => 'Book Consultation';
+  String get bookConsultation => 'Bookings/ Consultation';
 
   @override
   String get scheduleWithExperts => 'Schedule with experts';
@@ -202,7 +202,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get useSocialHub => 'Use bottom navigation to access Social Hub';
 
   @override
-  String get legalResources => 'Legal Resources';
+  String get legalResources => 'Bookshop';
 
   @override
   String get browseLibrary => 'Browse library';

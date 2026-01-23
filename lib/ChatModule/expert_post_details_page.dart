@@ -2,18 +2,20 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:math';
 
 import 'chat_module.dart';
+import '../Services/config_service.dart';
 
 
 class TranslationService {
-  static String API_KEY = dotenv.env['NLP_API_KEY'] ?? '';
-  static String API_URL = dotenv.env['NLP_API_URL'] ?? '';
+  static final ConfigService _configService = ConfigService();
+  
+  static String get API_KEY => _configService.nlpApiKey;
+  static String get API_URL => _configService.nlpApiUrl;
 
   static final Map<String, String> ghanaianLanguages = {
     'en': 'English',

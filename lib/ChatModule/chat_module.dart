@@ -24,11 +24,14 @@ import 'package:flutter/services.dart';
 // Import other pages
 import 'experts_community_page.dart';
 import 'HealthInsightsPage.dart';
+import '../Services/config_service.dart';
 
 // ====================== Translation Service ======================
 class TranslationService {
-  static String API_KEY = dotenv.env['NLP_API_KEY'] ?? '';
-  static String API_URL = dotenv.env['NLP_API_URL'] ?? '';
+  static final ConfigService _configService = ConfigService();
+  
+  static String get API_KEY => _configService.nlpApiKey;
+  static String get API_URL => _configService.nlpApiUrl;
 
   static final Map<String, String> ghanaianLanguages = {
     'en': 'English',

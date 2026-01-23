@@ -6,8 +6,10 @@ import '../Forums/Chat/search_screen.dart';
 import '../Hospital/doctor_profile.dart';
 import '../Forums/Public/forum.dart';
 import '../Forums/Public/Widgets/create_post_dialog.dart';
-import '../Forums/Chat/chat_list.dart';
+import '../Forums/Public/Widgets/user_profile_screen.dart';
+import '../LawInsights/law_insights_page.dart';
 import '../Forums/Chat/live_stream.dart';
+import '../Auth/auth_screen.dart';
 
 class SocialContent extends StatefulWidget {
   final int initialTabIndex;
@@ -40,7 +42,15 @@ class _SocialContentState extends State<SocialContent>
 
   Future<void> _startPublicConsultation(BuildContext context) async {
     try {
-      final currentUser = FirebaseAuth.instance.currentUser!;
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please log in to start a consultation')),
+          );
+        }
+        return;
+      }
       final chatId =
           'public_${currentUser.uid}_${DateTime.now().millisecondsSinceEpoch}';
 
@@ -93,7 +103,29 @@ class _SocialContentState extends State<SocialContent>
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = FirebaseAuth.instance.currentUser!;
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      // Redirect to login page
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AuthScreen()),
+          ).then((_) {
+            // Refresh after login
+            if (mounted) {
+              setState(() {});
+            }
+          });
+        }
+      });
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+    }
     final loggedInUserId = currentUser.uid;
 
     return Scaffold(
@@ -118,14 +150,13 @@ class _SocialContentState extends State<SocialContent>
           ),
           Padding(
             padding: const EdgeInsets.only(right: 12),
-            child: GestureDetector(
+              child: GestureDetector(
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => DoctorProfileScreen(
+                    builder: (context) => UserProfileScreen(
                       userId: loggedInUserId,
-                      isReferral: false,
                     ),
                   ),
                 );
@@ -157,7 +188,7 @@ class _SocialContentState extends State<SocialContent>
       body: TabBarView(
         controller: _tabController,
         children: [
-          ChatList(),
+          const LawInsightsPage(),
           Forum(userId: loggedInUserId),
         ],
       ),

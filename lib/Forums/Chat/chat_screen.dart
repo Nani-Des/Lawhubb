@@ -56,6 +56,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _setUserOnline();
+    _markMessagesAsRead(); // Mark messages as read when chat opens
     _durationSub = _audioPlayer.durationStream.listen((d) {
       if (d != null) setState(() => _currentDuration = d);
     });
@@ -95,6 +96,32 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       'isOnline': true,
       'lastSeen': FieldValue.serverTimestamp(),
     });
+  }
+
+  /// Mark all messages in this chat as read
+  Future<void> _markMessagesAsRead() async {
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+    if (currentUserId == null) return;
+
+    try {
+      final unreadMessages = await FirebaseFirestore.instance
+          .collection('Chats')
+          .doc(widget.chatId)
+          .collection('Messages')
+          .where('recipientId', isEqualTo: currentUserId)
+          .where('read', isEqualTo: false)
+          .get();
+
+      if (unreadMessages.docs.isNotEmpty) {
+        final batch = FirebaseFirestore.instance.batch();
+        for (var doc in unreadMessages.docs) {
+          batch.update(doc.reference, {'read': true});
+        }
+        await batch.commit();
+      }
+    } catch (e) {
+      debugPrint('Error marking messages as read: $e');
+    }
   }
 
   Future<void> _setUserOffline() async {
