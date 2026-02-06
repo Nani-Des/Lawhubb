@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nhap/l10n/app_localizations.dart';
+import 'search_bar1.dart';
 
 class HeroSection extends StatefulWidget {
   final String userName;
@@ -36,12 +37,8 @@ class _HeroSectionState extends State<HeroSection> {
             width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.grey[900],
+              color: const Color(0xFF1C1C1E),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.grey[800]!,
-                width: 1,
-              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,9 +74,9 @@ class _HeroSectionState extends State<HeroSection> {
                           Text(
                             widget.isLoggedIn
                                 ? (localizations?.loggedInMessage ??
-                                    'Your legal journey continues here')
+                                    'Do you need a legal aid?')
                                 : (localizations?.notLoggedInMessage ??
-                                    'Join thousands of legal professionals'),
+                                    'Do you need a legal aid?'),
                             style: TextStyle(
                               color: Colors.grey[400],
                               fontSize: 16,
@@ -110,59 +107,7 @@ class _HeroSectionState extends State<HeroSection> {
                   ],
                 ),
                 const SizedBox(height: 20),
-                GestureDetector(
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                            localizations?.searchFunctionalityComingSoon ??
-                                'Search functionality coming soon'),
-                        backgroundColor: Colors.grey[800],
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[850],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.grey[800]!,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.search_rounded,
-                          color: Colors.grey[600],
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            localizations?.searchPlaceholder ??
-                                'Search lawyers, chambers...',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 15,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ),
-                        Icon(
-                          Icons.tune_rounded,
-                          color: Colors.grey[600],
-                          size: 18,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                const SearchBar1(),
               ],
             ),
           ),

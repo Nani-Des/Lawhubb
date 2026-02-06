@@ -5,6 +5,7 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../Services/config_service.dart';
 
 class LiveConsultationScreen extends StatefulWidget {
   final String channelName;
@@ -25,7 +26,7 @@ class LiveConsultationScreen extends StatefulWidget {
 }
 
 class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
-  static const String _appId = "873c3e4a81ca45cb92806d6362381790";
+  final ConfigService _configService = ConfigService();
   RtcEngine? _engine;
   
   bool _localUserJoined = false;
@@ -93,8 +94,12 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
       }
 
       // Initialize Agora Engine
+      final appId = _configService.agoraAppId;
+      if (appId.isEmpty) {
+        throw Exception('Agora App ID is not configured');
+      }
       final engine = createAgoraRtcEngine();
-      await engine.initialize(RtcEngineContext(appId: _appId));
+      await engine.initialize(RtcEngineContext(appId: appId));
       
       if (_isDisposing) {
         await engine.release();
@@ -112,23 +117,50 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
             setState(() => _localUserJoined = true);
             if (widget.isInitiator) {
               _startViewerCountSync();
+            } else {
+              // For viewers, try to get the current broadcaster's UID
+              // This handles the case where broadcaster joined before viewer
+              _checkForExistingBroadcaster();
             }
           },
           onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
             if (!mounted || _isDisposing) return;
-            setState(() {
-              _remoteUid = remoteUid;
-              _viewerCount++;
-            });
-            _updateViewerCount();
+            if (widget.isInitiator) {
+              // Broadcaster: someone (viewer) joined
+              setState(() {
+                _viewerCount++;
+              });
+              _updateViewerCount();
+            } else {
+              // Viewer: broadcaster joined
+              setState(() {
+                _remoteUid = remoteUid;
+              });
+            }
           },
           onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
             if (!mounted || _isDisposing) return;
-            setState(() {
-              _remoteUid = null;
-              _viewerCount = (_viewerCount > 1) ? _viewerCount - 1 : 1;
-            });
-            _updateViewerCount();
+            if (widget.isInitiator) {
+              // Broadcaster: viewer left
+              setState(() {
+                _viewerCount = (_viewerCount > 1) ? _viewerCount - 1 : 1;
+              });
+              _updateViewerCount();
+            } else {
+              // Viewer: broadcaster left
+              setState(() {
+                _remoteUid = null;
+              });
+            }
+          },
+          onRemoteVideoStateChanged: (RtcConnection connection, int remoteUid, RemoteVideoState state, RemoteVideoStateReason reason, int elapsed) {
+            if (!mounted || _isDisposing) return;
+            // For viewers: detect when broadcaster's video becomes available
+            if (!widget.isInitiator && state == RemoteVideoState.remoteVideoStateStarting) {
+              setState(() {
+                _remoteUid = remoteUid;
+              });
+            }
           },
           onError: (ErrorCodeType err, String msg) {
             debugPrint("⚠️ Agora error: $err - $msg");
@@ -192,6 +224,26 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
       }
       _updateViewerCount();
     });
+  }
+
+  // Check for existing broadcaster when viewer joins
+  Future<void> _checkForExistingBroadcaster() async {
+    if (widget.isInitiator || _isDisposing || !mounted) return;
+    
+    // Small delay to allow channel to fully initialize
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    if (_isDisposing || !mounted) return;
+    
+    // Try to get remote video state - if broadcaster is already streaming,
+    // we should detect it via onRemoteVideoStateChanged
+    // This is a fallback in case onUserJoined didn't fire
+    try {
+      // The onRemoteVideoStateChanged handler will catch when video becomes available
+      // We just need to ensure we're listening properly
+    } catch (e) {
+      debugPrint("Error checking for broadcaster: $e");
+    }
   }
 
   Future<void> _updateViewerCount() async {

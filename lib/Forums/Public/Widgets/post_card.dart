@@ -2,17 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nhap/Forums/Public/Widgets/postcard_media.dart';
-import '../../../Hospital/doctor_profile.dart';
 import '../../../Services/translation_service.dart';
 import 'delete_post_service.dart';
 import 'full_screen.dart';
 import 'add_comment.dart';
+import 'user_profile_screen.dart';
 
 class PostCard extends StatefulWidget {
   final Map<String, dynamic> postData;
-  final Function refreshCallback;
+  final Future<void> Function() refreshCallback;
 
-  PostCard({required this.postData, required this.refreshCallback});
+  const PostCard({
+    Key? key,
+    required this.postData,
+    required this.refreshCallback,
+  }) : super(key: key);
 
   @override
   _PostCardState createState() => _PostCardState();
@@ -354,22 +358,15 @@ class _PostCardState extends State<PostCard> {
                 return ListTile(
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  onTap: () async {
-                    DocumentSnapshot userDoc = await FirebaseFirestore.instance
-                        .collection('Users')
-                        .doc(widget.postData['User ID'])
-                        .get();
-
-                    if (userDoc.exists && userDoc['Role'] == true) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DoctorProfileScreen(
-                              userId: widget.postData['User ID'],
-                              isReferral: false),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UserProfileScreen(
+                          userId: widget.postData['User ID'],
                         ),
-                      );
-                    }
+                      ),
+                    );
                   },
                   leading: CircleAvatar(
                     backgroundImage:

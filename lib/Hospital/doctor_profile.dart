@@ -62,25 +62,11 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Center(
-          child: Text(
-            "${_doctorDetails['Title'] ?? ''} ${_doctorDetails['Lname'] ?? ''}",
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.white,  // White text for contrast
-            ),
-          ),
-        ),
-        backgroundColor: Colors.grey[900],
-        foregroundColor: Colors.white,// Dark grey app bar
-        elevation: 0,
-      ),
-      backgroundColor: Colors.black,  // Black background
+      backgroundColor: Colors.black,
       body: _isLoading
           ? Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),  // White progress indicator
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
         ),
       )
           : DoctorInfoWidget(

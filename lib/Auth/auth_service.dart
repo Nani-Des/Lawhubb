@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
+import '../Services/notification_service.dart';
 
 class AuthService with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -111,6 +112,9 @@ class AuthService with ChangeNotifier {
         });
 
         _currentUser = user;
+        // Store FCM token after registration
+        final notificationService = NotificationService();
+        await notificationService.storeTokenForUserId(user.uid);
         notifyListeners();
         return true;
       }
@@ -149,6 +153,9 @@ class AuthService with ChangeNotifier {
         await _firestore.collection('Users').doc(user.uid).get();
         if (userDoc.exists && userDoc['Status'] == true) {
           _currentUser = user;
+          // Store FCM token after login
+          final notificationService = NotificationService();
+          await notificationService.storeTokenForUserId(user.uid);
           notifyListeners();
           return true;
         } else {
@@ -256,6 +263,9 @@ class AuthService with ChangeNotifier {
         }
 
         _currentUser = user;
+        // Store FCM token after Google sign in
+        final notificationService = NotificationService();
+        await notificationService.storeTokenForUserId(user.uid);
         notifyListeners();
         return true;
       }
@@ -270,6 +280,9 @@ class AuthService with ChangeNotifier {
 
   // --- Sign out ---
   Future<void> signOut() async {
+    // Clear FCM token on logout
+    final notificationService = NotificationService();
+    await notificationService.clearToken();
     await _googleSignIn.signOut();
     await _auth.signOut();
     _currentUser = null;

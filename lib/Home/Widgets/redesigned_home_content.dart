@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'hero_section.dart';
-import 'stats_section.dart';
 import 'services_grid.dart';
 import 'recent_activity.dart';
 import 'trending_topics.dart';
 
 class RedesignedHomeContent extends StatefulWidget {
-  const RedesignedHomeContent({super.key});
+  final Function(int)? onTabChange;
+  final User? currentUser;
+
+  const RedesignedHomeContent({
+    super.key,
+    this.onTabChange,
+    this.currentUser,
+  });
 
   @override
   State<RedesignedHomeContent> createState() => _RedesignedHomeContentState();
@@ -17,12 +23,10 @@ class _RedesignedHomeContentState extends State<RedesignedHomeContent>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
-  User? _currentUser;
 
   @override
   void initState() {
     super.initState();
-    _currentUser = FirebaseAuth.instance.currentUser;
     
     _controller = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -43,8 +47,8 @@ class _RedesignedHomeContentState extends State<RedesignedHomeContent>
   }
 
   String get _userName {
-    if (_currentUser?.displayName != null) {
-      return _currentUser!.displayName!.split(' ').first;
+    if (widget.currentUser?.displayName != null) {
+      return widget.currentUser!.displayName!.split(' ').first;
     }
     return 'Guest';
   }
@@ -61,21 +65,19 @@ class _RedesignedHomeContentState extends State<RedesignedHomeContent>
           SliverToBoxAdapter(
             child: HeroSection(
               userName: _userName,
-              isLoggedIn: _currentUser != null,
+              isLoggedIn: widget.currentUser != null,
             ),
-          ),
-          
-          const SliverToBoxAdapter(
-            child: StatsSection(),
           ),
           
           const SliverToBoxAdapter(
             child: ServicesGrid(),
           ),
           
-          if (_currentUser != null)
-            const SliverToBoxAdapter(
-              child: RecentActivity(),
+          if (widget.currentUser != null)
+             SliverToBoxAdapter(
+              child: RecentActivity(
+                onTabChange: widget.onTabChange,
+              ),
             ),
           
           const SliverToBoxAdapter(

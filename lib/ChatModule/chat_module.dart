@@ -24,11 +24,14 @@ import 'package:flutter/services.dart';
 // Import other pages
 import 'experts_community_page.dart';
 import 'HealthInsightsPage.dart';
+import '../Services/config_service.dart';
 
 // ====================== Translation Service ======================
 class TranslationService {
-  static String API_KEY = dotenv.env['NLP_API_KEY'] ?? '';
-  static String API_URL = dotenv.env['NLP_API_URL'] ?? '';
+  static final ConfigService _configService = ConfigService();
+  
+  static String get API_KEY => _configService.nlpApiKey;
+  static String get API_URL => _configService.nlpApiUrl;
 
   static final Map<String, String> ghanaianLanguages = {
     'en': 'English',
@@ -124,23 +127,13 @@ class ChatHomePage extends StatefulWidget {
   _ChatHomePageState createState() => _ChatHomePageState();
 }
 
-class _ChatHomePageState extends State<ChatHomePage>
-    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
-  late TabController _tabController;
-  final List<Widget> _pages = [ChatPage(), ForumPage()];
-  bool? isExpert; // Store user's expert status
+class _ChatHomePageState extends State<ChatHomePage> {
+  bool? isExpert;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    //CallService().initialize();
-    _fetchUserRole(); // Fetch user role when initializing
-    _tabController.addListener(() {
-      if (mounted) {
-        setState(() {}); // ✅ Ensures FAB updates correctly when switching tabs
-      }
-    });
+    _fetchUserRole();
   }
 
   Future<void> _fetchUserRole() async {
@@ -159,126 +152,52 @@ class _ChatHomePageState extends State<ChatHomePage>
   }
 
   @override
-  bool get wantKeepAlive => true;
-
-  @override
   Widget build(BuildContext context) {
-    super
-        .build(context); // Call super.build to ensure the mixin works correctly
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(
-          _tabController.index == 0 ? 'Private Chats' : 'Open Forum',
-          style: TextStyle(color: Colors.white),
+        title: const Text(
+          'Chats',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.tealAccent,
+        backgroundColor: Colors.black,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: IndexedStack(
-        index: _tabController.index,
-        children: _pages,
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.teal.shade700, Colors.tealAccent.shade400],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      body: const ChatPage(),
+      floatingActionButton: SpeedDial(
+        icon: Icons.add,
+        activeIcon: Icons.close,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        children: [
+          SpeedDialChild(
+            child: const Icon(Icons.person_add),
+            backgroundColor: Colors.white,
+            label: 'Add User',
+            onTap: () async {
+              String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
+              if (currentUserId != null) {
+                _showUserList(context, currentUserId);
+              }
+            },
           ),
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(
-              icon: Icon(Icons.message, size: 28),
-              text: 'Private Chats',
-            ),
-            Tab(
-              icon: Icon(Icons.forum, size: 28),
-              text: 'Open Forum',
-            ),
-          ],
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.grey[300],
-          indicator: const UnderlineTabIndicator(
-            borderSide: BorderSide(
-              color: Colors.white,
-              width: 3,
-            ),
-            insets: EdgeInsets.symmetric(horizontal: 40),
-          ),
-          indicatorSize: TabBarIndicatorSize.tab,
-          labelStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
-          unselectedLabelStyle: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.normal,
-          ),
-        ),
-      ),
-      floatingActionButton: _tabController.index == 0
-          ? SpeedDial(
-              icon: Icons.add,
-              activeIcon: Icons.close,
-              backgroundColor: Colors.teal,
-              foregroundColor: Colors.white,
-              children: [
-                SpeedDialChild(
-                  child: const Icon(Icons.person_add),
-                  backgroundColor: Colors.teal,
-                  label: 'Add User',
-                  onTap: () async {
-                    String? currentUserId =
-                        FirebaseAuth.instance.currentUser?.uid;
-                    if (currentUserId != null) {
-                      _showUserList(context, currentUserId);
-                    }
-                  },
-                ),
-                // Only show Health Insights if user is an expert
-                if (isExpert == true)
-                  SpeedDialChild(
-                    child: const Icon(Icons.analytics),
-                    backgroundColor: Colors.teal.shade600,
-                    label: 'Health Insights',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const HealthInsightsPage(),
-                        ),
-                      );
-                    },
+          if (isExpert == true)
+            SpeedDialChild(
+              child: const Icon(Icons.analytics),
+              backgroundColor: Colors.teal.shade600,
+              label: 'Health Insights',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HealthInsightsPage(),
                   ),
-              ],
-            )
-          : isExpert == true // Only show FAB in forum tab if expert
-              ? FloatingActionButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const HealthInsightsPage(),
-                        fullscreenDialog: true,
-                      ),
-                    );
-                  },
-                  backgroundColor: Colors.teal,
-                  child: const Icon(Icons.analytics, color: Colors.white),
-                )
-              : null, // Hide FAB if not expert // Hide FAB completely if not expert
+                );
+              },
+            ),
+        ],
+      ),
     );
   }
 }
@@ -650,7 +569,7 @@ class _ChatPageState extends State<ChatPage>
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
+          return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.white)));
         }
 
         if (!snapshot.hasData || _isLoadingUsers) {
@@ -729,7 +648,7 @@ class _ChatPageState extends State<ChatPage>
                         : null,
                   ),
                   title: Text(fullName,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
                   subtitle: Row(
                     children: [
                       Expanded(
@@ -740,6 +659,7 @@ class _ChatPageState extends State<ChatPage>
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                           softWrap: false,
+                          style: TextStyle(color: Colors.grey[400]),
                         ),
                       ),
                     ],
@@ -769,7 +689,7 @@ class _ChatPageState extends State<ChatPage>
                       : Text(
                           formatTimestamp(chat['last_time']),
                           style: const TextStyle(
-                              fontSize: 12, color: Colors.blueGrey),
+                              fontSize: 12, color: Colors.grey),
                         ),
                   onTap: () async {
                     await _markMessagesAsRead(chatId, currentUserId);

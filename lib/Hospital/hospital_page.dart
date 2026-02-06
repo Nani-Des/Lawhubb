@@ -69,6 +69,7 @@ class _HospitalPageState extends State<HospitalPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: Text(
           _hospitalDetails['hospitalName'] ??
@@ -81,23 +82,14 @@ class _HospitalPageState extends State<HospitalPage>
         ),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.grey[900], // Dark grey app bar
+        backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.grey[900]!,
-              Colors.black
-            ], // Dark grey to black gradient
-          ),
-        ),
+        color: Colors.black,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0),
           child: Column(
@@ -283,15 +275,8 @@ class CardButton extends StatelessWidget {
               ? MediaQuery.of(context).size.width * 0.7
               : MediaQuery.of(context).size.width * 0.4,
           decoration: BoxDecoration(
-            gradient: gradient,
+            color: const Color(0xFF1C1C1E),
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.3), // Dark shadow
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
           ),
           child: Padding(
             padding: const EdgeInsets.all(20.0),
@@ -310,7 +295,7 @@ class CardButton extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1), // Subtle white overlay
+            color: Colors.grey[900],
             borderRadius: BorderRadius.circular(14),
           ),
           child: Icon(
@@ -360,7 +345,7 @@ class CardButton extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1), // Subtle white overlay
+            color: Colors.grey[900],
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(

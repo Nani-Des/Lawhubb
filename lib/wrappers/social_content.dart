@@ -1,13 +1,14 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../Forums/Chat/search_screen.dart';
 import '../Hospital/doctor_profile.dart';
 import '../Forums/Public/forum.dart';
 import '../Forums/Public/Widgets/create_post_dialog.dart';
-import '../Forums/Chat/chat_list.dart';
+import '../Forums/Public/Widgets/user_profile_screen.dart';
+import '../LawInsights/law_insights_page.dart';
 import '../Forums/Chat/live_stream.dart';
+import '../Auth/auth_screen.dart';
 import '../Auth/auth_screen.dart';
 
 class SocialContent extends StatefulWidget {
@@ -105,66 +106,24 @@ class _SocialContentState extends State<SocialContent>
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
+      // Redirect to login page
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AuthScreen()),
+          ).then((_) {
+            // Refresh after login
+            if (mounted) {
+              setState(() {});
+            }
+          });
+        }
+      });
       return Scaffold(
         backgroundColor: Colors.black,
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.lock_outline,
-                  size: 80,
-                  color: Colors.white54,
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'You are not logged in',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Please log in to access your chats and posts',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 32),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const AuthScreen()),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 48, vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'Go to Login',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        body: const Center(
+          child: CircularProgressIndicator(color: Colors.white),
         ),
       );
     }
@@ -177,8 +136,13 @@ class _SocialContentState extends State<SocialContent>
         elevation: 0,
         automaticallyImplyLeading: false,
         toolbarHeight: 70,
-        title: SocialHubbTabBar(
-          tabController: _tabController,
+        title: const Text(
+          'SocialHubb',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
           IconButton(
@@ -197,9 +161,8 @@ class _SocialContentState extends State<SocialContent>
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => DoctorProfileScreen(
+                    builder: (context) => UserProfileScreen(
                       userId: loggedInUserId,
-                      isReferral: false,
                     ),
                   ),
                 );
@@ -231,7 +194,7 @@ class _SocialContentState extends State<SocialContent>
       body: TabBarView(
         controller: _tabController,
         children: [
-          ChatList(),
+          const LawInsightsPage(),
           Forum(userId: loggedInUserId),
         ],
       ),
@@ -264,143 +227,8 @@ class _SocialContentState extends State<SocialContent>
             );
           }
         },
+        child: const Icon(Icons.add, size: 28),
       ),
-    );
-  }
-}
-
-class SocialHubbTabBar extends StatelessWidget {
-  final TabController tabController;
-
-  const SocialHubbTabBar({
-    super.key,
-    required this.tabController,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: tabController,
-      builder: (context, child) {
-        return Center(
-          child: Container(
-            width: 280,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.75),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white12),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black54,
-                  blurRadius: 12,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                child: Stack(
-                  children: [
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeInOut,
-                      left: tabController.index == 0 ? 4 : 144,
-                      top: 4,
-                      child: Container(
-                        width: 132,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => tabController.animateTo(0),
-                            child: Container(
-                              color: Colors.transparent,
-                              child: Center(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.chat_rounded,
-                                      size: 18,
-                                      color: tabController.index == 0
-                                          ? Colors.white
-                                          : Colors.white70,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      'Chats',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: tabController.index == 0
-                                            ? FontWeight.w700
-                                            : FontWeight.w500,
-                                        color: tabController.index == 0
-                                            ? Colors.white
-                                            : Colors.white70,
-                                        letterSpacing: 0.3,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => tabController.animateTo(1),
-                            child: Container(
-                              color: Colors.transparent,
-                              child: Center(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.forum_rounded,
-                                      size: 18,
-                                      color: tabController.index == 1
-                                          ? Colors.white
-                                          : Colors.white70,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      'Posts',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: tabController.index == 1
-                                            ? FontWeight.w700
-                                            : FontWeight.w500,
-                                        color: tabController.index == 1
-                                            ? Colors.white
-                                            : Colors.white70,
-                                        letterSpacing: 0.3,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }

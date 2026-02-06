@@ -1,8 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nhap/l10n/app_localizations.dart';
+import '../../Services/recent_activity_service.dart';
+import '../../booking_page.dart';
+import '../../Library/library_page.dart';
+import '../../Library/pdf_reader_page.dart';
+import '../../Forums/Chat/chat_screen.dart';
+import 'package:hive/hive.dart';
 
 class RecentActivity extends StatefulWidget {
-  const RecentActivity({super.key});
+  final Function(int)? onTabChange;
+
+  const RecentActivity({
+    super.key,
+    this.onTabChange,
+  });
 
   @override
   State<RecentActivity> createState() => _RecentActivityState();
@@ -11,7 +23,9 @@ class RecentActivity extends StatefulWidget {
 class _RecentActivityState extends State<RecentActivity>
     with TickerProviderStateMixin {
   late AnimationController _controller;
-  late List<Animation<Offset>> _slideAnimations;
+  final RecentActivityService _activityService = RecentActivityService();
+  List<ActivityItem> _activities = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -20,22 +34,30 @@ class _RecentActivityState extends State<RecentActivity>
       duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
+    _loadActivities();
+  }
 
-    _slideAnimations = List.generate(3, (index) {
-      return Tween<Offset>(
-        begin: const Offset(1, 0),
-        end: Offset.zero,
-      ).animate(CurvedAnimation(
-        parent: _controller,
-        curve: Interval(
-          index * 0.2,
-          0.6 + (index * 0.2),
-          curve: Curves.easeOutCubic,
-        ),
-      ));
-    });
+  Future<void> _loadActivities() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      setState(() => _isLoading = false);
+      return;
+    }
 
-    _controller.forward();
+    try {
+      final activities = await _activityService.getRecentActivities(user.uid, limit: 5);
+      setState(() {
+        _activities = activities;
+        _isLoading = false;
+      });
+
+      // Generate animations for loaded activities
+      _controller.reset();
+      _controller.forward();
+    } catch (e) {
+      debugPrint('Error loading activities: $e');
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -44,9 +66,175 @@ class _RecentActivityState extends State<RecentActivity>
     super.dispose();
   }
 
+  List<Animation<Offset>> _getSlideAnimations(int count) {
+    return List.generate(count, (index) {
+      final start = index * 0.15;
+      final end = (0.6 + (index * 0.15)).clamp(0.0, 1.0);
+      return Tween<Offset>(
+        begin: const Offset(1, 0),
+        end: Offset.zero,
+      ).animate(CurvedAnimation(
+        parent: _controller,
+        curve: Interval(
+          start,
+          end,
+          curve: Curves.easeOutCubic,
+        ),
+      ));
+    });
+  }
+
+  IconData _getIconForType(ActivityType type) {
+    switch (type) {
+      case ActivityType.booking:
+        return Icons.calendar_today_outlined;
+      case ActivityType.message:
+        return Icons.message_outlined;
+      case ActivityType.documentSaved:
+        return Icons.bookmark_outline;
+      case ActivityType.readingHistory:
+        return Icons.menu_book_outlined;
+    }
+  }
+
+  Future<void> _handleActivityTap(ActivityItem activity) async {
+    switch (activity.type) {
+      case ActivityType.booking:
+        if (activity.id != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BookingPage(currentUserId: activity.id!),
+            ),
+          );
+        }
+        break;
+      case ActivityType.message:
+        if (activity.metadata != null) {
+          final chatId = activity.metadata!['chatId'];
+          final senderId = activity.metadata!['senderId'];
+          final senderName = activity.metadata!['senderName'] ?? 'User';
+          final senderPic = activity.metadata!['senderPic'] ?? '';
+          final senderRole = activity.metadata!['senderRole'] ?? false;
+          if (chatId != null && senderId != null) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChatScreen(
+                  chatId: chatId,
+                  recipientId: senderId,
+                  recipientName: senderName,
+                  recipientPic: senderPic,
+                  recipientRole: senderRole,
+                ),
+              ),
+            );
+          }
+        }
+        break;
+      case ActivityType.documentSaved:
+      case ActivityType.readingHistory:
+        if (activity.metadata != null) {
+          final documentId = activity.metadata!['documentId'];
+          if (documentId != null) {
+            try {
+              final archiveBox = await Hive.openBox('reading_archive');
+              final docData = archiveBox.get(documentId);
+              if (docData is Map && docData['url'] != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PDFReaderPage(
+                      url: docData['url'],
+                      title: docData['title'] ?? 'Document',
+                      id: documentId,
+                      initialPage: docData['progressPage'] as int?,
+                    ),
+                  ),
+                );
+              } else {
+                // Navigate to library to find the document
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const LibraryPage(),
+                  ),
+                );
+              }
+            } catch (e) {
+              // Navigate to library on error
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const LibraryPage(),
+                ),
+              );
+            }
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const LibraryPage(),
+              ),
+            );
+          }
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const LibraryPage(),
+            ),
+          );
+        }
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
+
+    if (_isLoading) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 24),
+            Text(
+              localizations?.recentActivity ?? 'Recent Activity',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.3,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              height: 200,
+              decoration: BoxDecoration(
+                color: Colors.grey[900],
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.grey[800]!,
+                ),
+              ),
+              child: const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      );
+    }
+
+    if (_activities.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final animations = _getSlideAnimations(_activities.length);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -66,82 +254,39 @@ class _RecentActivityState extends State<RecentActivity>
                   letterSpacing: -0.3,
                 ),
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.grey[850],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.grey[800]!,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      localizations?.viewAll ?? 'View All',
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      color: Colors.grey[400],
-                      size: 10,
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 16),
           Container(
             decoration: BoxDecoration(
-              color: Colors.grey[900],
+              color: const Color(0xFF1C1C1E),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.grey[800]!,
-              ),
             ),
             child: Column(
               children: [
-                SlideTransition(
-                  position: _slideAnimations[0],
-                  child: _ActivityItem(
-                    icon: Icons.calendar_today_outlined,
-                    title: localizations?.consultationScheduled ??
-                        'Consultation Scheduled',
-                    subtitle: localizations?.consultationScheduledSubtitle ??
-                        'With Adv. Sarah Johnson - Tomorrow 2:00 PM',
-                    time: localizations?.twoHoursAgo ?? '2 hours ago',
-                  ),
-                ),
-                _buildDivider(),
-                SlideTransition(
-                  position: _slideAnimations[1],
-                  child: _ActivityItem(
-                    icon: Icons.message_outlined,
-                    title: localizations?.newMessage ?? 'New Message',
-                    subtitle: localizations?.newMessageSubtitle ??
-                        'From Legal Community Forum',
-                    time: localizations?.fiveHoursAgo ?? '5 hours ago',
-                  ),
-                ),
-                _buildDivider(),
-                SlideTransition(
-                  position: _slideAnimations[2],
-                  child: _ActivityItem(
-                    icon: Icons.bookmark_outline,
-                    title: localizations?.documentSaved ?? 'Document Saved',
-                    subtitle: localizations?.documentSavedSubtitle ??
-                        'Contract Template - Employment Law',
-                    time: localizations?.oneDayAgo ?? '1 day ago',
-                  ),
-                ),
+                ...List.generate(_activities.length, (index) {
+                  final activity = _activities[index];
+                  final widgetList = <Widget>[];
+                  
+                  if (index > 0) {
+                    widgetList.add(_buildDivider());
+                  }
+
+                  widgetList.add(
+                    SlideTransition(
+                      position: animations[index],
+                      child: _ActivityItem(
+                        icon: _getIconForType(activity.type),
+                        title: activity.title,
+                        subtitle: activity.subtitle,
+                        time: _activityService.getTimeAgo(activity),
+                        onTap: () => _handleActivityTap(activity),
+                      ),
+                    ),
+                  );
+
+                  return Column(children: widgetList);
+                }),
               ],
             ),
           ),
@@ -165,12 +310,14 @@ class _ActivityItem extends StatefulWidget {
   final String title;
   final String subtitle;
   final String time;
+  final VoidCallback? onTap;
 
   const _ActivityItem({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.time,
+    this.onTap,
   });
 
   @override
@@ -183,6 +330,7 @@ class _ActivityItemState extends State<_ActivityItem> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      onTap: widget.onTap,
       onTapDown: (_) => setState(() => _isHovered = true),
       onTapUp: (_) => setState(() => _isHovered = false),
       onTapCancel: () => setState(() => _isHovered = false),
@@ -230,6 +378,8 @@ class _ActivityItemState extends State<_ActivityItem> {
                       fontWeight: FontWeight.w400,
                       height: 1.3,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

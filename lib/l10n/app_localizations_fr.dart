@@ -164,11 +164,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get goodEvening => 'Bonsoir';
 
   @override
-  String get loggedInMessage => 'Votre parcours juridique se poursuit ici';
+  String get loggedInMessage => 'Avez-vous besoin d\'une aide juridique?';
 
   @override
-  String get notLoggedInMessage =>
-      'Rejoignez des milliers de professionnels du droit';
+  String get notLoggedInMessage => 'Avez-vous besoin d\'une aide juridique?';
 
   @override
   String get searchPlaceholder => 'Rechercher des avocats, cabinets...';
@@ -184,13 +183,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get available24_7 => 'Disponible 24/7';
 
   @override
-  String get emergencyLegalHelp => 'Aide Juridique d\'Urgence';
+  String get emergencyLegalHelp => 'Assistant IA';
 
   @override
   String get immediateAssistance => 'Assistance immédiate';
 
   @override
-  String get bookConsultation => 'Réserver une Consultation';
+  String get bookConsultation => 'Réservations/ Consultation';
 
   @override
   String get scheduleWithExperts => 'Planifier avec des experts';
@@ -210,7 +209,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Utilisez la navigation inférieure pour accéder au Social Hub';
 
   @override
-  String get legalResources => 'Ressources Juridiques';
+  String get legalResources => 'Librairie';
 
   @override
   String get browseLibrary => 'Parcourir la bibliothèque';

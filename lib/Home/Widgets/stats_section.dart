@@ -101,62 +101,62 @@ class _StatsSectionState extends State<StatsSection>
             ],
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: AnimatedBuilder(
-                  animation: _animations[0],
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: _animations[0].value,
-                      child: _StatCard(
-                        icon: Icons.people_outline,
-                        title: localizations?.activeLawyersCount ?? '2,500+',
-                        subtitle: localizations?.activeLawyersLabel ??
-                            'Active Lawyers',
-                        animation: _animations[0],
-                      ),
-                    );
-                  },
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: AnimatedBuilder(
+                    animation: _animations[0],
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: _animations[0].value,
+                        child: _StatCard(
+                          icon: Icons.people_outline,
+                          title: '2,500+',
+                          subtitle: 'Active Lawyers',
+                          animation: _animations[0],
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: AnimatedBuilder(
-                  animation: _animations[1],
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: _animations[1].value,
-                      child: _StatCard(
-                        icon: Icons.business_outlined,
-                        title: localizations?.lawChambersCount ?? '150+',
-                        subtitle:
-                            localizations?.lawChambersLabel ?? 'Law Chambers',
-                        animation: _animations[1],
-                      ),
-                    );
-                  },
+                const SizedBox(width: 16),
+            
+                   AnimatedBuilder(
+                    animation: _animations[1],
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: _animations[1].value,
+                        child: _StatCard(
+                          icon: Icons.business_outlined,
+                          title: '150+',
+                          subtitle: 'Law Chambers',
+                          animation: _animations[1],
+                        ),
+                      );
+                    },
+                  ),
+                
+                const SizedBox(width: 16),
+                Expanded(
+                  child: AnimatedBuilder(
+                    animation: _animations[2],
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: _animations[2].value,
+                        child: _StatCard(
+                          icon: Icons.check_circle_outline,
+                          title: '10k+',
+                          subtitle: 'Cases Resolved',
+                          animation: _animations[2],
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: AnimatedBuilder(
-                  animation: _animations[2],
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: _animations[2].value,
-                      child: _StatCard(
-                        icon: Icons.check_circle_outline,
-                        title: localizations?.casesResolvedCount ?? '10k+',
-                        subtitle: localizations?.casesResolvedLabel ??
-                            'Cases Resolved',
-                        animation: _animations[2],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 8),
         ],
@@ -217,14 +217,11 @@ class _StatCardState extends State<_StatCard>
           return Transform.scale(
             scale: _hoverAnimation.value,
             child: Container(
+              height: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey[900],
+                color: const Color(0xFF1C1C1E),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: Colors.grey[800]!,
-                  width: 1,
-                ),
               ),
               child: Column(
                 children: [
@@ -245,7 +242,7 @@ class _StatCardState extends State<_StatCard>
                     animation: widget.animation,
                     builder: (context, child) {
                       return Opacity(
-                        opacity: widget.animation.value,
+                        opacity: widget.animation.value.clamp(0.0, 1.0),
                         child: Text(
                           widget.title,
                           style: const TextStyle(
