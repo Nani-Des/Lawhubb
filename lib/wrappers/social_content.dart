@@ -45,7 +45,8 @@ class _SocialContentState extends State<SocialContent>
       if (currentUser == null) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please log in to start a consultation')),
+            const SnackBar(
+                content: Text('Please log in to start a consultation')),
           );
         }
         return;
@@ -140,13 +141,15 @@ class _SocialContentState extends State<SocialContent>
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const AuthScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const AuthScreen()),
                     );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 48, vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -243,7 +246,8 @@ class _SocialContentState extends State<SocialContent>
               onPressed: () {
                 showDialog(
                   context: context,
-                  builder: (context) => CreatePostDialog(userId: loggedInUserId),
+                  builder: (context) =>
+                      CreatePostDialog(userId: loggedInUserId),
                 ).then((_) {
                   setState(() {});
                 });
