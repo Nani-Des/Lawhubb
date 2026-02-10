@@ -1173,6 +1173,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Chamber ID is missing'**
   String get chamberIdMissing;
+
+  /// No description provided for @onlyLawyersCanShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Only Lawyers can share videos and content on Law Insights.'**
+  String get onlyLawyersCanShare;
+
+  /// No description provided for @ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
+  /// No description provided for @filterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get filterAll;
+
+  /// No description provided for @filterCases.
+  ///
+  /// In en, this message translates to:
+  /// **'Cases'**
+  String get filterCases;
+
+  /// No description provided for @filterLegalIssues.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal Issues'**
+  String get filterLegalIssues;
+
+  /// No description provided for @filterLegalTopics.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal Topics'**
+  String get filterLegalTopics;
+
+  /// No description provided for @filterTrending.
+  ///
+  /// In en, this message translates to:
+  /// **'Trending'**
+  String get filterTrending;
+
+  /// No description provided for @noInsightsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No insights yet'**
+  String get noInsightsYet;
+
+  /// No description provided for @beFirstToShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Be the first to share your legal insights!'**
+  String get beFirstToShare;
+
+  /// No description provided for @chats.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get chats;
+
+  /// No description provided for @chatsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'🗣️ Chats'**
+  String get chatsSection;
+
+  /// No description provided for @noPostsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No posts yet.'**
+  String get noPostsYet;
+
+  /// No description provided for @beFirstToPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Be the first to share something.'**
+  String get beFirstToPost;
+
+  /// No description provided for @liveNow.
+  ///
+  /// In en, this message translates to:
+  /// **'LIVE NOW'**
+  String get liveNow;
+
+  /// No description provided for @noActiveLivestreams.
+  ///
+  /// In en, this message translates to:
+  /// **'No active livestreams'**
+  String get noActiveLivestreams;
+
+  /// No description provided for @youBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'YOU'**
+  String get youBadge;
+
+  /// No description provided for @liveBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'LIVE'**
+  String get liveBadge;
+
+  /// No description provided for @you.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get you;
+
+  /// No description provided for @host.
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get host;
 }
 
 class _AppLocalizationsDelegate

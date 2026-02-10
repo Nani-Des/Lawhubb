@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 import '../Chat/live_stream.dart';
 import 'Services/forum_firebase_service.dart';
 import 'Widgets/post_card.dart';
@@ -43,9 +44,10 @@ class _ForumPageState extends State<Forum> {
             .get();
 
         blockedUserIds = blockedSnapshot.docs.map((doc) => doc.id).toSet();
-        
+
         // Fetch followed users
-        followedUserIds = (await _followService.getFollowingList(currentUserId)).toSet();
+        followedUserIds =
+            (await _followService.getFollowingList(currentUserId)).toSet();
       } catch (e) {
         debugPrint("Error fetching blocked/followed users: $e");
       }
@@ -66,22 +68,22 @@ class _ForumPageState extends State<Forum> {
     posts.sort((a, b) {
       final aUserId = a['User ID'] as String? ?? '';
       final bUserId = b['User ID'] as String? ?? '';
-      
+
       final aIsFollowed = followedUserIds.contains(aUserId);
       final bIsFollowed = followedUserIds.contains(bUserId);
-      
+
       // If one is followed and the other isn't, prioritize followed
       if (aIsFollowed && !bIsFollowed) return -1;
       if (!aIsFollowed && bIsFollowed) return 1;
-      
+
       // If both are followed or both aren't, sort by timestamp (newest first)
       final aTimestamp = a['Timestamp'] as Timestamp?;
       final bTimestamp = b['Timestamp'] as Timestamp?;
-      
+
       if (aTimestamp == null && bTimestamp == null) return 0;
       if (aTimestamp == null) return 1;
       if (bTimestamp == null) return -1;
-      
+
       return bTimestamp.compareTo(aTimestamp);
     });
 
@@ -104,25 +106,26 @@ class _ForumPageState extends State<Forum> {
       backgroundColor: Colors.black, // Modern minimalistic black background
 
       body: _posts.isEmpty
-          ? const Center(
+          ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.forum_outlined,
+                  const Icon(Icons.forum_outlined,
                       size: 60, color: Colors.white24), // Subtle icon
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Text(
-                    'No posts yet.',
-                    style: TextStyle(
+                    AppLocalizations.of(context)?.noPostsYet ?? 'No posts yet.',
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
-                    'Be the first to share something.',
-                    style: TextStyle(
+                    AppLocalizations.of(context)?.beFirstToPost ??
+                        'Be the first to share something.',
+                    style: const TextStyle(
                       color: Colors.grey,
                       fontSize: 14,
                     ),
@@ -162,7 +165,8 @@ class _ForumPageState extends State<Forum> {
                             padding:
                                 const EdgeInsets.only(left: 16.0, bottom: 12.0),
                             child: Text(
-                              "LIVE NOW",
+                              AppLocalizations.of(context)?.liveNow ??
+                                  "LIVE NOW",
                               style: TextStyle(
                                 color: Colors.grey[400],
                                 fontSize: 12,
@@ -192,10 +196,12 @@ class _ForumPageState extends State<Forum> {
                                 final consults = snapshot.data!.docs;
 
                                 if (consults.isEmpty) {
-                                  return const Center(
+                                  return Center(
                                     child: Text(
-                                      "No active livestreams",
-                                      style: TextStyle(
+                                      AppLocalizations.of(context)
+                                              ?.noActiveLivestreams ??
+                                          "No active livestreams",
+                                      style: const TextStyle(
                                         color: Colors.white70,
                                         fontSize: 14,
                                       ),
@@ -314,7 +320,15 @@ class _ForumPageState extends State<Forum> {
                                                                 .circular(10),
                                                       ),
                                                       child: Text(
-                                                        isHost ? "YOU" : "LIVE",
+                                                        isHost
+                                                            ? (AppLocalizations.of(
+                                                                        context)
+                                                                    ?.youBadge ??
+                                                                "YOU")
+                                                            : (AppLocalizations.of(
+                                                                        context)
+                                                                    ?.liveBadge ??
+                                                                "LIVE"),
                                                         style: const TextStyle(
                                                           color: Colors.white,
                                                           fontSize: 10,
@@ -332,8 +346,14 @@ class _ForumPageState extends State<Forum> {
                                                           ? '${fullName.substring(0, 21)}...'
                                                           : fullName)
                                                       : (isHost
-                                                          ? "You"
-                                                          : "Host"),
+                                                          ? (AppLocalizations.of(
+                                                                      context)
+                                                                  ?.you ??
+                                                              "You")
+                                                          : (AppLocalizations.of(
+                                                                      context)
+                                                                  ?.host ??
+                                                              "Host")),
                                                   style: const TextStyle(
                                                     fontSize: 12,
                                                     color: Colors.white,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 import '../Auth/auth_screen.dart';
 import 'create_insight_dialog.dart';
 import 'insight_card.dart';
@@ -34,7 +35,8 @@ class _LawInsightsPageState extends State<LawInsightsPage> {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
       try {
-        final following = await _followService.getFollowingList(currentUser.uid);
+        final following =
+            await _followService.getFollowingList(currentUser.uid);
         setState(() {
           _followingList = following.toSet();
         });
@@ -70,24 +72,26 @@ class _LawInsightsPageState extends State<LawInsightsPage> {
   }
 
   void _showAccessDeniedDialog() {
+    final localizations = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text(
-          'Access Denied',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          localizations?.accessDenied ?? 'Access Denied',
+          style: const TextStyle(color: Colors.white),
         ),
-        content: const Text(
-          'Only Lawyers can share videos and content on Law Insights.',
-          style: TextStyle(color: Colors.grey),
+        content: Text(
+          localizations?.onlyLawyersCanShare ??
+              'Only Lawyers can share videos and content on Law Insights.',
+          style: const TextStyle(color: Colors.grey),
         ),
         backgroundColor: Colors.grey[900],
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'OK',
-              style: TextStyle(color: Colors.white),
+            child: Text(
+              localizations?.ok ?? 'OK',
+              style: const TextStyle(color: Colors.white),
             ),
           ),
         ],
@@ -145,9 +149,9 @@ class _LawInsightsPageState extends State<LawInsightsPage> {
               ),
             ),
             const SizedBox(width: 12),
-            const Text(
-              'Law Insights',
-              style: TextStyle(
+            Text(
+              AppLocalizations.of(context)?.lawInsights ?? 'Law Insights',
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -167,7 +171,8 @@ class _LawInsightsPageState extends State<LawInsightsPage> {
               }
               final result = await showDialog(
                 context: context,
-                builder: (context) => CreateInsightDialog(userId: currentUser.uid),
+                builder: (context) =>
+                    CreateInsightDialog(userId: currentUser.uid),
               );
               if (result == true) {
                 _refreshInsights();
@@ -191,31 +196,36 @@ class _LawInsightsPageState extends State<LawInsightsPage> {
                 scrollDirection: Axis.horizontal,
                 children: [
                   _FilterChip(
-                    label: 'All',
+                    label: AppLocalizations.of(context)?.filterAll ?? 'All',
                     isSelected: _selectedFilter == 'All',
                     onTap: () => setState(() => _selectedFilter = 'All'),
                   ),
                   const SizedBox(width: 8),
                   _FilterChip(
-                    label: 'Cases',
+                    label: AppLocalizations.of(context)?.filterCases ?? 'Cases',
                     isSelected: _selectedFilter == 'Cases',
                     onTap: () => setState(() => _selectedFilter = 'Cases'),
                   ),
                   const SizedBox(width: 8),
                   _FilterChip(
-                    label: 'Legal Issues',
+                    label: AppLocalizations.of(context)?.filterLegalIssues ??
+                        'Legal Issues',
                     isSelected: _selectedFilter == 'Legal Issues',
-                    onTap: () => setState(() => _selectedFilter = 'Legal Issues'),
+                    onTap: () =>
+                        setState(() => _selectedFilter = 'Legal Issues'),
                   ),
                   const SizedBox(width: 8),
                   _FilterChip(
-                    label: 'Legal Topics',
+                    label: AppLocalizations.of(context)?.filterLegalTopics ??
+                        'Legal Topics',
                     isSelected: _selectedFilter == 'Legal Topics',
-                    onTap: () => setState(() => _selectedFilter = 'Legal Topics'),
+                    onTap: () =>
+                        setState(() => _selectedFilter = 'Legal Topics'),
                   ),
                   const SizedBox(width: 8),
                   _FilterChip(
-                    label: 'Trending',
+                    label: AppLocalizations.of(context)?.filterTrending ??
+                        'Trending',
                     isSelected: _selectedFilter == 'Trending',
                     onTap: () => setState(() => _selectedFilter = 'Trending'),
                   ),
@@ -249,7 +259,8 @@ class _LawInsightsPageState extends State<LawInsightsPage> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'No insights yet',
+                            AppLocalizations.of(context)?.noInsightsYet ??
+                                'No insights yet',
                             style: TextStyle(
                               color: Colors.grey[500],
                               fontSize: 18,
@@ -258,7 +269,8 @@ class _LawInsightsPageState extends State<LawInsightsPage> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Be the first to share your legal insights!',
+                            AppLocalizations.of(context)?.beFirstToShare ??
+                                'Be the first to share your legal insights!',
                             style: TextStyle(
                               color: Colors.grey[600],
                               fontSize: 14,
@@ -272,35 +284,37 @@ class _LawInsightsPageState extends State<LawInsightsPage> {
                   final insights = snapshot.data!.docs;
 
                   // Sort insights: followed users first, then by date (newest first)
-                  final sortedInsights = List<QueryDocumentSnapshot>.from(insights);
+                  final sortedInsights =
+                      List<QueryDocumentSnapshot>.from(insights);
                   sortedInsights.sort((a, b) {
                     final aData = a.data() as Map<String, dynamic>;
                     final bData = b.data() as Map<String, dynamic>;
-                    
+
                     final aUserId = aData['userId'] as String? ?? '';
                     final bUserId = bData['userId'] as String? ?? '';
-                    
+
                     final aIsFollowed = _followingList.contains(aUserId);
                     final bIsFollowed = _followingList.contains(bUserId);
-                    
+
                     // If one is followed and the other isn't, prioritize followed
                     if (aIsFollowed && !bIsFollowed) return -1;
                     if (!aIsFollowed && bIsFollowed) return 1;
-                    
+
                     // If both are followed or both aren't, sort by timestamp (newest first)
                     final aTimestamp = aData['createdAt'] as Timestamp?;
                     final bTimestamp = bData['createdAt'] as Timestamp?;
-                    
+
                     if (aTimestamp == null && bTimestamp == null) return 0;
                     if (aTimestamp == null) return 1;
                     if (bTimestamp == null) return -1;
-                    
+
                     return bTimestamp.compareTo(aTimestamp);
                   });
 
                   return ListView.builder(
                     controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     itemCount: sortedInsights.length,
                     itemBuilder: (context, index) {
                       final insight = sortedInsights[index];

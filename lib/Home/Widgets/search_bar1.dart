@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:nhap/main.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 import '../../Hospital/doctor_profile.dart';
 import '../../bot/widget/openai_service.dart';
 
@@ -181,6 +181,7 @@ class _SearchBar1State extends State<SearchBar1> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     return Column(
       children: [
         // 🔍 Search Bar
@@ -203,7 +204,8 @@ class _SearchBar1State extends State<SearchBar1> {
                 child: TextField(
                   controller: _controller,
                   decoration: InputDecoration(
-                    hintText: appLocalization!.findLawyerOrDescribe,
+                    hintText: localizations?.findLawyerOrDescribe ??
+                        'Find a Lawyer or describe your issue',
                     hintStyle: TextStyle(color: Colors.grey[400], fontSize: 12),
                     prefixIcon: const Icon(Icons.search, color: Colors.white),
                     border: OutlineInputBorder(

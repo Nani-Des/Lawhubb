@@ -574,4 +574,63 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get chamberIdMissing => 'Falta el ID del despacho';
+
+  @override
+  String get onlyLawyersCanShare =>
+      'Solo los abogados pueden compartir videos y contenido en Law Insights.';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get filterAll => 'Todos';
+
+  @override
+  String get filterCases => 'Casos';
+
+  @override
+  String get filterLegalIssues => 'Asuntos Legales';
+
+  @override
+  String get filterLegalTopics => 'Temas Legales';
+
+  @override
+  String get filterTrending => 'Tendencias';
+
+  @override
+  String get noInsightsYet => 'Aún no hay insights';
+
+  @override
+  String get beFirstToShare =>
+      '¡Sé el primero en compartir tus conocimientos legales!';
+
+  @override
+  String get chats => 'Chats';
+
+  @override
+  String get chatsSection => '🗣️ Chats';
+
+  @override
+  String get noPostsYet => 'Aún no hay publicaciones.';
+
+  @override
+  String get beFirstToPost => 'Sé el primero en compartir algo.';
+
+  @override
+  String get liveNow => 'EN VIVO';
+
+  @override
+  String get noActiveLivestreams => 'No hay transmisiones activas';
+
+  @override
+  String get youBadge => 'TÚ';
+
+  @override
+  String get liveBadge => 'VIVO';
+
+  @override
+  String get you => 'Tú';
+
+  @override
+  String get host => 'Anfitrión';
 }

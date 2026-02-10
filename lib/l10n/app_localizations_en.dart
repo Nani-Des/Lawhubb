@@ -570,4 +570,62 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chamberIdMissing => 'Chamber ID is missing';
+
+  @override
+  String get onlyLawyersCanShare =>
+      'Only Lawyers can share videos and content on Law Insights.';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get filterAll => 'All';
+
+  @override
+  String get filterCases => 'Cases';
+
+  @override
+  String get filterLegalIssues => 'Legal Issues';
+
+  @override
+  String get filterLegalTopics => 'Legal Topics';
+
+  @override
+  String get filterTrending => 'Trending';
+
+  @override
+  String get noInsightsYet => 'No insights yet';
+
+  @override
+  String get beFirstToShare => 'Be the first to share your legal insights!';
+
+  @override
+  String get chats => 'Chats';
+
+  @override
+  String get chatsSection => '🗣️ Chats';
+
+  @override
+  String get noPostsYet => 'No posts yet.';
+
+  @override
+  String get beFirstToPost => 'Be the first to share something.';
+
+  @override
+  String get liveNow => 'LIVE NOW';
+
+  @override
+  String get noActiveLivestreams => 'No active livestreams';
+
+  @override
+  String get youBadge => 'YOU';
+
+  @override
+  String get liveBadge => 'LIVE';
+
+  @override
+  String get you => 'You';
+
+  @override
+  String get host => 'Host';
 }
