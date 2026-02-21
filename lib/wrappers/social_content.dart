@@ -9,6 +9,7 @@ import '../Forums/Public/Widgets/user_profile_screen.dart';
 import '../LawInsights/law_insights_page.dart';
 import '../Forums/Chat/live_stream.dart';
 import '../Auth/auth_screen.dart';
+import '../Auth/auth_screen.dart';
 
 class SocialContent extends StatefulWidget {
   final int initialTabIndex;
@@ -45,7 +46,8 @@ class _SocialContentState extends State<SocialContent>
       if (currentUser == null) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please log in to start a consultation')),
+            const SnackBar(
+                content: Text('Please log in to start a consultation')),
           );
         }
         return;
@@ -154,7 +156,7 @@ class _SocialContentState extends State<SocialContent>
           ),
           Padding(
             padding: const EdgeInsets.only(right: 12),
-              child: GestureDetector(
+            child: GestureDetector(
               onTap: () {
                 Navigator.push(
                   context,
@@ -207,7 +209,8 @@ class _SocialContentState extends State<SocialContent>
               onPressed: () {
                 showDialog(
                   context: context,
-                  builder: (context) => CreatePostDialog(userId: loggedInUserId),
+                  builder: (context) =>
+                      CreatePostDialog(userId: loggedInUserId),
                 ).then((_) {
                   setState(() {});
                 });

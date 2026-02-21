@@ -6,6 +6,7 @@ import 'package:nhap/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 import '../../Auth/auth_screen.dart';
 import '../../Hospital/hospital_page.dart';
 import '../../Hospital/hospital_profile_screen.dart';
@@ -57,7 +58,9 @@ class _OrganizationListViewState extends State<OrganizationListView> {
         _isOffline = results.contains(ConnectivityResult.none);
       });
       if (!_isOffline) {
-        _showModernSnackBar(context, "Back online, syncing data...");
+        final localizations = AppLocalizations.of(context);
+        _showModernSnackBar(context,
+            localizations?.backOnlineSyncing ?? "Back online, syncing data...");
       }
     });
   }
@@ -112,6 +115,7 @@ class _OrganizationListViewState extends State<OrganizationListView> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     return Column(
       children: [
         if (widget.showSearchBar)
@@ -119,7 +123,8 @@ class _OrganizationListViewState extends State<OrganizationListView> {
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'Search by name or city...',
+                hintText: localizations?.searchByNameOrCity ??
+                    'Search by name or city...',
                 hintStyle:
                     TextStyle(color: Colors.grey[400]), // Light grey hint text
                 prefixIcon:
@@ -137,154 +142,105 @@ class _OrganizationListViewState extends State<OrganizationListView> {
             ),
           ),
         Expanded(
-          child: _isOffline && _cachedHospitals.isNotEmpty
-              ? _buildOfflineHospitalList()
-              : StreamBuilder<QuerySnapshot>(
-            stream: _hospitalsStream,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),  // White progress indicator
-                      const SizedBox(height: 16),
-                      Text(
-                        "Loading ${_isOffline ? ' (Offline)' : ''}...",
-                        style: const TextStyle(fontSize: 16, color: Colors.white),  // White text
-                      ),                   ],
-                  ),
-                );
-              }
+            child: _isOffline && _cachedHospitals.isNotEmpty
+                ? _buildOfflineHospitalList()
+                : StreamBuilder<QuerySnapshot>(
+                    stream: _hospitalsStream,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors
+                                          .white)), // White progress indicator
+                              const SizedBox(height: 16),
+                              Text(
+                                _isOffline
+                                    ? (localizations?.loadingOffline ??
+                                        "Loading (Offline)...")
+                                    : (localizations?.loading ?? "Loading..."),
+                                style: const TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white), // White text
+                              ),
+                            ],
+                          ),
+                        );
+                      }
 
-              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return const Center(child: Text("No Chamber found", style: TextStyle(color: Colors.white)));  // White text
-              }
+                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        return const Center(
+                            child: Text("No Chamber found",
+                                style: TextStyle(
+                                    color: Colors.white))); // White text
+                      }
 
-              final hospitals = _filterHospitals(snapshot.data!.docs);
-              final hospitalDataList = hospitals.map((doc) {
-                final data = doc.data() as Map<String, dynamic>;
-                return {
-                  'id': doc.id,
-                  'Chamber Name': data['Chamber Name'] ?? '',
-                  'City': data['City'] ?? 'Unknown City',
-                  'Contact': data['Contact'] ?? 'No Contact Info',
-                  'Background Image': data['Background Image']?.isNotEmpty == true
-                      ? data['Background Image']
-                      : 'assets/Images/background_default.jpg',
-                };
-              }).toList();
+                      final hospitals = _filterHospitals(snapshot.data!.docs);
+                      final hospitalDataList = hospitals.map((doc) {
+                        final data = doc.data() as Map<String, dynamic>;
+                        return {
+                          'id': doc.id,
+                          'Chamber Name': data['Chamber Name'] ?? '',
+                          'City': data['City'] ?? 'Unknown City',
+                          'Contact': data['Contact'] ?? 'No Contact Info',
+                          'Background Image':
+                              data['Background Image']?.isNotEmpty == true
+                                  ? data['Background Image']
+                                  : 'assets/Images/background_default.jpg',
+                        };
+                      }).toList();
 
-              // Cache hospital data
-              _cacheData(hospitalDataList, _cachedRatings);
+                      // Cache hospital data
+                      _cacheData(hospitalDataList, _cachedRatings);
 
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                decoration: const BoxDecoration(
-                  color: Colors.transparent,
-                ),
-                child: Scrollbar(
-                  controller: _scrollController,
-                  thumbVisibility: true,
-                  thickness: 8,
-                  radius: const Radius.circular(12),
-                  trackVisibility: true,
-                  child: ListView.builder(
-                    key: const PageStorageKey<String>('hospital_list'),
-                    controller: _scrollController,
-                    shrinkWrap: true,
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.all(8),
-                    itemCount: hospitals.length,
-                    itemBuilder: (context, index) {
-                      final hospital = hospitals[index];
-                      final hospitalData = hospital.data() as Map<String, dynamic>;
-                      final backgroundImage = hospitalData['Background Image']?.isNotEmpty == true
-                          ? hospitalData['Background Image']
-                          : 'assets/Images/background_default.jpg';
-
-                      return HospitalCard(
-                        backgroundImage: backgroundImage,
-                        hospitalName: hospitalData['Chamber Name'] ?? 'Unknown Chamber',
-                        contact: hospitalData['Contact'] ?? 'No Contact Info',
-                        hospitalId: hospital.id,
-                        onTap: () => _navigateToHospitalPage(context, hospital.id),
-                        cachedRating: _cachedRatings[hospital.id],
-                      );
-                    }
-
-                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                      return Center(
-                          child: Text(appLocalization!.noChamberFound,
-                              style: TextStyle(
-                                  color: Colors.white))); // White text
-                    }
-
-                    final hospitals = _filterHospitals(snapshot.data!.docs);
-                    final hospitalDataList = hospitals.map((doc) {
-                      final data = doc.data() as Map<String, dynamic>;
-                      return {
-                        'id': doc.id,
-                        'Chamber Name': data['Chamber Name'] ?? '',
-                        'City': data['City'] ?? 'Unknown City',
-                        'Contact': data['Contact'] ?? 'No Contact Info',
-                        'Background Image':
-                            data['Background Image']?.isNotEmpty == true
-                                ? data['Background Image']
-                                : 'assets/Images/background_default.jpg',
-                      };
-                    }).toList();
-
-                    // Cache hospital data
-                    _cacheData(hospitalDataList, _cachedRatings);
-
-                    return Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 20),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: Scrollbar(
-                        controller: _scrollController,
-                        thumbVisibility: true,
-                        thickness: 8,
-                        radius: const Radius.circular(12),
-                        trackVisibility: true,
-                        child: ListView.builder(
-                          key: const PageStorageKey<String>('hospital_list'),
-                          controller: _scrollController,
-                          shrinkWrap: true,
-                          physics: const BouncingScrollPhysics(),
-                          padding: const EdgeInsets.all(8),
-                          itemCount: hospitals.length,
-                          itemBuilder: (context, index) {
-                            final hospital = hospitals[index];
-                            final hospitalData =
-                                hospital.data() as Map<String, dynamic>;
-                            final backgroundImage =
-                                hospitalData['Background Image']?.isNotEmpty ==
-                                        true
-                                    ? hospitalData['Background Image']
-                                    : 'assets/Images/background_default.jpg';
-
-                            return HospitalCard(
-                              backgroundImage: backgroundImage,
-                              hospitalName: hospitalData['Chamber Name'] ??
-                                  'Unknown Chamber',
-                              contact:
-                                  hospitalData['Contact'] ?? 'No Contact Info',
-                              hospitalId: hospital.id,
-                              onTap: () =>
-                                  _navigateToHospitalPage(context, hospital.id),
-                              cachedRating: _cachedRatings[hospital.id],
-                            );
-                          },
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 20),
+                        decoration: const BoxDecoration(
+                          color: Colors.transparent,
                         ),
-                      ),
-                    );
-                  },
-                ),
-        ),
+                        child: Scrollbar(
+                          controller: _scrollController,
+                          thumbVisibility: true,
+                          thickness: 8,
+                          radius: const Radius.circular(12),
+                          trackVisibility: true,
+                          child: ListView.builder(
+                            key: const PageStorageKey<String>('hospital_list'),
+                            controller: _scrollController,
+                            shrinkWrap: true,
+                            physics: const BouncingScrollPhysics(),
+                            padding: const EdgeInsets.all(8),
+                            itemCount: hospitals.length,
+                            itemBuilder: (context, index) {
+                              final hospital = hospitals[index];
+                              final hospitalData =
+                                  hospital.data() as Map<String, dynamic>;
+                              final backgroundImage =
+                                  hospitalData['Background Image']
+                                              ?.isNotEmpty ==
+                                          true
+                                      ? hospitalData['Background Image']
+                                      : 'assets/Images/background_default.jpg';
+
+                              return HospitalCard(
+                                backgroundImage: backgroundImage,
+                                hospitalName: hospitalData['Chamber Name'] ??
+                                    'Unknown Chamber',
+                                contact: hospitalData['Contact'] ??
+                                    'No Contact Info',
+                                hospitalId: hospital.id,
+                                onTap: () => _navigateToHospitalPage(
+                                    context, hospital.id),
+                                cachedRating: _cachedRatings[hospital.id],
+                              );
+                            },
+                          ),
+                        ),
+                      );
+                    }))
       ],
     );
   }
@@ -591,9 +547,9 @@ class HospitalCard extends StatelessWidget {
                                       color: Colors.white,
                                       size: 16,
                                     ),
-                                    const SizedBox(width: 6),
-                                    const Text(
-                                      "Reviews",
+                                    Text(
+                                      AppLocalizations.of(context)?.reviews ??
+                                          "Reviews",
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 14,

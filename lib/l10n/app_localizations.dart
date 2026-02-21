@@ -813,6 +813,480 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Logout failed: {error}'**
   String logoutFailed(Object error);
+
+  /// No description provided for @legalChambers.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal Chambers'**
+  String get legalChambers;
+
+  /// No description provided for @aiAssistant.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Assistant'**
+  String get aiAssistant;
+
+  /// No description provided for @viewReferrals.
+  ///
+  /// In en, this message translates to:
+  /// **'View Referrals'**
+  String get viewReferrals;
+
+  /// No description provided for @searchChambersPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Search legal chambers & lawyers...'**
+  String get searchChambersPlaceholder;
+
+  /// No description provided for @resources.
+  ///
+  /// In en, this message translates to:
+  /// **'Resources'**
+  String get resources;
+
+  /// No description provided for @searchByNameOrCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or city...'**
+  String get searchByNameOrCity;
+
+  /// No description provided for @backOnlineSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Back online, syncing data...'**
+  String get backOnlineSyncing;
+
+  /// No description provided for @loadingOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading (Offline)...'**
+  String get loadingOffline;
+
+  /// No description provided for @loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get loading;
+
+  /// No description provided for @unknownCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown City'**
+  String get unknownCity;
+
+  /// No description provided for @noContactInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'No Contact Info'**
+  String get noContactInfo;
+
+  /// No description provided for @unknownChamber.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Chamber'**
+  String get unknownChamber;
+
+  /// No description provided for @reviews.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews'**
+  String get reviews;
+
+  /// No description provided for @welcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome'**
+  String get welcome;
+
+  /// No description provided for @getALawyer.
+  ///
+  /// In en, this message translates to:
+  /// **'Get A Lawyer'**
+  String get getALawyer;
+
+  /// No description provided for @tapToExplore.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to explore'**
+  String get tapToExplore;
+
+  /// No description provided for @chamberEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Chamber Events'**
+  String get chamberEvents;
+
+  /// No description provided for @chamberPractices.
+  ///
+  /// In en, this message translates to:
+  /// **'Chamber Practices'**
+  String get chamberPractices;
+
+  /// No description provided for @tap.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap'**
+  String get tap;
+
+  /// No description provided for @tapHereToAddHospital.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Here To Add Hospital'**
+  String get tapHereToAddHospital;
+
+  /// No description provided for @loadingHospital.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading Hospital..'**
+  String get loadingHospital;
+
+  /// No description provided for @loadingDots.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading ..'**
+  String get loadingDots;
+
+  /// No description provided for @searchDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Search title, author, category...'**
+  String get searchDocuments;
+
+  /// No description provided for @continueReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue Reading'**
+  String get continueReading;
+
+  /// No description provided for @allDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'All Documents'**
+  String get allDocuments;
+
+  /// No description provided for @items.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items'**
+  String items(Object count);
+
+  /// No description provided for @unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknown;
+
+  /// No description provided for @untitled.
+  ///
+  /// In en, this message translates to:
+  /// **'Untitled'**
+  String get untitled;
+
+  /// No description provided for @free.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get free;
+
+  /// No description provided for @complete.
+  ///
+  /// In en, this message translates to:
+  /// **'complete'**
+  String get complete;
+
+  /// No description provided for @myNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'My Notes'**
+  String get myNotes;
+
+  /// No description provided for @noNotesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No notes yet'**
+  String get noNotesYet;
+
+  /// No description provided for @notes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} notes'**
+  String notes(Object count);
+
+  /// No description provided for @page.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {number}'**
+  String page(Object number);
+
+  /// No description provided for @books.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Books'**
+  String books(Object count);
+
+  /// No description provided for @streak.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak {days}d'**
+  String streak(Object days);
+
+  /// No description provided for @uploadDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Document'**
+  String get uploadDocument;
+
+  /// No description provided for @selectPdfOrWordFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Select PDF or Word File'**
+  String get selectPdfOrWordFile;
+
+  /// No description provided for @selected.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected: {extension}'**
+  String selected(Object extension);
+
+  /// No description provided for @fieldTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get fieldTitle;
+
+  /// No description provided for @fieldAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'Author'**
+  String get fieldAuthor;
+
+  /// No description provided for @fieldCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get fieldCategory;
+
+  /// No description provided for @fieldDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Preface / Description'**
+  String get fieldDescription;
+
+  /// No description provided for @fieldPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price (GHS)'**
+  String get fieldPrice;
+
+  /// No description provided for @uploadButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload'**
+  String get uploadButton;
+
+  /// No description provided for @required.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get required;
+
+  /// No description provided for @selectPdfOrWordDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a PDF or Word document'**
+  String get selectPdfOrWordDocument;
+
+  /// No description provided for @uploadedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploaded Successfully!'**
+  String get uploadedSuccessfully;
+
+  /// No description provided for @available.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get available;
+
+  /// No description provided for @bar.
+  ///
+  /// In en, this message translates to:
+  /// **'Bar'**
+  String get bar;
+
+  /// No description provided for @practice.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice'**
+  String get practice;
+
+  /// No description provided for @yearOfCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Year of Call'**
+  String get yearOfCall;
+
+  /// No description provided for @notAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available'**
+  String get notAvailable;
+
+  /// No description provided for @naValue.
+  ///
+  /// In en, this message translates to:
+  /// **'N/A'**
+  String get naValue;
+
+  /// No description provided for @experience.
+  ///
+  /// In en, this message translates to:
+  /// **'Experience'**
+  String get experience;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// No description provided for @messageLawyer.
+  ///
+  /// In en, this message translates to:
+  /// **'Message Lawyer'**
+  String get messageLawyer;
+
+  /// No description provided for @bookButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Book'**
+  String get bookButton;
+
+  /// No description provided for @lawyerIdMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Lawyer ID is missing'**
+  String get lawyerIdMissing;
+
+  /// No description provided for @chamberIdMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Chamber ID is missing'**
+  String get chamberIdMissing;
+
+  /// No description provided for @onlyLawyersCanShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Only Lawyers can share videos and content on Law Insights.'**
+  String get onlyLawyersCanShare;
+
+  /// No description provided for @ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
+  /// No description provided for @filterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get filterAll;
+
+  /// No description provided for @filterCases.
+  ///
+  /// In en, this message translates to:
+  /// **'Cases'**
+  String get filterCases;
+
+  /// No description provided for @filterLegalIssues.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal Issues'**
+  String get filterLegalIssues;
+
+  /// No description provided for @filterLegalTopics.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal Topics'**
+  String get filterLegalTopics;
+
+  /// No description provided for @filterTrending.
+  ///
+  /// In en, this message translates to:
+  /// **'Trending'**
+  String get filterTrending;
+
+  /// No description provided for @noInsightsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No insights yet'**
+  String get noInsightsYet;
+
+  /// No description provided for @beFirstToShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Be the first to share your legal insights!'**
+  String get beFirstToShare;
+
+  /// No description provided for @chats.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get chats;
+
+  /// No description provided for @chatsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'🗣️ Chats'**
+  String get chatsSection;
+
+  /// No description provided for @noPostsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No posts yet.'**
+  String get noPostsYet;
+
+  /// No description provided for @beFirstToPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Be the first to share something.'**
+  String get beFirstToPost;
+
+  /// No description provided for @liveNow.
+  ///
+  /// In en, this message translates to:
+  /// **'LIVE NOW'**
+  String get liveNow;
+
+  /// No description provided for @noActiveLivestreams.
+  ///
+  /// In en, this message translates to:
+  /// **'No active livestreams'**
+  String get noActiveLivestreams;
+
+  /// No description provided for @youBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'YOU'**
+  String get youBadge;
+
+  /// No description provided for @liveBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'LIVE'**
+  String get liveBadge;
+
+  /// No description provided for @you.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get you;
+
+  /// No description provided for @host.
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get host;
 }
 
 class _AppLocalizationsDelegate

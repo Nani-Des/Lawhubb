@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hive/hive.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 import 'upload_pdf.dart';
 import 'pdf_reader_page.dart';
 
@@ -42,7 +43,10 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   Future<void> _fetchPDFs() async {
-    final snapshot = await FirebaseFirestore.instance.collection('library').orderBy('timestamp', descending: true).get();
+    final snapshot = await FirebaseFirestore.instance
+        .collection('library')
+        .orderBy('timestamp', descending: true)
+        .get();
     pdfs = snapshot.docs.map((d) => {...d.data(), 'id': d.id}).toList();
     filtered = pdfs;
     setState(() => loading = false);
@@ -100,8 +104,9 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   List<Map<String, dynamic>> get continueList {
-    final items = archiveBox.values.map((e) => Map<String,dynamic>.from(e)).toList();
-    items.sort((a,b) {
+    final items =
+        archiveBox.values.map((e) => Map<String, dynamic>.from(e)).toList();
+    items.sort((a, b) {
       final at = DateTime.tryParse(a['timestamp'] ?? '') ?? DateTime(0);
       final bt = DateTime.tryParse(b['timestamp'] ?? '') ?? DateTime(0);
       return bt.compareTo(at);
@@ -109,24 +114,27 @@ class _LibraryPageState extends State<LibraryPage> {
     return items;
   }
 
-  void _openReader(Map<String,dynamic> pdf, {bool fromNote = false, int? page}) async {
-    await Navigator.push(context, MaterialPageRoute(
-        builder: (_) => PDFReaderPage(
-          title: pdf['title'] ?? 'Untitled',
-          url: pdf['url'] ?? '',
-          id: pdf['id'] ?? pdf['title'],
-          fromNote: fromNote,
-          initialPage: page,
-        )
-    ));
+  void _openReader(Map<String, dynamic> pdf,
+      {bool fromNote = false, int? page}) async {
+    await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (_) => PDFReaderPage(
+                  title: pdf['title'] ?? 'Untitled',
+                  url: pdf['url'] ?? '',
+                  id: pdf['id'] ?? pdf['title'],
+                  fromNote: fromNote,
+                  initialPage: page,
+                )));
     setState(() {});
   }
 
-  Widget _bookCard(Map<String,dynamic> pdf) {
+  Widget _bookCard(Map<String, dynamic> pdf) {
     final price = (pdf['price'] as num?)?.toDouble() ?? 0.0;
     final id = pdf['id'] ?? pdf['title'];
     final saved = archiveBox.get(id);
-    final progress = saved != null ? (saved['progress'] as num?)?.toDouble() ?? 0.0 : 0.0;
+    final progress =
+        saved != null ? (saved['progress'] as num?)?.toDouble() ?? 0.0 : 0.0;
 
     return GestureDetector(
       onTap: () => _openReader(pdf),
@@ -154,11 +162,13 @@ class _LibraryPageState extends State<LibraryPage> {
                       color: Colors.grey[850],
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.picture_as_pdf, color: Colors.white, size: 28),
+                    child: const Icon(Icons.picture_as_pdf,
+                        color: Colors.white, size: 28),
                   ),
                   if (progress > 0)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.grey[850],
                         borderRadius: BorderRadius.circular(8),
@@ -176,7 +186,8 @@ class _LibraryPageState extends State<LibraryPage> {
               ),
               const SizedBox(height: 12),
               Text(
-                pdf['title'] ?? 'Untitled',
+                pdf['title'] ??
+                    (AppLocalizations.of(context)?.untitled ?? 'Untitled'),
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
@@ -188,7 +199,8 @@ class _LibraryPageState extends State<LibraryPage> {
               ),
               const SizedBox(height: 6),
               Text(
-                pdf['author'] ?? 'Unknown',
+                pdf['author'] ??
+                    (AppLocalizations.of(context)?.unknown ?? 'Unknown'),
                 style: TextStyle(
                   color: Colors.grey[500],
                   fontSize: 12,
@@ -225,7 +237,7 @@ class _LibraryPageState extends State<LibraryPage> {
                     )
                   else
                     Text(
-                      'Free',
+                      AppLocalizations.of(context)?.free ?? 'Free',
                       style: TextStyle(
                         color: Colors.grey[400],
                         fontWeight: FontWeight.w600,
@@ -250,12 +262,18 @@ class _LibraryPageState extends State<LibraryPage> {
                     child: Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: archiveBox.containsKey(id) ? Colors.white : Colors.grey[850],
+                        color: archiveBox.containsKey(id)
+                            ? Colors.white
+                            : Colors.grey[850],
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
-                        archiveBox.containsKey(id) ? Icons.bookmark : Icons.bookmark_border,
-                        color: archiveBox.containsKey(id) ? Colors.black : Colors.white,
+                        archiveBox.containsKey(id)
+                            ? Icons.bookmark
+                            : Icons.bookmark_border,
+                        color: archiveBox.containsKey(id)
+                            ? Colors.black
+                            : Colors.white,
                         size: 18,
                       ),
                     ),
@@ -278,7 +296,7 @@ class _LibraryPageState extends State<LibraryPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
         itemCount: cont.length,
-        separatorBuilder: (_,__) => const SizedBox(width: 12),
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, i) {
           final it = cont[i];
           final progress = (it['progress'] as num?)?.toDouble() ?? 0.0;
@@ -316,13 +334,14 @@ class _LibraryPageState extends State<LibraryPage> {
                           child: LinearProgressIndicator(
                             value: progress,
                             backgroundColor: Colors.grey[850],
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
                             minHeight: 4,
                           ),
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          '${(progress * 100).toStringAsFixed(0)}% complete',
+                          '${(progress * 100).toStringAsFixed(0)}% ${AppLocalizations.of(context)?.complete ?? 'complete'}',
                           style: TextStyle(
                             color: Colors.grey[500],
                             fontSize: 12,
@@ -339,7 +358,8 @@ class _LibraryPageState extends State<LibraryPage> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.play_arrow, color: Colors.black, size: 24),
+                    child: const Icon(Icons.play_arrow,
+                        color: Colors.black, size: 24),
                   ),
                 ],
               ),
@@ -375,9 +395,9 @@ class _LibraryPageState extends State<LibraryPage> {
               ),
             ),
             const SizedBox(width: 12),
-            const Text(
-              'Law Insights',
-              style: TextStyle(
+            Text(
+              AppLocalizations.of(context)?.lawInsights ?? 'Law Insights',
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -395,8 +415,8 @@ class _LibraryPageState extends State<LibraryPage> {
                 _showAccessDeniedDialog();
                 return;
               }
-              await Navigator.push(
-                  context, MaterialPageRoute(builder: (_) => const UploadPDFPage()));
+              await Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const UploadPDFPage()));
               await _fetchPDFs();
             },
           ),
@@ -416,113 +436,135 @@ class _LibraryPageState extends State<LibraryPage> {
       body: loading
           ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildStatChip('${pdfs.length} Books', Icons.library_books),
-                    _buildStatChip('Streak ${streakDays}d', Icons.local_fire_department),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: searchController,
-                  onChanged: _search,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: 'Search title, author, category...',
-                    hintStyle: TextStyle(color: Colors.grey[600]),
-                    filled: true,
-                    fillColor: Colors.grey[900],
-                    prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[800]!),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[800]!),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[700]!),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildStatChip(
+                              AppLocalizations.of(context)
+                                      ?.books(pdfs.length.toString()) ??
+                                  '${pdfs.length} Books',
+                              Icons.library_books),
+                          _buildStatChip(
+                              AppLocalizations.of(context)
+                                      ?.streak(streakDays.toString()) ??
+                                  'Streak ${streakDays}d',
+                              Icons.local_fire_department),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: searchController,
+                        onChanged: _search,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText:
+                              AppLocalizations.of(context)?.searchDocuments ??
+                                  'Search title, author, category...',
+                          hintStyle: TextStyle(color: Colors.grey[600]),
+                          filled: true,
+                          fillColor: Colors.grey[900],
+                          prefixIcon:
+                              Icon(Icons.search, color: Colors.grey[600]),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[800]!),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[800]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[700]!),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 14),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ),
-          if (continueList.isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Continue Reading',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.3,
+                if (continueList.isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context)?.continueReading ??
+                              'Continue Reading',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        Text(
+                          AppLocalizations.of(context)
+                                  ?.items(continueList.length.toString()) ??
+                              '${continueList.length} items',
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  Text(
-                    '${continueList.length} items',
-                    style: TextStyle(
-                      color: Colors.grey[500],
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                  _continueStrip(),
+                  const SizedBox(height: 16),
                 ],
-              ),
-            ),
-            _continueStrip(),
-            const SizedBox(height: 16),
-          ],
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'All Documents',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.3,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        AppLocalizations.of(context)?.allDocuments ??
+                            'All Documents',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      Text(
+                        AppLocalizations.of(context)
+                                ?.items(filtered.length.toString()) ??
+                            '${filtered.length} items',
+                        style: TextStyle(
+                          color: Colors.grey[500],
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  '${filtered.length} items',
-                  style: TextStyle(
-                    color: Colors.grey[500],
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
+                Expanded(
+                  child: GridView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 0.7),
+                    itemCount: filtered.length,
+                    itemBuilder: (context, i) => _bookCard(filtered[i]),
                   ),
                 ),
               ],
             ),
-          ),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2, mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 0.7),
-              itemCount: filtered.length,
-              itemBuilder: (context, i) => _bookCard(filtered[i]),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -573,9 +615,9 @@ class _LibraryPageState extends State<LibraryPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'My Notes',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context)?.myNotes ?? 'My Notes',
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -583,7 +625,8 @@ class _LibraryPageState extends State<LibraryPage> {
                   ),
                 ),
                 Text(
-                  '${keys.length} notes',
+                  AppLocalizations.of(context)?.notes(keys.length.toString()) ??
+                      '${keys.length} notes',
                   style: TextStyle(
                     color: Colors.grey[500],
                     fontSize: 14,
@@ -599,10 +642,12 @@ class _LibraryPageState extends State<LibraryPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.note_outlined, color: Colors.grey[700], size: 48),
+                        Icon(Icons.note_outlined,
+                            color: Colors.grey[700], size: 48),
                         const SizedBox(height: 12),
                         Text(
-                          'No notes yet',
+                          AppLocalizations.of(context)?.noNotesYet ??
+                              'No notes yet',
                           style: TextStyle(
                             color: Colors.grey[500],
                             fontSize: 16,
@@ -613,85 +658,94 @@ class _LibraryPageState extends State<LibraryPage> {
                     ),
                   )
                 : ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemBuilder: (ctx, idx) {
-                final k = keys[idx];
-                final note = notesBox.get(k);
-                return InkWell(
-                  onTap: () => _openReader(note, fromNote: true, page: note['page']),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[850],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey[800]!),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(16),
+                    itemBuilder: (ctx, idx) {
+                      final k = keys[idx];
+                      final note = notesBox.get(k);
+                      return InkWell(
+                        onTap: () => _openReader(note,
+                            fromNote: true, page: note['page']),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            color: Colors.grey[800],
-                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.grey[850],
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey[800]!),
                           ),
-                          child: const Icon(Icons.sticky_note_2, color: Colors.white, size: 20),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
+                          child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                note['title'] ?? k,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 14,
-                                  letterSpacing: -0.2,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                note['text'] ?? '',
-                                style: TextStyle(
-                                  color: Colors.grey[400],
-                                  fontSize: 13,
-                                  height: 1.4,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                   color: Colors.grey[800],
-                                  borderRadius: BorderRadius.circular(6),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: Text(
-                                  'Page ${note['page'] ?? 0}',
-                                  style: TextStyle(
-                                    color: Colors.grey[400],
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                child: const Icon(Icons.sticky_note_2,
+                                    color: Colors.white, size: 20),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      note['title'] ??
+                                          (AppLocalizations.of(context)
+                                                  ?.untitled ??
+                                              'Untitled'),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 14,
+                                        letterSpacing: -0.2,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      note['text'] ?? '',
+                                      style: TextStyle(
+                                        color: Colors.grey[400],
+                                        fontSize: 13,
+                                        height: 1.4,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[800],
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        AppLocalizations.of(context)?.page(
+                                                (note['page'] ?? 0)
+                                                    .toString()) ??
+                                            'Page ${note['page'] ?? 0}',
+                                        style: TextStyle(
+                                          color: Colors.grey[400],
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      ],
-                    ),
+                      );
+                    },
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemCount: keys.length,
                   ),
-                );
-              },
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemCount: keys.length,
-            ),
           ),
         ],
       ),

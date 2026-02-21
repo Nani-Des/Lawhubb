@@ -381,4 +381,256 @@ class AppLocalizationsEs extends AppLocalizations {
   String logoutFailed(Object error) {
     return 'Cierre de sesión fallido: $error';
   }
+
+  @override
+  String get legalChambers => 'Despachos Legales';
+
+  @override
+  String get aiAssistant => 'Asistente IA';
+
+  @override
+  String get viewReferrals => 'Ver Referencias';
+
+  @override
+  String get searchChambersPlaceholder => 'Buscar despachos y abogados...';
+
+  @override
+  String get resources => 'Recursos';
+
+  @override
+  String get searchByNameOrCity => 'Buscar por nombre o ciudad...';
+
+  @override
+  String get backOnlineSyncing => 'En línea de nuevo, sincronizando datos...';
+
+  @override
+  String get loadingOffline => 'Cargando (Sin conexión)...';
+
+  @override
+  String get loading => 'Cargando...';
+
+  @override
+  String get unknownCity => 'Ciudad desconocida';
+
+  @override
+  String get noContactInfo => 'Sin información de contacto';
+
+  @override
+  String get unknownChamber => 'Despacho desconocido';
+
+  @override
+  String get reviews => 'Reseñas';
+
+  @override
+  String get welcome => 'Bienvenido';
+
+  @override
+  String get getALawyer => 'Obtener un Abogado';
+
+  @override
+  String get tapToExplore => 'Toca para explorar';
+
+  @override
+  String get chamberEvents => 'Eventos del Despacho';
+
+  @override
+  String get chamberPractices => 'Prácticas del Despacho';
+
+  @override
+  String get tap => 'Toca';
+
+  @override
+  String get tapHereToAddHospital => 'Toca aquí para agregar despacho';
+
+  @override
+  String get loadingHospital => 'Cargando Despacho..';
+
+  @override
+  String get loadingDots => 'Cargando ..';
+
+  @override
+  String get searchDocuments => 'Buscar título, autor, categoría...';
+
+  @override
+  String get continueReading => 'Continuar Leyendo';
+
+  @override
+  String get allDocuments => 'Todos los Documentos';
+
+  @override
+  String items(Object count) {
+    return '$count elementos';
+  }
+
+  @override
+  String get unknown => 'Desconocido';
+
+  @override
+  String get untitled => 'Sin título';
+
+  @override
+  String get free => 'Gratis';
+
+  @override
+  String get complete => 'completo';
+
+  @override
+  String get myNotes => 'Mis Notas';
+
+  @override
+  String get noNotesYet => 'Sin notas aún';
+
+  @override
+  String notes(Object count) {
+    return '$count notas';
+  }
+
+  @override
+  String page(Object number) {
+    return 'Página $number';
+  }
+
+  @override
+  String books(Object count) {
+    return '$count Libros';
+  }
+
+  @override
+  String streak(Object days) {
+    return 'Racha ${days}d';
+  }
+
+  @override
+  String get uploadDocument => 'Cargar Documento';
+
+  @override
+  String get selectPdfOrWordFile => 'Selecciona archivo PDF o Word';
+
+  @override
+  String selected(Object extension) {
+    return 'Seleccionado: $extension';
+  }
+
+  @override
+  String get fieldTitle => 'Título';
+
+  @override
+  String get fieldAuthor => 'Autor';
+
+  @override
+  String get fieldCategory => 'Categoría';
+
+  @override
+  String get fieldDescription => 'Prefacio / Descripción';
+
+  @override
+  String get fieldPrice => 'Precio (GHS)';
+
+  @override
+  String get uploadButton => 'Cargar';
+
+  @override
+  String get required => 'Requerido';
+
+  @override
+  String get selectPdfOrWordDocument =>
+      'Por favor, selecciona un documento PDF o Word';
+
+  @override
+  String get uploadedSuccessfully => '¡Cargado Exitosamente!';
+
+  @override
+  String get available => 'Disponible';
+
+  @override
+  String get bar => 'Colegio';
+
+  @override
+  String get practice => 'Práctica';
+
+  @override
+  String get yearOfCall => 'Año de Admisión';
+
+  @override
+  String get notAvailable => 'No disponible';
+
+  @override
+  String get naValue => 'N/D';
+
+  @override
+  String get experience => 'Experiencia';
+
+  @override
+  String get close => 'Cerrar';
+
+  @override
+  String get messageLawyer => 'Mensaje al Abogado';
+
+  @override
+  String get bookButton => 'Reservar';
+
+  @override
+  String get lawyerIdMissing => 'Falta el ID del abogado';
+
+  @override
+  String get chamberIdMissing => 'Falta el ID del despacho';
+
+  @override
+  String get onlyLawyersCanShare =>
+      'Solo los abogados pueden compartir videos y contenido en Law Insights.';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get filterAll => 'Todos';
+
+  @override
+  String get filterCases => 'Casos';
+
+  @override
+  String get filterLegalIssues => 'Asuntos Legales';
+
+  @override
+  String get filterLegalTopics => 'Temas Legales';
+
+  @override
+  String get filterTrending => 'Tendencias';
+
+  @override
+  String get noInsightsYet => 'Aún no hay insights';
+
+  @override
+  String get beFirstToShare =>
+      '¡Sé el primero en compartir tus conocimientos legales!';
+
+  @override
+  String get chats => 'Chats';
+
+  @override
+  String get chatsSection => '🗣️ Chats';
+
+  @override
+  String get noPostsYet => 'Aún no hay publicaciones.';
+
+  @override
+  String get beFirstToPost => 'Sé el primero en compartir algo.';
+
+  @override
+  String get liveNow => 'EN VIVO';
+
+  @override
+  String get noActiveLivestreams => 'No hay transmisiones activas';
+
+  @override
+  String get youBadge => 'TÚ';
+
+  @override
+  String get liveBadge => 'VIVO';
+
+  @override
+  String get you => 'Tú';
+
+  @override
+  String get host => 'Anfitrión';
 }

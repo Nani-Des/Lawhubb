@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 import '../Appointments/Referral screens/referral_details_page.dart';
 import '../Appointments/referral_form.dart';
 import '../Emergency/knowledge_packs_page.dart';
@@ -13,8 +14,10 @@ class ChambersContent extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return false;
 
-    final userDoc =
-    await FirebaseFirestore.instance.collection('Users').doc(user.uid).get();
+    final userDoc = await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(user.uid)
+        .get();
 
     if (!userDoc.exists) return false;
 
@@ -25,13 +28,13 @@ class ChambersContent extends StatelessWidget {
     return isDoctor && isActive;
   }
 
-
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
       future: _isActiveDoctor(),
       builder: (context, snapshot) {
         bool isActiveDoctor = snapshot.data ?? false;
+        final localizations = AppLocalizations.of(context);
 
         return Scaffold(
           backgroundColor: Colors.black,
@@ -58,7 +61,6 @@ class ChambersContent extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-
               ],
             ),
             automaticallyImplyLeading: false,
@@ -79,7 +81,8 @@ class ChambersContent extends StatelessWidget {
                       );
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
                         color: const Color(0xFF1C1C1E),
                         borderRadius: BorderRadius.circular(24),
@@ -93,9 +96,9 @@ class ChambersContent extends StatelessWidget {
                             size: 18,
                           ),
                           const SizedBox(width: 6),
-                          const Text(
-                            'AI Assistant',
-                            style: TextStyle(
+                          Text(
+                            localizations?.aiAssistant ?? 'AI Assistant',
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -135,20 +138,26 @@ class ChambersContent extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => ReferralDetailsPage(userId: user.uid),
+                            builder: (context) =>
+                                ReferralDetailsPage(userId: user.uid),
                           ),
                         );
                       }
                     }
                   },
-                  itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                    const PopupMenuItem<String>(
+                  itemBuilder: (BuildContext context) =>
+                      <PopupMenuEntry<String>>[
+                    PopupMenuItem<String>(
                       value: 'referral_form',
-                      child: Text('Refer A Client', style: TextStyle(color: Colors.white)),
+                      child: Text(
+                          localizations?.referAClient ?? 'Refer A Client',
+                          style: const TextStyle(color: Colors.white)),
                     ),
-                    const PopupMenuItem<String>(
+                    PopupMenuItem<String>(
                       value: 'referrals',
-                      child: Text('View Referrals', style: TextStyle(color: Colors.white)),
+                      child: Text(
+                          localizations?.viewReferrals ?? 'View Referrals',
+                          style: const TextStyle(color: Colors.white)),
                     ),
                   ],
                 ),
@@ -183,7 +192,9 @@ class ChambersContent extends StatelessWidget {
                               fontWeight: FontWeight.w500,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Search legal chambers & lawyers...',
+                              hintText:
+                                  localizations?.searchChambersPlaceholder ??
+                                      'Search legal chambers & lawyers...',
                               hintStyle: TextStyle(
                                 color: Colors.white.withOpacity(0.6),
                                 fontSize: 16,
@@ -231,9 +242,9 @@ class ChambersContent extends StatelessWidget {
                                     size: 20,
                                   ),
                                   const SizedBox(width: 6),
-                                  const Text(
-                                    'Resources',
-                                    style: TextStyle(
+                                  Text(
+                                    localizations?.resources ?? 'Resources',
+                                    style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,

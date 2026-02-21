@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nhap/Hospital/Widgets/custom_nav_bar.dart';
 import 'package:nhap/Hospital/specialty_details.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 import '../Services/firebase_service.dart';
 import '../try.dart';
 import 'Widgets/calender_page.dart';
@@ -50,7 +51,7 @@ class _HospitalPageState extends State<HospitalPage>
   Future<void> _loadHospitalData() async {
     try {
       Map<String, String> hospitalDetails =
-      await _firebaseService.getHospitalDetails(widget.hospitalId);
+          await _firebaseService.getHospitalDetails(widget.hospitalId);
       setState(() {
         _hospitalDetails = hospitalDetails;
       });
@@ -71,7 +72,8 @@ class _HospitalPageState extends State<HospitalPage>
       backgroundColor: Colors.black,
       appBar: AppBar(
         title: Text(
-          _hospitalDetails['hospitalName'] ?? 'Loading ..',
+          _hospitalDetails['hospitalName'] ??
+              (AppLocalizations.of(context)?.loadingDots ?? 'Loading ..'),
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -92,12 +94,12 @@ class _HospitalPageState extends State<HospitalPage>
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0),
           child: Column(
             children: [
-              const Text(
-                'Welcome',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)?.welcome ?? 'Welcome',
+                style: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,  // White text for contrast
+                  color: Colors.white, // White text for contrast
                   letterSpacing: 1.2,
                 ),
               ),
@@ -107,10 +109,14 @@ class _HospitalPageState extends State<HospitalPage>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CardButton(
-                      title: 'Get A Lawyer',
+                      title: AppLocalizations.of(context)?.getALawyer ??
+                          'Get A Lawyer',
                       icon: Icons.person,
                       gradient: LinearGradient(
-                        colors: [Colors.grey[800]!, Colors.grey[600]!],  // Grey gradient
+                        colors: [
+                          Colors.grey[800]!,
+                          Colors.grey[600]!
+                        ], // Grey gradient
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -132,10 +138,15 @@ class _HospitalPageState extends State<HospitalPage>
                       children: [
                         Flexible(
                           child: CardButton(
-                            title: 'Chamber Events',
+                            title:
+                                AppLocalizations.of(context)?.chamberEvents ??
+                                    'Chamber Events',
                             icon: Icons.medical_services,
                             gradient: LinearGradient(
-                              colors: [Colors.grey[800]!, Colors.grey[600]!],  // Grey gradient
+                              colors: [
+                                Colors.grey[800]!,
+                                Colors.grey[600]!
+                              ], // Grey gradient
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -144,17 +155,24 @@ class _HospitalPageState extends State<HospitalPage>
                                   context,
                                   MaterialPageRoute(
                                       builder: (context) =>
-                                          HospitalServiceScreen(hospitalId: widget.hospitalId, isReferral: widget.isReferral)));
+                                          HospitalServiceScreen(
+                                              hospitalId: widget.hospitalId,
+                                              isReferral: widget.isReferral)));
                             },
                           ),
                         ),
                         const SizedBox(width: 20),
                         Flexible(
                           child: CardButton(
-                            title: 'Chamber Practices',
+                            title: AppLocalizations.of(context)
+                                    ?.chamberPractices ??
+                                'Chamber Practices',
                             icon: Icons.calendar_today,
                             gradient: LinearGradient(
-                              colors: [Colors.grey[800]!, Colors.grey[600]!],  // Grey gradient
+                              colors: [
+                                Colors.grey[800]!,
+                                Colors.grey[600]!
+                              ], // Grey gradient
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -162,8 +180,9 @@ class _HospitalPageState extends State<HospitalPage>
                               Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) =>
-                                          CalenderPage(hospitalId: widget.hospitalId, isReferral: widget.isReferral)));
+                                      builder: (context) => CalenderPage(
+                                          hospitalId: widget.hospitalId,
+                                          isReferral: widget.isReferral)));
                             },
                           ),
                         ),
@@ -178,42 +197,48 @@ class _HospitalPageState extends State<HospitalPage>
       ),
       floatingActionButton: widget.isReferral
           ? Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FadeTransition(
-            opacity: _textFadeAnimation,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: Text(
-                "Tap Here To Add Hospital",
-                style: TextStyle(
-                  color: Colors.white,  // White text for visibility
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FadeTransition(
+                  opacity: _textFadeAnimation,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Text(
+                      AppLocalizations.of(context)?.tapHereToAddHospital ??
+                          "Tap Here To Add Hospital",
+                      style: TextStyle(
+                        color: Colors.white, // White text for visibility
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ),
-          FloatingActionButton(
-            onPressed: () {
-              String selectedHospitalName = _hospitalDetails['hospitalName'] ?? 'Loading Hospital..';
+                FloatingActionButton(
+                  onPressed: () {
+                    String selectedHospitalName =
+                        _hospitalDetails['hospitalName'] ??
+                            (AppLocalizations.of(context)?.loadingHospital ??
+                                'Loading Hospital..');
 
-              Navigator.pop(context, selectedHospitalName);
-              Navigator.pop(context, selectedHospitalName);
+                    Navigator.pop(context, selectedHospitalName);
+                    Navigator.pop(context, selectedHospitalName);
 
-              Future.delayed(Duration(milliseconds: 300), () {
-                if (widget.selectHealthFacility != null) {
-                  widget.selectHealthFacility!(selectedHospitalName);
-                }
-              });
-            },
-            child: Icon(Icons.add, color: Colors.black),  // Black icon
-            backgroundColor: Colors.white,  // White button
-          ),
-        ],
-      )
+                    Future.delayed(Duration(milliseconds: 300), () {
+                      if (widget.selectHealthFacility != null) {
+                        widget.selectHealthFacility!(selectedHospitalName);
+                      }
+                    });
+                  },
+                  child: Icon(Icons.add, color: Colors.black), // Black icon
+                  backgroundColor: Colors.white, // White button
+                ),
+              ],
+            )
           : null,
-      bottomNavigationBar: widget.isReferral ? null : CustomBottomNavBarHospital(hospitalId: widget.hospitalId),
+      bottomNavigationBar: widget.isReferral
+          ? null
+          : CustomBottomNavBarHospital(hospitalId: widget.hospitalId),
     );
   }
 }
@@ -234,11 +259,11 @@ class CardButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isPhysicians = title == 'Get A Lawyer';
+    bool isPhysicians = title == AppLocalizations.of(context)?.getALawyer;
 
     return Card(
       elevation: 12,
-      shadowColor: Colors.black.withOpacity(0.4),  // Darker shadow
+      shadowColor: Colors.black.withOpacity(0.4), // Darker shadow
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
       ),
@@ -256,15 +281,15 @@ class CardButton extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: isPhysicians
-                ? _buildHorizontalLayout()
-                : _buildVerticalLayout(),
+                ? _buildHorizontalLayout(context)
+                : _buildVerticalLayout(context),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildHorizontalLayout() {
+  Widget _buildHorizontalLayout(BuildContext context) {
     return Row(
       children: [
         Container(
@@ -276,7 +301,7 @@ class CardButton extends StatelessWidget {
           child: Icon(
             icon,
             size: 30,
-            color: Colors.white,  // White icon
+            color: Colors.white, // White icon
           ),
         ),
         const SizedBox(width: 16),
@@ -289,16 +314,16 @@ class CardButton extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,  // White text
+                  color: Colors.white, // White text
                   letterSpacing: 0.5,
                 ),
               ),
               const SizedBox(height: 6),
               Text(
-                'Tap to explore',
+                AppLocalizations.of(context)?.tapToExplore ?? 'Tap to explore',
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey[300],  // Light grey text
+                  color: Colors.grey[300], // Light grey text
                 ),
               ),
             ],
@@ -306,14 +331,14 @@ class CardButton extends StatelessWidget {
         ),
         Icon(
           Icons.arrow_forward_ios,
-          color: Colors.grey[300],  // Light grey icon
+          color: Colors.grey[300], // Light grey icon
           size: 22,
         ),
       ],
     );
   }
 
-  Widget _buildVerticalLayout() {
+  Widget _buildVerticalLayout(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -326,7 +351,7 @@ class CardButton extends StatelessWidget {
           child: Icon(
             icon,
             size: 30,
-            color: Colors.white,  // White icon
+            color: Colors.white, // White icon
           ),
         ),
         const SizedBox(height: 12),
@@ -335,17 +360,17 @@ class CardButton extends StatelessWidget {
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: Colors.white,  // White text
+            color: Colors.white, // White text
             letterSpacing: 0.5,
           ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 6),
         Text(
-          'Tap',
+          AppLocalizations.of(context)?.tap ?? 'Tap',
           style: TextStyle(
             fontSize: 12,
-            color: Colors.grey[300],  // Light grey text
+            color: Colors.grey[300], // Light grey text
           ),
         ),
       ],

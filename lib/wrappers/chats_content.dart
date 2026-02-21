@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 import '../Forums/Chat/search_screen.dart';
 import '../Forums/Chat/chat_list.dart';
 import '../Forums/Public/Widgets/user_profile_screen.dart';
@@ -38,9 +39,9 @@ class ChatsContent extends StatelessWidget {
         elevation: 0,
         automaticallyImplyLeading: false,
         toolbarHeight: 70,
-        title: const Text(
-          'Chats',
-          style: TextStyle(
+        title: Text(
+          AppLocalizations.of(context)?.chats ?? 'Chats',
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -96,11 +97,11 @@ class ChatsContent extends StatelessWidget {
       body: Column(
         children: [
           const SizedBox(height: 12),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8.0),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Text(
-              "🗣️ Chats",
-              style: TextStyle(
+              AppLocalizations.of(context)?.chatsSection ?? "🗣️ Chats",
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -109,15 +110,9 @@ class ChatsContent extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           const Divider(thickness: 1.2),
-           Expanded(child: ChatList()),
+          Expanded(child: ChatList()),
         ],
       ),
     );
   }
 }
-
-
-
-
-
-

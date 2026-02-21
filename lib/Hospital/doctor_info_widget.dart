@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nhap/Hospital/specialty_details.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 import '../Forums/Chat/chat_screen.dart';
 import '../Forums/Chat/voice_call_screen.dart';
 import 'doctor_availability_calendar.dart';
@@ -51,7 +52,8 @@ class DoctorInfoWidget extends StatelessWidget {
                     ],
                   ),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 child: Column(
                   children: [
                     // Profile Avatar with Status
@@ -75,11 +77,13 @@ class DoctorInfoWidget extends StatelessWidget {
                           child: CircleAvatar(
                             radius: 40,
                             backgroundColor: Colors.grey[800],
-                            backgroundImage: doctorDetails['User Pic']?.isNotEmpty ?? false
-                                ? NetworkImage(doctorDetails['User Pic'])
-                                : null,
+                            backgroundImage:
+                                doctorDetails['User Pic']?.isNotEmpty ?? false
+                                    ? NetworkImage(doctorDetails['User Pic'])
+                                    : null,
                             child: doctorDetails['User Pic']?.isEmpty ?? true
-                                ? const Icon(Icons.person, size: 40, color: Colors.grey)
+                                ? const Icon(Icons.person,
+                                    size: 40, color: Colors.grey)
                                 : null,
                           ),
                         ),
@@ -91,7 +95,8 @@ class DoctorInfoWidget extends StatelessWidget {
                             width: 14,
                             height: 14,
                             decoration: BoxDecoration(
-                              color: (doctorDetails['status'] == 'Available' || doctorDetails['isOnline'] == true)
+                              color: (doctorDetails['status'] == 'Available' ||
+                                      doctorDetails['isOnline'] == true)
                                   ? Colors.grey[300]
                                   : Colors.grey[600],
                               shape: BoxShape.circle,
@@ -104,7 +109,8 @@ class DoctorInfoWidget extends StatelessWidget {
                     const SizedBox(height: 12),
                     // Name
                     Text(
-                      "${doctorDetails['Title'] ?? ''} ${doctorDetails['Fname'] ?? ''} ${doctorDetails['Lname'] ?? ''}".trim(),
+                      "${doctorDetails['Title'] ?? ''} ${doctorDetails['Fname'] ?? ''} ${doctorDetails['Lname'] ?? ''}"
+                          .trim(),
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -116,25 +122,29 @@ class DoctorInfoWidget extends StatelessWidget {
                     const SizedBox(height: 6),
                     // Status Badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.grey[850],
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: (doctorDetails['status'] == 'Available' || doctorDetails['isOnline'] == true)
+                          color: (doctorDetails['status'] == 'Available' ||
+                                  doctorDetails['isOnline'] == true)
                               ? Colors.grey[600]!
                               : Colors.grey[700]!,
                           width: 1,
                         ),
                       ),
                       child: Text(
-                        (doctorDetails['status'] == 'Available' || doctorDetails['isOnline'] == true)
+                        (doctorDetails['status'] == 'Available' ||
+                                doctorDetails['isOnline'] == true)
                             ? 'Available'
                             : 'Offline',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: (doctorDetails['status'] == 'Available' || doctorDetails['isOnline'] == true)
+                          color: (doctorDetails['status'] == 'Available' ||
+                                  doctorDetails['isOnline'] == true)
                               ? Colors.grey[300]
                               : Colors.grey[500],
                         ),
@@ -143,10 +153,11 @@ class DoctorInfoWidget extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               // Info Cards Section
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -161,7 +172,7 @@ class DoctorInfoWidget extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    
+
                     // Info Cards Grid
                     GridView.count(
                       crossAxisCount: 2,
@@ -208,9 +219,9 @@ class DoctorInfoWidget extends StatelessWidget {
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Action Buttons
                     _buildActionButtons(context),
                     const SizedBox(height: 12),
@@ -290,10 +301,12 @@ class DoctorInfoWidget extends StatelessWidget {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Colors.grey[900],
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
             title,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold),
           ),
           content: Text(
             value,
@@ -302,9 +315,10 @@ class DoctorInfoWidget extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Close',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              child: Text(
+                AppLocalizations.of(context)?.close ?? 'Close',
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.w600),
               ),
             ),
           ],
@@ -322,40 +336,48 @@ class DoctorInfoWidget extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: currentUser == null ? () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Please log in to make voice calls'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            } : () {
-              final String otherUserId = doctorDetails['User ID'];
-              final recipientName = "${doctorDetails['Fname'] ?? ''} ${doctorDetails['Lname'] ?? ''}".trim();
-              
-              // Generate unique channel name using UUID (max 64 chars)
-              final uuid = const Uuid();
-              final channelName = uuid.v4().replaceAll('-', '').substring(0, 32);
-              
-              if (context.mounted) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => VoiceCallScreen(
-                      channelName: channelName,
-                      recipientId: otherUserId,
-                      recipientName: recipientName.isNotEmpty ? recipientName : 'Lawyer',
-                      isInitiator: true,
-                    ),
-                  ),
-                );
-              }
-            },
+            onPressed: currentUser == null
+                ? () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please log in to make voice calls'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                : () {
+                    final String otherUserId = doctorDetails['User ID'];
+                    final recipientName =
+                        "${doctorDetails['Fname'] ?? ''} ${doctorDetails['Lname'] ?? ''}"
+                            .trim();
+
+                    // Generate unique channel name using UUID (max 64 chars)
+                    final uuid = const Uuid();
+                    final channelName =
+                        uuid.v4().replaceAll('-', '').substring(0, 32);
+
+                    if (context.mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => VoiceCallScreen(
+                            channelName: channelName,
+                            recipientId: otherUserId,
+                            recipientName: recipientName.isNotEmpty
+                                ? recipientName
+                                : 'Lawyer',
+                            isInitiator: true,
+                          ),
+                        ),
+                      );
+                    }
+                  },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: Colors.black,
               padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               elevation: 2,
             ),
             child: Row(
@@ -375,82 +397,91 @@ class DoctorInfoWidget extends StatelessWidget {
             ),
           ),
         ),
-        
+
         const SizedBox(height: 8),
-        
+
         // Follow Button
         if (currentUser != null && currentUser.uid != doctorDetails['User ID'])
           _FollowButton(
             currentUserId: currentUser!.uid,
             targetUserId: doctorDetails['User ID'],
           ),
-        
+
         if (currentUser != null && currentUser.uid != doctorDetails['User ID'])
           const SizedBox(height: 8),
-        
+
         // Secondary Actions Row
         Row(
           children: [
             Expanded(
               child: ElevatedButton(
-                onPressed: currentUser == null ? () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please log in to message lawyers'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                } : () async {
-                  final String otherUserId = doctorDetails['User ID'];
-                  final chatRef = FirebaseFirestore.instance.collection('Chats');
+                onPressed: currentUser == null
+                    ? () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please log in to message lawyers'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    : () async {
+                        final String otherUserId = doctorDetails['User ID'];
+                        final chatRef =
+                            FirebaseFirestore.instance.collection('Chats');
 
-                  // Find existing chat
-                  final existingChat = await chatRef
-                      .where('participants', arrayContains: currentUser!.uid)
-                      .get();
+                        // Find existing chat
+                        final existingChat = await chatRef
+                            .where('participants',
+                                arrayContains: currentUser!.uid)
+                            .get();
 
-                  DocumentSnapshot? foundChat;
-                  for (var doc in existingChat.docs) {
-                    if ((doc['participants'] as List).contains(otherUserId)) {
-                      foundChat = doc;
-                      break;
-                    }
-                  }
+                        DocumentSnapshot? foundChat;
+                        for (var doc in existingChat.docs) {
+                          if ((doc['participants'] as List)
+                              .contains(otherUserId)) {
+                            foundChat = doc;
+                            break;
+                          }
+                        }
 
-                  // If chat doesn't exist, create one
-                  if (foundChat == null) {
-                    final newChatRef = await chatRef.add({
-                      'participants': [currentUser.uid, otherUserId],
-                      'createdAt': FieldValue.serverTimestamp(),
-                    });
+                        // If chat doesn't exist, create one
+                        if (foundChat == null) {
+                          final newChatRef = await chatRef.add({
+                            'participants': [currentUser.uid, otherUserId],
+                            'createdAt': FieldValue.serverTimestamp(),
+                          });
 
-                    // Fetch the created document as a snapshot
-                    foundChat = await newChatRef.get();
-                  }
+                          // Fetch the created document as a snapshot
+                          foundChat = await newChatRef.get();
+                        }
 
-                  if (context.mounted) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ChatScreen(
-                          chatId: foundChat!.id,
-                          recipientId: otherUserId,
-                          recipientName:
-                          "${doctorDetails['Fname'] ?? ''} ${doctorDetails['Lname'] ?? ''}",
-                          recipientPic: doctorDetails['User Pic'] ?? '',
-                          recipientRole: doctorDetails['Role'] is bool
-                              ? doctorDetails['Role']
-                              : (doctorDetails['Role']?.toString().toLowerCase() == 'true'),
-                        ),
-                      ),
-                    );
-                  }
-                },
+                        if (context.mounted) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChatScreen(
+                                chatId: foundChat!.id,
+                                recipientId: otherUserId,
+                                recipientName:
+                                    "${doctorDetails['Fname'] ?? ''} ${doctorDetails['Lname'] ?? ''}",
+                                recipientPic: doctorDetails['User Pic'] ?? '',
+                                recipientRole: doctorDetails['Role'] is bool
+                                    ? doctorDetails['Role']
+                                    : (doctorDetails['Role']
+                                            ?.toString()
+                                            .toLowerCase() ==
+                                        'true'),
+                              ),
+                            ),
+                          );
+                        }
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   elevation: 2,
                 ),
                 child: Row(
@@ -472,12 +503,14 @@ class DoctorInfoWidget extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: ElevatedButton(
-                onPressed: isReferral ? null : () => _showCalendarDialog(context),
+                onPressed:
+                    isReferral ? null : () => _showCalendarDialog(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isReferral ? Colors.grey[800] : Colors.white,
                   foregroundColor: isReferral ? Colors.grey[500] : Colors.black,
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   elevation: isReferral ? 0 : 2,
                 ),
                 child: Row(
@@ -509,10 +542,15 @@ class DoctorInfoWidget extends StatelessWidget {
     if (doctorId == null || hospitalId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${doctorId == null ? 'Lawyers' : 'Chamber'} ID is missing'),
+          content: Text(doctorId == null
+              ? (AppLocalizations.of(context)?.lawyerIdMissing ??
+                  'Lawyer ID is missing')
+              : (AppLocalizations.of(context)?.chamberIdMissing ??
+                  'Chamber ID is missing')),
           backgroundColor: Colors.grey[800],
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
       return;
@@ -549,12 +587,14 @@ class _FollowButtonState extends State<_FollowButton> {
   @override
   void initState() {
     super.initState();
-    _isFollowingFuture = FollowService().isFollowing(widget.currentUserId, widget.targetUserId);
+    _isFollowingFuture =
+        FollowService().isFollowing(widget.currentUserId, widget.targetUserId);
   }
 
   void _refreshFollowStatus() {
     setState(() {
-      _isFollowingFuture = FollowService().isFollowing(widget.currentUserId, widget.targetUserId);
+      _isFollowingFuture = FollowService()
+          .isFollowing(widget.currentUserId, widget.targetUserId);
     });
   }
 
@@ -564,16 +604,17 @@ class _FollowButtonState extends State<_FollowButton> {
       future: _isFollowingFuture,
       builder: (context, snapshot) {
         final isFollowing = snapshot.data ?? false;
-        
+
         return SizedBox(
           width: double.infinity,
           child: OutlinedButton(
             onPressed: () async {
               final followService = FollowService();
-              
+
               try {
                 if (isFollowing) {
-                  await followService.unfollowUser(widget.currentUserId, widget.targetUserId);
+                  await followService.unfollowUser(
+                      widget.currentUserId, widget.targetUserId);
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -583,7 +624,8 @@ class _FollowButtonState extends State<_FollowButton> {
                     );
                   }
                 } else {
-                  await followService.followUser(widget.currentUserId, widget.targetUserId);
+                  await followService.followUser(
+                      widget.currentUserId, widget.targetUserId);
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -607,10 +649,13 @@ class _FollowButtonState extends State<_FollowButton> {
             },
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.white,
-              side: BorderSide(color: isFollowing ? Colors.grey[700]! : Colors.white),
-              backgroundColor: isFollowing ? Colors.grey[800] : Colors.transparent,
+              side: BorderSide(
+                  color: isFollowing ? Colors.grey[700]! : Colors.white),
+              backgroundColor:
+                  isFollowing ? Colors.grey[800] : Colors.transparent,
               padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
