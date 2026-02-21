@@ -130,19 +130,19 @@ class ServicesGrid extends StatelessWidget {
                   }
                 },
               ),
-              _ServiceCard(
-                icon: Icons.balance,
-                title: localizations?.legalCommunity ?? 'Legal Community',
-                subtitle: localizations?.connectAndDiscuss ?? 'Connect & discuss',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => GeneralHospitalPage(),
-                    ),
-                  );
-                },
-              ),
+              // _ServiceCard(
+              //   icon: Icons.balance,
+              //   title: localizations?.legalCommunity ?? 'Legal Community',
+              //   subtitle: localizations?.connectAndDiscuss ?? 'Connect & discuss',
+              //   onTap: () {
+              //     Navigator.push(
+              //       context,
+              //       MaterialPageRoute(
+              //         builder: (context) => GeneralHospitalPage(),
+              //       ),
+              //     );
+              //   },
+              // ),
 
             ],
           ),

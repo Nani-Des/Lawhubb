@@ -131,7 +131,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
       case 1:
         return const [
           _NavItem(icon: Icons.home_filled, label: 'Home'),
-          _NavItem(icon: Icons.menu_book_outlined, label: 'Law Insights'),
+          _NavItem(icon: Icons.menu_book_outlined, label: 'Insights'),
           _NavItem(icon: Icons.chat, label: 'Chats'),
           _NavItem(icon: Icons.forum, label: 'SocialHubb'),
         ];
@@ -145,7 +145,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
         return const [
           _NavItem(icon: Icons.home_filled, label: 'Home'),
           _NavItem(icon: Icons.chat, label: 'Chats'),
-          _NavItem(icon: Icons.menu_book_outlined, label: 'Law Insights'),
+          _NavItem(icon: Icons.menu_book_outlined, label: 'Insights'),
         ];
       case 4:
         return const [
@@ -156,7 +156,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
       case 5:
         return const [
           _NavItem(icon: Icons.home_filled, label: 'Home'),
-          _NavItem(icon: Icons.menu_book_outlined, label: 'Law Insights'),
+          _NavItem(icon: Icons.menu_book_outlined, label: 'Insights'),
           _NavItem(icon: Icons.forum, label: 'SocialHubb'),
         ];
       default:
