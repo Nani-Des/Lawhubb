@@ -236,13 +236,14 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const SizedBox(height: 20),
                 if (!_isForgotPassword)
-                  Center(
+                  SizedBox(
+                    width: double.infinity,
                     child: OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(
                             color: Colors.white), // White border
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 40,
+                          horizontal: 20,
                           vertical: 15,
                         ),
                         shape: RoundedRectangleBorder(
@@ -266,11 +267,20 @@ class _AuthScreenState extends State<AuthScreen> {
                       icon: Image.network(
                         'https://www.google.com/favicon.ico',
                         height: 24,
+                        width: 24,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.g_mobiledata,
+                            size: 24,
+                            color: Colors.white,
+                          );
+                        },
                       ),
                       label: Text(
                         appLocalization!.signInWithGoogle,
                         style: TextStyle(
                             fontSize: 16, color: Colors.white), // White text
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
