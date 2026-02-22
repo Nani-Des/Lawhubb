@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:nhap/Forums/Public/Widgets/postcard_media.dart';
 import '../../../Services/translation_service.dart';
 import 'delete_post_service.dart';
@@ -141,39 +142,85 @@ class _PostCardState extends State<PostCard> {
   }
 
   void _checkIfLiked() async {
-    String userId = 'user_id'; // replace with actual user id
+    if (currentUserId == null) return;
     DocumentSnapshot postSnapshot = await FirebaseFirestore.instance
         .collection('Posts')
         .doc(widget.postData['id'])
         .collection('Likes')
-        .doc(userId)
+        .doc(currentUserId)
         .get();
 
-    setState(() {
-      _isLiked = postSnapshot.exists;
-    });
+    if (mounted) {
+      setState(() {
+        _isLiked = postSnapshot.exists;
+      });
+    }
   }
 
   void _likePost() async {
-    if (!_isLiked) {
-      String userId = 'user_id'; // replace with actual user id
+    if (currentUserId == null) return;
+
+    if (_isLiked) {
+      // Unlike
       await FirebaseFirestore.instance
           .collection('Posts')
           .doc(widget.postData['id'])
           .collection('Likes')
-          .doc(userId)
-          .set({'User ID': userId});
+          .doc(currentUserId)
+          .delete();
 
       await FirebaseFirestore.instance
           .collection('Posts')
           .doc(widget.postData['id'])
-          .update({'Likes': widget.postData['Likes'] + 1});
+          .update({'Likes': (widget.postData['Likes'] as int) - 1});
 
-      setState(() {
-        _isLiked = true;
-        widget.postData['Likes'] += 1;
-      });
+      if (mounted) {
+        setState(() {
+          _isLiked = false;
+          widget.postData['Likes'] = (widget.postData['Likes'] as int) - 1;
+        });
+      }
+    } else {
+      // Like
+      await FirebaseFirestore.instance
+          .collection('Posts')
+          .doc(widget.postData['id'])
+          .collection('Likes')
+          .doc(currentUserId)
+          .set({'User ID': currentUserId});
+
+      await FirebaseFirestore.instance
+          .collection('Posts')
+          .doc(widget.postData['id'])
+          .update({'Likes': (widget.postData['Likes'] as int) + 1});
+
+      if (mounted) {
+        setState(() {
+          _isLiked = true;
+          widget.postData['Likes'] = (widget.postData['Likes'] as int) + 1;
+        });
+      }
     }
+  }
+
+  void _sharePost() {
+    final content = widget.postData['Content'] as String? ?? '';
+    final videoUrl = widget.postData['VideoURL'] as String?;
+    final imageUrl = widget.postData['ImageURL'] as String?;
+
+    final buffer = StringBuffer();
+    if (content.isNotEmpty) {
+      buffer.writeln(content);
+      buffer.writeln();
+    }
+    if (videoUrl != null && videoUrl.isNotEmpty) {
+      buffer.writeln('🎥 Watch: $videoUrl');
+    } else if (imageUrl != null && imageUrl.isNotEmpty) {
+      buffer.writeln('🖼️ View: $imageUrl');
+    }
+    buffer.writeln('\nShared from LawHubb');
+
+    Share.share(buffer.toString().trim());
   }
 
   Future<Map<String, String?>> _fetchUserDetails(String userId) async {
@@ -568,20 +615,43 @@ class _PostCardState extends State<PostCard> {
 
                   const SizedBox(width: 20),
 
-                  // Comment Button
+                  // Comment Button with count
                   InkWell(
                     onTap: _viewComments,
-                    child: const Icon(Icons.chat_bubble_outline,
-                        color: Colors.white, size: 22),
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('Posts')
+                          .doc(widget.postData['id'])
+                          .collection('Comments')
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        final count = snapshot.data?.docs.length ?? 0;
+                        return Row(
+                          children: [
+                            const Icon(Icons.chat_bubble_outline,
+                                color: Colors.white, size: 22),
+                            if (count > 0) ...[
+                              const SizedBox(width: 6),
+                              Text(
+                                '$count',
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 14),
+                              ),
+                            ],
+                          ],
+                        );
+                      },
+                    ),
                   ),
 
                   const Spacer(),
 
-                  // Share/Other (Optional, using report for now as placeholder for consistency)
-                  // InkWell(
-                  //   onTap: () {},
-                  //   child: Icon(Icons.share_outlined, color: Colors.white, size: 22),
-                  // ),
+                  // Share Button
+                  InkWell(
+                    onTap: _sharePost,
+                    child: const Icon(Icons.share_outlined,
+                        color: Colors.white, size: 22),
+                  ),
                 ],
               ),
             ),

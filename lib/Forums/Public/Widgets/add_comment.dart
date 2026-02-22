@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../ChatModule/chat_module.dart';
 
 class AddCommentScreen extends StatefulWidget {
   final String postId;
@@ -42,7 +43,7 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
 
   Future<Map<String, String?>> _fetchUserDetails(String userId) async {
     DocumentSnapshot userDoc =
-    await FirebaseFirestore.instance.collection('Users').doc(userId).get();
+        await FirebaseFirestore.instance.collection('Users').doc(userId).get();
     return {
       'imageUrl': userDoc['User Pic'],
       'fullName': '${userDoc['Fname']} ${userDoc['Lname']}'
@@ -51,6 +52,13 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
 
   void _sendCommentOrReply() async {
     if (currentUserId == null || _commentController.text.isEmpty) return;
+
+    final text = _commentController.text.trim();
+    if (text.isEmpty) return;
+
+    // Word filter check
+    final canPost = await WordFilterService().canSendMessage(text, context);
+    if (!canPost) return;
 
     if (replyingToCommentId != null) {
       // store reply
@@ -61,7 +69,7 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
           .doc(replyingToCommentId)
           .collection('Replies')
           .add({
-        'Content': _commentController.text.trim(),
+        'Content': text,
         'Timestamp': FieldValue.serverTimestamp(),
         'User ID': currentUserId,
       });
@@ -72,7 +80,7 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
           .doc(widget.postId)
           .collection('Comments')
           .add({
-        'Content': _commentController.text.trim(),
+        'Content': text,
         'Timestamp': FieldValue.serverTimestamp(),
         'User ID': currentUserId,
       });
@@ -98,11 +106,12 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
 
   /// ---------- Replies ----------
   Widget _buildReplies(String commentId) {
-    final replyPath =
-    FirebaseFirestore.instance.collection('Posts/${widget.postId}/Comments/$commentId/Replies'.replaceAll('//', '/'));
+    final replyPath = FirebaseFirestore.instance.collection(
+        'Posts/${widget.postId}/Comments/$commentId/Replies'
+            .replaceAll('//', '/'));
 
     return StreamBuilder<QuerySnapshot>(
-      stream: replyPath.snapshots(),
+      stream: replyPath.orderBy('Timestamp').snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
           return const SizedBox.shrink();
@@ -143,8 +152,9 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
                           radius: 14,
                           backgroundImage: snap.data?['imageUrl'] != null
                               ? NetworkImage(snap.data!['imageUrl']!)
-                              : const AssetImage('assets/Images/placeholder.png')
-                          as ImageProvider,
+                              : const AssetImage(
+                                      'assets/Images/placeholder.png')
+                                  as ImageProvider,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -166,7 +176,8 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
                               ),
                               const SizedBox(height: 4),
                               StreamBuilder<QuerySnapshot>(
-                                stream: replyRef.collection('Likes').snapshots(),
+                                stream:
+                                    replyRef.collection('Likes').snapshots(),
                                 builder: (context, likeSnap) {
                                   final isLiked = likeSnap.data?.docs.any(
                                           (doc) => doc.id == currentUserId) ??
@@ -185,8 +196,7 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
                                               : Colors.grey[400],
                                           size: 16,
                                         ),
-                                        onPressed: () =>
-                                            _toggleLike(replyRef),
+                                        onPressed: () => _toggleLike(replyRef),
                                       ),
                                       if (likeCount > 0)
                                         Text("$likeCount",
@@ -240,7 +250,7 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
                 backgroundImage: snapshot.data?['imageUrl'] != null
                     ? NetworkImage(snapshot.data!['imageUrl']!)
                     : const AssetImage('assets/Images/placeholder.png')
-                as ImageProvider,
+                        as ImageProvider,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -250,12 +260,12 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
                     RichText(
                       text: TextSpan(
                         style:
-                        const TextStyle(color: Colors.white, fontSize: 14),
+                            const TextStyle(color: Colors.white, fontSize: 14),
                         children: [
                           TextSpan(
                               text: "${snapshot.data?['fullName']} ",
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold)),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
                           TextSpan(text: comment['Content'] ?? ''),
                         ],
                       ),
@@ -265,7 +275,7 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
                       stream: commentRef.collection('Likes').snapshots(),
                       builder: (context, likeSnap) {
                         final isLiked = likeSnap.data?.docs
-                            .any((doc) => doc.id == currentUserId) ??
+                                .any((doc) => doc.id == currentUserId) ??
                             false;
                         final likeCount = likeSnap.data?.docs.length ?? 0;
                         return Row(
@@ -290,7 +300,7 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
                                 setState(() {
                                   replyingToCommentId = commentId;
                                   replyingToUserName =
-                                  snapshot.data?['fullName'];
+                                      snapshot.data?['fullName'];
                                 });
                               },
                               child: const Text("Reply",
@@ -316,7 +326,7 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
   Widget build(BuildContext context) {
     return Padding(
       padding:
-      EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: DraggableScrollableSheet(
         expand: false,
         initialChildSize: 0.8,
@@ -339,8 +349,7 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData)
-                      return const Center(
-                          child: CircularProgressIndicator());
+                      return const Center(child: CircularProgressIndicator());
                     if (snapshot.data!.docs.isEmpty) {
                       return const Center(
                         child: Text("No comments yet",
@@ -350,7 +359,7 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
                     return ListView(
                       controller: controller,
                       children:
-                      snapshot.data!.docs.map(_buildCommentItem).toList(),
+                          snapshot.data!.docs.map(_buildCommentItem).toList(),
                     );
                   },
                 ),
@@ -361,7 +370,7 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
                 child: Container(
                   color: Colors.grey[900],
                   padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   child: Row(
                     children: [
                       CircleAvatar(
@@ -369,7 +378,7 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
                         backgroundImage: currentUserPic != null
                             ? NetworkImage(currentUserPic!)
                             : const AssetImage('assets/Images/placeholder.png')
-                        as ImageProvider,
+                                as ImageProvider,
                       ),
                       const SizedBox(width: 10),
                       Expanded(
