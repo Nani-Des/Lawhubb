@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:nhap/Forums/Public/Widgets/postcard_media.dart';
 import '../../../Services/translation_service.dart';
 import 'delete_post_service.dart';
@@ -388,13 +389,28 @@ class _PostCardState extends State<PostCard> {
               future: _fetchUserDetails(widget.postData['User ID']),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Padding(
-                    padding: EdgeInsets.all(12.0),
-                    child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.grey)),
+                  return Shimmer.fromColors(
+                    baseColor: Colors.grey[900]!,
+                    highlightColor: Colors.grey[700]!,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
+                      child: Row(
+                        children: [
+                          const CircleAvatar(
+                              radius: 18, backgroundColor: Colors.white),
+                          const SizedBox(width: 12),
+                          Container(
+                            width: 120,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 }
                 if (snapshot.hasError) {
@@ -436,6 +452,8 @@ class _PostCardState extends State<PostCard> {
                         _blockUser();
                       } else if (value == 'report') {
                         _reportPost();
+                      } else if (value == 'delete') {
+                        _onLongPressPost();
                       }
                     },
                     itemBuilder: (BuildContext context) =>
@@ -453,10 +471,9 @@ class _PostCardState extends State<PostCard> {
                         ),
                       ] else
                         const PopupMenuItem<String>(
-                          enabled: false,
-                          value: 'none',
-                          child: Text('Your Post',
-                              style: TextStyle(color: Colors.grey)),
+                          value: 'delete',
+                          child: Text('Delete Post',
+                              style: TextStyle(color: Colors.redAccent)),
                         ),
                     ],
                   ),
