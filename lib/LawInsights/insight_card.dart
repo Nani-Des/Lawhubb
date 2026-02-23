@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
 import '../../Hospital/doctor_profile.dart';
+import '../../ChatModule/chat_module.dart';
 import 'Services/law_insights_service.dart';
 import 'Widgets/insight_video_player.dart';
 import 'insight_detail_page.dart';
@@ -24,7 +25,8 @@ class InsightCard extends StatefulWidget {
   State<InsightCard> createState() => _InsightCardState();
 }
 
-class _InsightCardState extends State<InsightCard> with SingleTickerProviderStateMixin {
+class _InsightCardState extends State<InsightCard>
+    with SingleTickerProviderStateMixin {
   final LawInsightsService _service = LawInsightsService();
   final TextEditingController _commentController = TextEditingController();
   bool _showComments = false;
@@ -59,14 +61,14 @@ class _InsightCardState extends State<InsightCard> with SingleTickerProviderStat
   Future<void> _incrementView() async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return;
-    
+
     // Check if user has already viewed this insight
     final viewedBy = List<String>.from(widget.insightData['viewedBy'] ?? []);
     if (viewedBy.contains(userId)) {
       _hasViewed = true;
       return;
     }
-    
+
     if (!_hasViewed) {
       _hasViewed = true;
       await _service.incrementViews(widget.insightId, userId);
@@ -81,7 +83,7 @@ class _InsightCardState extends State<InsightCard> with SingleTickerProviderStat
       );
       return;
     }
-    
+
     // Optimistic update
     setState(() {});
     await _service.toggleLike(widget.insightId, userId);
@@ -99,10 +101,12 @@ class _InsightCardState extends State<InsightCard> with SingleTickerProviderStat
     final comment = _commentController.text.trim();
     if (comment.isEmpty) return;
 
-    final userDoc = await FirebaseFirestore.instance
-        .collection('Users')
-        .doc(userId)
-        .get();
+    // Word filter check
+    final canPost = await WordFilterService().canSendMessage(comment, context);
+    if (!canPost) return;
+
+    final userDoc =
+        await FirebaseFirestore.instance.collection('Users').doc(userId).get();
     final userData = userDoc.data() ?? {};
 
     await _service.addComment(
@@ -119,7 +123,23 @@ class _InsightCardState extends State<InsightCard> with SingleTickerProviderStat
   void _shareInsight() {
     final title = widget.insightData['title'] ?? '';
     final description = widget.insightData['description'] ?? '';
-    Share.share('$title\n\n$description');
+    final videoUrl = widget.insightData['videoUrl'] as String? ?? '';
+
+    final buffer = StringBuffer();
+    if (title.isNotEmpty) {
+      buffer.writeln(title);
+      buffer.writeln();
+    }
+    if (description.isNotEmpty) {
+      buffer.writeln(description);
+      buffer.writeln();
+    }
+    if (videoUrl.isNotEmpty) {
+      buffer.writeln('🎥 Watch: $videoUrl');
+    }
+    buffer.writeln('\nShared from LawHubb');
+
+    Share.share(buffer.toString().trim());
   }
 
   String _formatDate(Timestamp? timestamp) {
@@ -186,7 +206,8 @@ class _InsightCardState extends State<InsightCard> with SingleTickerProviderStat
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text('Delete',
+                style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -310,7 +331,8 @@ class _InsightCardState extends State<InsightCard> with SingleTickerProviderStat
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${_userData?['Fname'] ?? ''} ${_userData?['Lname'] ?? ''}'.trim(),
+                          '${_userData?['Fname'] ?? ''} ${_userData?['Lname'] ?? ''}'
+                              .trim(),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 15,
@@ -351,45 +373,53 @@ class _InsightCardState extends State<InsightCard> with SingleTickerProviderStat
                   ),
                 ),
                 // Action buttons (edit/delete for author, share for all)
-                if (isAuthor)
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert, color: Colors.white, size: 20),
-                    color: Colors.grey[900],
-                    onSelected: (value) {
-                      if (value == 'edit') {
-                        _editInsight();
-                      } else if (value == 'delete') {
-                        _deleteInsight();
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit, color: Colors.white, size: 20),
-                            SizedBox(width: 8),
-                            Text('Edit', style: TextStyle(color: Colors.white)),
-                          ],
-                        ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.share_outlined,
+                          color: Colors.white, size: 20),
+                      onPressed: _shareInsight,
+                    ),
+                    if (isAuthor)
+                      PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert,
+                            color: Colors.white, size: 20),
+                        color: Colors.grey[900],
+                        onSelected: (value) {
+                          if (value == 'edit') {
+                            _editInsight();
+                          } else if (value == 'delete') {
+                            _deleteInsight();
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit, color: Colors.white, size: 20),
+                                SizedBox(width: 8),
+                                Text('Edit',
+                                    style: TextStyle(color: Colors.white)),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete, color: Colors.red, size: 20),
+                                SizedBox(width: 8),
+                                Text('Delete',
+                                    style: TextStyle(color: Colors.red)),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete, color: Colors.red, size: 20),
-                            SizedBox(width: 8),
-                            Text('Delete', style: TextStyle(color: Colors.red)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  )
-                else
-                  IconButton(
-                    icon: const Icon(Icons.share_outlined, color: Colors.white, size: 20),
-                    onPressed: _shareInsight,
-                  ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -480,7 +510,9 @@ class _InsightCardState extends State<InsightCard> with SingleTickerProviderStat
                                   AnimatedSwitcher(
                                     duration: const Duration(milliseconds: 200),
                                     child: Icon(
-                                      isLiked ? Icons.favorite : Icons.favorite_border,
+                                      isLiked
+                                          ? Icons.favorite
+                                          : Icons.favorite_border,
                                       key: ValueKey(isLiked),
                                       color: isLiked ? Colors.red : Colors.grey,
                                       size: 20,
@@ -515,22 +547,30 @@ class _InsightCardState extends State<InsightCard> with SingleTickerProviderStat
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             decoration: BoxDecoration(
-                              color: _showComments ? Colors.grey[700] : Colors.grey[800],
+                              color: _showComments
+                                  ? Colors.grey[700]
+                                  : Colors.grey[800],
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  _showComments ? Icons.comment : Icons.comment_outlined,
-                                  color: _showComments ? Colors.white : Colors.grey,
+                                  _showComments
+                                      ? Icons.comment
+                                      : Icons.comment_outlined,
+                                  color: _showComments
+                                      ? Colors.white
+                                      : Colors.grey,
                                   size: 20,
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
                                   '$commentsCount',
                                   style: TextStyle(
-                                    color: _showComments ? Colors.white : Colors.grey,
+                                    color: _showComments
+                                        ? Colors.white
+                                        : Colors.grey,
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -552,70 +592,73 @@ class _InsightCardState extends State<InsightCard> with SingleTickerProviderStat
             curve: Curves.easeInOut,
             child: _showComments
                 ? Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey[850],
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(16),
-                ),
-              ),
-              child: Column(
-                children: [
-                  StreamBuilder<QuerySnapshot>(
-                    stream: _service.getCommentsStream(widget.insightId),
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
-                        return const SizedBox();
-                      }
-                      final comments = snapshot.data!.docs;
-                      if (comments.isEmpty) {
-                        return const Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Text(
-                            'No comments yet',
-                            style: TextStyle(color: Colors.grey, fontSize: 14),
-                          ),
-                        );
-                      }
-                      return Column(
-                        children: comments.map((doc) {
-                          final data = doc.data() as Map<String, dynamic>;
-                          return _CommentItem(commentData: data);
-                        }).toList(),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _commentController,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: InputDecoration(
-                            hintText: 'Add a comment...',
-                            hintStyle: const TextStyle(color: Colors.grey),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(20),
-                              borderSide: BorderSide(color: Colors.grey[700]!),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                          ),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[850],
+                      borderRadius: const BorderRadius.vertical(
+                        bottom: Radius.circular(16),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        StreamBuilder<QuerySnapshot>(
+                          stream: _service.getCommentsStream(widget.insightId),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) {
+                              return const SizedBox();
+                            }
+                            final comments = snapshot.data!.docs;
+                            if (comments.isEmpty) {
+                              return const Padding(
+                                padding: EdgeInsets.all(16.0),
+                                child: Text(
+                                  'No comments yet',
+                                  style: TextStyle(
+                                      color: Colors.grey, fontSize: 14),
+                                ),
+                              );
+                            }
+                            return Column(
+                              children: comments.map((doc) {
+                                final data = doc.data() as Map<String, dynamic>;
+                                return _CommentItem(commentData: data);
+                              }).toList(),
+                            );
+                          },
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.send, color: Colors.white),
-                        onPressed: _addComment,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            )
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _commentController,
+                                style: const TextStyle(color: Colors.white),
+                                decoration: InputDecoration(
+                                  hintText: 'Add a comment...',
+                                  hintStyle:
+                                      const TextStyle(color: Colors.grey),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                    borderSide:
+                                        BorderSide(color: Colors.grey[700]!),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(Icons.send, color: Colors.white),
+                              onPressed: _addComment,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  )
                 : const SizedBox.shrink(),
           ),
         ],
@@ -745,4 +788,3 @@ class _CommentItem extends StatelessWidget {
     }
   }
 }
-

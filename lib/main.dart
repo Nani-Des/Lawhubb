@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:hive/hive.dart';
@@ -20,6 +21,7 @@ import 'main_layout.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 
 import 'Services/config_service.dart';
 import 'Services/language_provider.dart';
@@ -55,7 +57,6 @@ void _debugLog({
   } catch (_) {}
 }
 // #endregion
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

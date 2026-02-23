@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:nhap/Forums/Public/Widgets/postcard_media.dart';
 import '../../../Services/translation_service.dart';
 import 'delete_post_service.dart';
@@ -141,39 +143,85 @@ class _PostCardState extends State<PostCard> {
   }
 
   void _checkIfLiked() async {
-    String userId = 'user_id'; // replace with actual user id
+    if (currentUserId == null) return;
     DocumentSnapshot postSnapshot = await FirebaseFirestore.instance
         .collection('Posts')
         .doc(widget.postData['id'])
         .collection('Likes')
-        .doc(userId)
+        .doc(currentUserId)
         .get();
 
-    setState(() {
-      _isLiked = postSnapshot.exists;
-    });
+    if (mounted) {
+      setState(() {
+        _isLiked = postSnapshot.exists;
+      });
+    }
   }
 
   void _likePost() async {
-    if (!_isLiked) {
-      String userId = 'user_id'; // replace with actual user id
+    if (currentUserId == null) return;
+
+    if (_isLiked) {
+      // Unlike
       await FirebaseFirestore.instance
           .collection('Posts')
           .doc(widget.postData['id'])
           .collection('Likes')
-          .doc(userId)
-          .set({'User ID': userId});
+          .doc(currentUserId)
+          .delete();
 
       await FirebaseFirestore.instance
           .collection('Posts')
           .doc(widget.postData['id'])
-          .update({'Likes': widget.postData['Likes'] + 1});
+          .update({'Likes': (widget.postData['Likes'] as int) - 1});
 
-      setState(() {
-        _isLiked = true;
-        widget.postData['Likes'] += 1;
-      });
+      if (mounted) {
+        setState(() {
+          _isLiked = false;
+          widget.postData['Likes'] = (widget.postData['Likes'] as int) - 1;
+        });
+      }
+    } else {
+      // Like
+      await FirebaseFirestore.instance
+          .collection('Posts')
+          .doc(widget.postData['id'])
+          .collection('Likes')
+          .doc(currentUserId)
+          .set({'User ID': currentUserId});
+
+      await FirebaseFirestore.instance
+          .collection('Posts')
+          .doc(widget.postData['id'])
+          .update({'Likes': (widget.postData['Likes'] as int) + 1});
+
+      if (mounted) {
+        setState(() {
+          _isLiked = true;
+          widget.postData['Likes'] = (widget.postData['Likes'] as int) + 1;
+        });
+      }
     }
+  }
+
+  void _sharePost() {
+    final content = widget.postData['Content'] as String? ?? '';
+    final videoUrl = widget.postData['VideoURL'] as String?;
+    final imageUrl = widget.postData['ImageURL'] as String?;
+
+    final buffer = StringBuffer();
+    if (content.isNotEmpty) {
+      buffer.writeln(content);
+      buffer.writeln();
+    }
+    if (videoUrl != null && videoUrl.isNotEmpty) {
+      buffer.writeln('🎥 Watch: $videoUrl');
+    } else if (imageUrl != null && imageUrl.isNotEmpty) {
+      buffer.writeln('🖼️ View: $imageUrl');
+    }
+    buffer.writeln('\nShared from LawHubb');
+
+    Share.share(buffer.toString().trim());
   }
 
   Future<Map<String, String?>> _fetchUserDetails(String userId) async {
@@ -341,13 +389,28 @@ class _PostCardState extends State<PostCard> {
               future: _fetchUserDetails(widget.postData['User ID']),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Padding(
-                    padding: EdgeInsets.all(12.0),
-                    child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.grey)),
+                  return Shimmer.fromColors(
+                    baseColor: Colors.grey[900]!,
+                    highlightColor: Colors.grey[700]!,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
+                      child: Row(
+                        children: [
+                          const CircleAvatar(
+                              radius: 18, backgroundColor: Colors.white),
+                          const SizedBox(width: 12),
+                          Container(
+                            width: 120,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 }
                 if (snapshot.hasError) {
@@ -389,6 +452,8 @@ class _PostCardState extends State<PostCard> {
                         _blockUser();
                       } else if (value == 'report') {
                         _reportPost();
+                      } else if (value == 'delete') {
+                        _onLongPressPost();
                       }
                     },
                     itemBuilder: (BuildContext context) =>
@@ -406,10 +471,9 @@ class _PostCardState extends State<PostCard> {
                         ),
                       ] else
                         const PopupMenuItem<String>(
-                          enabled: false,
-                          value: 'none',
-                          child: Text('Your Post',
-                              style: TextStyle(color: Colors.grey)),
+                          value: 'delete',
+                          child: Text('Delete Post',
+                              style: TextStyle(color: Colors.redAccent)),
                         ),
                     ],
                   ),
@@ -568,20 +632,43 @@ class _PostCardState extends State<PostCard> {
 
                   const SizedBox(width: 20),
 
-                  // Comment Button
+                  // Comment Button with count
                   InkWell(
                     onTap: _viewComments,
-                    child: const Icon(Icons.chat_bubble_outline,
-                        color: Colors.white, size: 22),
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('Posts')
+                          .doc(widget.postData['id'])
+                          .collection('Comments')
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        final count = snapshot.data?.docs.length ?? 0;
+                        return Row(
+                          children: [
+                            const Icon(Icons.chat_bubble_outline,
+                                color: Colors.white, size: 22),
+                            if (count > 0) ...[
+                              const SizedBox(width: 6),
+                              Text(
+                                '$count',
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 14),
+                              ),
+                            ],
+                          ],
+                        );
+                      },
+                    ),
                   ),
 
                   const Spacer(),
 
-                  // Share/Other (Optional, using report for now as placeholder for consistency)
-                  // InkWell(
-                  //   onTap: () {},
-                  //   child: Icon(Icons.share_outlined, color: Colors.white, size: 22),
-                  // ),
+                  // Share Button
+                  InkWell(
+                    onTap: _sharePost,
+                    child: const Icon(Icons.share_outlined,
+                        color: Colors.white, size: 22),
+                  ),
                 ],
               ),
             ),
