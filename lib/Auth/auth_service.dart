@@ -35,38 +35,43 @@ class AuthService with ChangeNotifier {
     return emailRegex.hasMatch(email);
   }
 
-  // --- General error handler for user-friendly messages ---
-  String _handleAuthError(dynamic e) {
+  // --- Internal logger — never surfaces raw errors to users ---
+  void _logAuthEvent(String operation, dynamic e) {
     if (e is FirebaseAuthException) {
-      debugPrint('FirebaseAuthException: ${e.code} - ${e.message}');
+      debugPrint('[Auth][$operation] code=${e.code}');
+    } else if (e is PlatformException) {
+      debugPrint('[Auth][$operation] platform_code=${e.code}');
+    } else {
+      debugPrint('[Auth][$operation] type=${e.runtimeType}');
+    }
+  }
+
+  // --- Generic user-facing messages — no information that aids enumeration ---
+  String _handleAuthError(dynamic e, {String operation = 'unknown'}) {
+    _logAuthEvent(operation, e);
+    if (e is FirebaseAuthException) {
       switch (e.code) {
         case 'invalid-email':
-          return 'The email address is not valid.';
-        case 'user-disabled':
-          return 'This account has been disabled. Contact support for help.';
-        case 'user-not-found':
-          return 'No account found with this email.';
-        case 'wrong-password':
-          return 'Incorrect password. Please try again.';
-        case 'email-already-in-use':
-          return 'This email is already registered. Try logging in instead.';
+          return 'Please enter a valid email address.';
         case 'weak-password':
-          return 'The password is too weak. Please choose a stronger one.';
+          return 'Please choose a stronger password (at least 8 characters).';
+        case 'network-request-failed':
+          return 'Network error. Check your connection and try again.';
+        // All account-state and credential errors get the same generic message
+        // to prevent user enumeration and credential confirmation attacks.
+        case 'user-not-found':
+        case 'wrong-password':
+        case 'invalid-credential':
+        case 'user-disabled':
+        case 'email-already-in-use':
         case 'account-exists-with-different-credential':
-          return 'This account exists with another sign-in method.';
         default:
-          return 'Something went wrong. Please try again later.';
+          return 'Something went wrong. Please check your details and try again.';
       }
     } else if (e is PlatformException) {
-      debugPrint('PlatformException: ${e.code} - ${e.message}');
-      if (e.code == 'sign_in_failed') {
-        return 'Google sign-in failed. Please try again later.';
-      }
-      return 'An unexpected error occurred. Please try again.';
-    } else {
-      debugPrint('Unknown error: $e');
-      return 'An unknown error occurred. Please try again.';
+      return 'Sign-in could not be completed. Please try again.';
     }
+    return 'Something went wrong. Please try again later.';
   }
 
   // --- Register user with email and password ---
@@ -119,7 +124,7 @@ class AuthService with ChangeNotifier {
         return true;
       }
     } catch (e) {
-      _errorMessage = _handleAuthError(e);
+      _errorMessage = _handleAuthError(e, operation: 'register');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -164,7 +169,7 @@ class AuthService with ChangeNotifier {
         }
       }
     } catch (e) {
-      _errorMessage = _handleAuthError(e);
+      _errorMessage = _handleAuthError(e, operation: 'sign_in');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -191,7 +196,7 @@ class AuthService with ChangeNotifier {
       await _auth.sendPasswordResetEmail(email: email);
       return true;
     } catch (e) {
-      _errorMessage = _handleAuthError(e);
+      _errorMessage = _handleAuthError(e, operation: 'reset_password');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -270,7 +275,7 @@ class AuthService with ChangeNotifier {
         return true;
       }
     } catch (e) {
-      _errorMessage = _handleAuthError(e);
+      _errorMessage = _handleAuthError(e, operation: 'google_sign_in');
     } finally {
       _isLoading = false;
       notifyListeners();

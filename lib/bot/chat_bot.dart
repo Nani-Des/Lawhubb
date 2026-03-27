@@ -113,10 +113,17 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     final chatStream = ChatService.getMessagesStream();
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text("LawHub Assistant"),
-        backgroundColor: Colors.redAccent,
+        title: const Text("LawHub Assistant",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: Colors.grey[900]),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_forever),
@@ -202,20 +209,22 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
             onTap: () => _sendMessage(guide["query"] as String),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.redAccent.withOpacity(0.1),
+                color: Colors.grey[900],
                 borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: Colors.redAccent, width: 1),
+                border: Border.all(color: Colors.grey[800]!, width: 1),
               ),
               padding: const EdgeInsets.all(8),
               child: Row(
                 children: [
-                  Icon(guide["icon"] as IconData, color: Colors.redAccent),
+                  Icon(guide["icon"] as IconData, color: Colors.white70),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       guide["title"] as String,
                       style: const TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w600),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -240,7 +249,8 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
             alignment: Alignment.centerLeft,
             child: Padding(
               padding: EdgeInsets.all(8.0),
-              child: Text("LawHub Assistant is typing..."),
+              child: Text("LawHub Assistant is typing...",
+                  style: TextStyle(color: Colors.white54, fontSize: 13)),
             ),
           );
         }
@@ -257,11 +267,11 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
               margin: const EdgeInsets.symmetric(vertical: 6),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: isUser ? Colors.redAccent : Colors.white,
+                color: isUser ? Colors.white : const Color(0xFF1C1C1E),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withOpacity(0.2),
                     blurRadius: 5,
                     offset: const Offset(0, 3),
                   ),
@@ -276,7 +286,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                     child: Text(
                       msg["text"] ?? "",
                       style: TextStyle(
-                        color: isUser ? Colors.white : Colors.black87,
+                        color: isUser ? Colors.black87 : Colors.white,
                         fontSize: 14,
                       ),
                     ),
@@ -294,16 +304,9 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 2,
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
+        color: const Color(0xFF111111),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border(top: BorderSide(color: Colors.grey[900]!, width: 1)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -312,24 +315,25 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
             child: TextField(
               controller: _messageController,
               maxLines: null,
+              style: const TextStyle(color: Colors.white, fontSize: 14),
               decoration: InputDecoration(
                 hintText: "Ask LawHub Assistant...",
-                hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
+                hintStyle: TextStyle(fontSize: 13, color: Colors.grey[600]),
                 filled: true,
-                fillColor: Colors.grey[100],
+                fillColor: const Color(0xFF2C2C2E),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide.none,
                 ),
                 contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                 suffixIcon: IconButton(
                   icon: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 200),
                     child: Icon(
                       _isListening ? Icons.mic : Icons.mic_none,
                       key: ValueKey(_isListening),
-                      color: Colors.redAccent,
+                      color: Colors.grey[400],
                     ),
                   ),
                   onPressed: () {
@@ -342,9 +346,9 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
           const SizedBox(width: 12),
           FloatingActionButton(
             onPressed: () => _sendMessage(_messageController.text),
-            backgroundColor: Colors.redAccent,
-            elevation: 2,
-            child: const Icon(Icons.send, color: Colors.white),
+            backgroundColor: Colors.white,
+            elevation: 0,
+            child: const Icon(Icons.send, color: Colors.black, size: 20),
           ),
         ],
       ),

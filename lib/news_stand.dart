@@ -273,7 +273,6 @@ class NewsStandPage extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: CustomBottomNavBar(selectedIndex: 1, setup: 5),
     );
   }
 }
@@ -381,7 +380,6 @@ class ArticleDetailPage extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: CustomBottomNavBar(selectedIndex: 2, setup:5),
     );
   }
 }

@@ -106,25 +106,19 @@ class _SocialContentState extends State<SocialContent>
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
-      // Redirect to login page
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AuthScreen()),
           ).then((_) {
-            // Refresh after login
-            if (mounted) {
-              setState(() {});
-            }
+            if (mounted) setState(() {});
           });
         }
       });
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: Colors.black,
-        body: const Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        ),
+        body: Center(child: CircularProgressIndicator(color: Colors.white)),
       );
     }
     final loggedInUserId = currentUser.uid;
