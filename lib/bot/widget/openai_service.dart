@@ -41,11 +41,15 @@ class OpenAIService {
 
       return response.data['choices'][0]['message']['content'];
     } on DioError catch (dioError) {
-      print("❌ DioError: ${dioError.response?.data ?? dioError.message}");
-      return "⚠️ Try again later";
+      final statusCode = dioError.response?.statusCode;
+      if (statusCode == 429) {
+        return "⚠️ The assistant is currently busy. Please wait a moment and try again.";
+      } else if (statusCode == 401 || statusCode == 403) {
+        return "⚠️ The assistant is temporarily unavailable. Please try again later.";
+      }
+      return "⚠️ Could not reach the assistant. Check your connection and try again.";
     } catch (e) {
-      print("❌ Exception: $e");
-      return "⚠️ Something went wrong: $e";
+      return "⚠️ Something went wrong. Please try again.";
     }
   }
 }

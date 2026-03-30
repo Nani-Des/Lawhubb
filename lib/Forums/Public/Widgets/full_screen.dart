@@ -14,11 +14,16 @@ class FullScreenImageView extends StatelessWidget {
       body: Center(
         child: Stack(
           children: [
-            Image.network(
-              imageUrl,
-              fit: BoxFit.contain, // Ensure the image fits within the screen
-              width: double.infinity,
-              height: double.infinity,
+            InteractiveViewer(
+              panEnabled: true,
+              minScale: 0.5,
+              maxScale: 5.0,
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.contain,
+                width: double.infinity,
+                height: double.infinity,
+              ),
             ),
             Positioned(
               top: 40,

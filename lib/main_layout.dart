@@ -165,18 +165,46 @@ class _MainLayoutState extends State<MainLayout> {
     }
   }
 
+  DateTime? _lastBackPressTime;
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        child: _getPageForSetup(_currentSetup, _selectedIndex),
-      ),
-      bottomNavigationBar: CustomBottomNavBar(
-        selectedIndex: _selectedIndex,
-        setup: _currentSetup,
-        onItemTapped: _onItemTapped,
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (_selectedIndex != 0) {
+          // Navigate back to home tab first
+          setState(() => _selectedIndex = 0);
+          return;
+        }
+        // Double-tap back to exit
+        final now = DateTime.now();
+        if (_lastBackPressTime == null ||
+            now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
+          _lastBackPressTime = now;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Press back again to exit'),
+              duration: Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          return;
+        }
+        // Actually exit
+        Navigator.of(context).pop();
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: _getPageForSetup(_currentSetup, _selectedIndex),
+        ),
+        bottomNavigationBar: CustomBottomNavBar(
+          selectedIndex: _selectedIndex,
+          setup: _currentSetup,
+          onItemTapped: _onItemTapped,
+        ),
       ),
     );
   }

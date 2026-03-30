@@ -18,6 +18,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
   bool _isListening = false;
   bool _isLoading = false;
   List<Map<String, dynamic>> _guestMessages = [];
+  String? _lastQuery;
 
   @override
   void initState() {
@@ -44,6 +45,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
   Future<void> _sendMessage(String query) async {
     if (query.trim().isEmpty) return;
 
+    _lastQuery = query;
     setState(() {
       _isLoading = true;
       _guestMessages.add({"role": "user", "text": query});
@@ -52,15 +54,32 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     _messageController.clear();
     await ChatService.saveMessage("user", query);
 
-    // ✅ Only send to AI when necessary
     final response = await OpenAIService.sendMessage(query);
+    final isError = response.startsWith("⚠️");
     await ChatService.saveMessage("bot", response);
 
     setState(() {
-      _guestMessages.add({"role": "bot", "text": response});
+      _guestMessages.add({"role": "bot", "text": response, "isError": isError});
       _isLoading = false;
     });
 
+    _scrollToBottom();
+  }
+
+  Future<void> _retryLastMessage() async {
+    if (_lastQuery == null || _isLoading) return;
+    // Remove the last error bot message
+    if (_guestMessages.isNotEmpty && _guestMessages.last['isError'] == true) {
+      setState(() => _guestMessages.removeLast());
+    }
+    setState(() => _isLoading = true);
+    final response = await OpenAIService.sendMessage(_lastQuery!);
+    final isError = response.startsWith("⚠️");
+    await ChatService.saveMessage("bot", response);
+    setState(() {
+      _guestMessages.add({"role": "bot", "text": response, "isError": isError});
+      _isLoading = false;
+    });
     _scrollToBottom();
   }
 
@@ -257,42 +276,64 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
 
         final msg = messages[index];
         final isUser = msg["role"] == "user";
+        final isError = msg["isError"] == true;
         final docId = isFirestore ? msg["docId"] as String : null;
+        final isLastMessage = index == messages.length - 1;
 
         return GestureDetector(
           onLongPress: () => _deleteMessage(index, docId: docId),
           child: Align(
             alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 6),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: isUser ? Colors.white : const Color(0xFF1C1C1E),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 5,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (!isUser)
-                    const Text("🤖 ", style: TextStyle(fontSize: 16)),
-                  Flexible(
-                    child: Text(
-                      msg["text"] ?? "",
-                      style: TextStyle(
-                        color: isUser ? Colors.black87 : Colors.white,
-                        fontSize: 14,
+            child: Column(
+              crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isError
+                        ? Colors.red[900]
+                        : isUser
+                            ? Colors.white
+                            : const Color(0xFF1C1C1E),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
                       ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (!isUser)
+                        Text(isError ? "⚠️ " : "🤖 ",
+                            style: const TextStyle(fontSize: 16)),
+                      Flexible(
+                        child: Text(
+                          msg["text"] ?? "",
+                          style: TextStyle(
+                            color: isUser ? Colors.black87 : Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isError && isLastMessage && !_isLoading)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: TextButton.icon(
+                      onPressed: _retryLastMessage,
+                      icon: const Icon(Icons.refresh, size: 16, color: Colors.white70),
+                      label: const Text("Retry",
+                          style: TextStyle(color: Colors.white70, fontSize: 13)),
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
           ),
         );

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -154,18 +155,32 @@ class AuthService with ChangeNotifier {
 
       User? user = userCredential.user;
       if (user != null) {
-        DocumentSnapshot userDoc =
-        await _firestore.collection('Users').doc(user.uid).get();
-        if (userDoc.exists && userDoc['Status'] == true) {
+        try {
+          final userDoc = await _firestore
+              .collection('Users')
+              .doc(user.uid)
+              .get()
+              .timeout(const Duration(seconds: 8));
+          if (userDoc.exists && userDoc['Status'] == true) {
+            _currentUser = user;
+            final notificationService = NotificationService();
+            await notificationService.storeTokenForUserId(user.uid);
+            notifyListeners();
+            return true;
+          } else if (userDoc.exists && userDoc['Status'] != true) {
+            await _auth.signOut();
+            _errorMessage = 'This account is no longer active.';
+          } else {
+            // Doc doesn't exist yet (race condition) — still allow login
+            _currentUser = user;
+            notifyListeners();
+            return true;
+          }
+        } catch (_) {
+          // Firestore unreachable — trust Firebase Auth and proceed
           _currentUser = user;
-          // Store FCM token after login
-          final notificationService = NotificationService();
-          await notificationService.storeTokenForUserId(user.uid);
           notifyListeners();
           return true;
-        } else {
-          await _auth.signOut();
-          _errorMessage = 'This account is no longer active.';
         }
       }
     } catch (e) {

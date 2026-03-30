@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 import '../Auth/auth_screen.dart';
 import '../Forums/Public/Widgets/user_profile_screen.dart';
+import '../bot/chat_bot.dart';
 import 'Widgets/profile_drawer.dart';
 import 'Widgets/redesigned_home_content.dart';
 import 'Widgets/app_bar.dart';
@@ -175,6 +176,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       appBar: CustomAppBar(
         userImageUrl: userImageUrl,
         onAvatarTap: _onAvatarTap,
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        tooltip: 'Legal Aid Assistant',
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ChatBotScreen()),
+        ),
+        child: const Icon(Icons.smart_toy),
       ),
       body: RefreshIndicator(
         onRefresh: _fetchUserData,

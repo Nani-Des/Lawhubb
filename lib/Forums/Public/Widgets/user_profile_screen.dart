@@ -337,8 +337,11 @@ class _UserProfileScreenState extends State<UserProfileScreen>
 
   Future<void> _loadPosts() async {
     try {
-      // Load all posts
-      final allPosts = await _forumService.fetchPosts();
+      // Force server fetch for own profile to get newly created posts immediately
+      final currentUid = FirebaseAuth.instance.currentUser?.uid;
+      final allPosts = await _forumService.fetchPosts(
+        fromServer: currentUid == widget.userId,
+      );
       
       // Filter posts by user
       final userPosts = allPosts
@@ -661,8 +664,10 @@ class _UserProfileScreenState extends State<UserProfileScreen>
               color: Colors.grey[900],
               onSelected: (value) {
                 if (value == 'blocked') {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const BlockedUsersPage()));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const BlockedUsersPage()));
                 } else if (value == 'logout') {
                   _handleLogout(context);
                 } else if (value == 'delete') {
@@ -684,13 +689,15 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                   child: Row(children: [
                     Icon(Icons.logout, color: Colors.white, size: 18),
                     SizedBox(width: 10),
-                    Text('Logout', style: TextStyle(color: Colors.white)),
+                    Text('Logout',
+                        style: TextStyle(color: Colors.white)),
                   ]),
                 ),
                 const PopupMenuItem(
                   value: 'delete',
                   child: Row(children: [
-                    Icon(Icons.delete_forever, color: Colors.red, size: 18),
+                    Icon(Icons.delete_forever,
+                        color: Colors.red, size: 18),
                     SizedBox(width: 10),
                     Text('Delete Account',
                         style: TextStyle(color: Colors.red)),

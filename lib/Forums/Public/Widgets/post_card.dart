@@ -27,6 +27,7 @@ class PostCard extends StatefulWidget {
 class _PostCardState extends State<PostCard> {
   final DeletePostService _deletePostService = DeletePostService();
   bool _isLiked = false;
+  bool _isLikePending = false;
   final String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
 
   // Translation state variables
@@ -159,7 +160,8 @@ class _PostCardState extends State<PostCard> {
   }
 
   void _likePost() async {
-    if (currentUserId == null) return;
+    if (currentUserId == null || _isLikePending) return;
+    _isLikePending = true;
 
     if (_isLiked) {
       // Unlike
@@ -178,6 +180,7 @@ class _PostCardState extends State<PostCard> {
       if (mounted) {
         setState(() {
           _isLiked = false;
+          _isLikePending = false;
           widget.postData['Likes'] = (widget.postData['Likes'] as int) - 1;
         });
       }
@@ -198,8 +201,78 @@ class _PostCardState extends State<PostCard> {
       if (mounted) {
         setState(() {
           _isLiked = true;
+          _isLikePending = false;
           widget.postData['Likes'] = (widget.postData['Likes'] as int) + 1;
         });
+      }
+    }
+  }
+
+  Future<void> _repostPost() async {
+    if (currentUserId == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text('Repost?', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'This will share the post to your profile.',
+          style: TextStyle(color: Colors.grey),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Repost', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      // Determine the true original post ID and original poster
+      // (so reposts of reposts still point to the root post)
+      final originalPostId = widget.postData['repostOf'] as String? ?? widget.postData['id'];
+      final originalUserId = widget.postData['originalUserId'] as String? ?? widget.postData['User ID'];
+
+      await FirebaseFirestore.instance.collection('Posts').add({
+        'User ID': currentUserId,
+        'Content': widget.postData['Content'] ?? '',
+        'ImageURL': widget.postData['ImageURL'],
+        'VideoURL': widget.postData['VideoURL'],
+        'Likes': 0,
+        'Reposts': 0,
+        'Timestamp': FieldValue.serverTimestamp(),
+        'repostOf': originalPostId,
+        'originalUserId': originalUserId,
+      });
+
+      // Increment repost count on the original post
+      await FirebaseFirestore.instance
+          .collection('Posts')
+          .doc(originalPostId)
+          .update({'Reposts': FieldValue.increment(1)});
+
+      if (mounted) {
+        setState(() {
+          widget.postData['Reposts'] =
+              ((widget.postData['Reposts'] as int?) ?? 0) + 1;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Reposted successfully.')),
+        );
+        widget.refreshCallback();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Repost failed: $e')),
+        );
       }
     }
   }
@@ -384,9 +457,56 @@ class _PostCardState extends State<PostCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
+            // Repost header — "You reposted" for own reposts, "[Name] reposted" for others
+            if (widget.postData['repostOf'] != null)
+              Padding(
+                padding: const EdgeInsets.only(left: 44, top: 10, bottom: 2),
+                child: widget.postData['User ID'] == currentUserId
+                    // Own repost — no need to fetch name
+                    ? Row(
+                        children: [
+                          Icon(Icons.repeat,
+                              color: Colors.grey[500], size: 14),
+                          const SizedBox(width: 5),
+                          Text(
+                            'You reposted',
+                            style: TextStyle(
+                                color: Colors.grey[500], fontSize: 12),
+                          ),
+                        ],
+                      )
+                    // Someone else's repost — fetch their name
+                    : FutureBuilder<Map<String, String?>>(
+                        future:
+                            _fetchUserDetails(widget.postData['User ID']),
+                        builder: (context, snap) {
+                          final name = snap.data?['fullName'] ?? '';
+                          return Row(
+                            children: [
+                              Icon(Icons.repeat,
+                                  color: Colors.grey[500], size: 14),
+                              const SizedBox(width: 5),
+                              Text(
+                                name.isNotEmpty
+                                    ? '$name reposted'
+                                    : 'Reposted',
+                                style: TextStyle(
+                                    color: Colors.grey[500], fontSize: 12),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+              ),
+
+            // Header — shows ORIGINAL poster (or reposter when not a repost)
             FutureBuilder<Map<String, String?>>(
-              future: _fetchUserDetails(widget.postData['User ID']),
+              future: _fetchUserDetails(
+                widget.postData['repostOf'] != null
+                    ? (widget.postData['originalUserId'] as String? ??
+                        widget.postData['User ID'])
+                    : widget.postData['User ID'],
+              ),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Shimmer.fromColors(
@@ -417,6 +537,11 @@ class _PostCardState extends State<PostCard> {
                   return const SizedBox.shrink();
                 }
 
+                final displayUserId = widget.postData['repostOf'] != null
+                    ? (widget.postData['originalUserId'] as String? ??
+                        widget.postData['User ID'])
+                    : widget.postData['User ID'];
+
                 var userDetails = snapshot.data!;
                 return ListTile(
                   contentPadding:
@@ -426,7 +551,7 @@ class _PostCardState extends State<PostCard> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => UserProfileScreen(
-                          userId: widget.postData['User ID'],
+                          userId: displayUserId,
                         ),
                       ),
                     );
@@ -454,10 +579,17 @@ class _PostCardState extends State<PostCard> {
                         _reportPost();
                       } else if (value == 'delete') {
                         _onLongPressPost();
+                      } else if (value == 'repost') {
+                        _repostPost();
                       }
                     },
                     itemBuilder: (BuildContext context) =>
                         <PopupMenuEntry<String>>[
+                      const PopupMenuItem<String>(
+                        value: 'repost',
+                        child: Text('Repost',
+                            style: TextStyle(color: Colors.white)),
+                      ),
                       if (widget.postData['User ID'] != currentUserId) ...[
                         const PopupMenuItem<String>(
                           value: 'report',
@@ -660,6 +792,23 @@ class _PostCardState extends State<PostCard> {
                       },
                     ),
                   ),
+
+                  // Repost count (shown to everyone; non-zero only)
+                  if ((widget.postData['Reposts'] ?? 0) > 0) ...[
+                    const SizedBox(width: 20),
+                    Row(
+                      children: [
+                        Icon(Icons.repeat,
+                            color: Colors.grey[400], size: 20),
+                        const SizedBox(width: 5),
+                        Text(
+                          '${widget.postData['Reposts']}',
+                          style: TextStyle(
+                              color: Colors.grey[400], fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ],
 
                   const Spacer(),
 

@@ -8,8 +8,7 @@ import '../../Library/library_page.dart';
 import '../../LawInsights/law_insights_page.dart';
 import '../../Hospital/general_hospital_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../Library/library_page.dart';
-
+import '../lawyer_directory_page.dart';
 import '../../bot/chat_bot.dart';
 
 class ServicesGrid extends StatelessWidget {
@@ -130,19 +129,19 @@ class ServicesGrid extends StatelessWidget {
                   }
                 },
               ),
-              // _ServiceCard(
-              //   icon: Icons.balance,
-              //   title: localizations?.legalCommunity ?? 'Legal Community',
-              //   subtitle: localizations?.connectAndDiscuss ?? 'Connect & discuss',
-              //   onTap: () {
-              //     Navigator.push(
-              //       context,
-              //       MaterialPageRoute(
-              //         builder: (context) => GeneralHospitalPage(),
-              //       ),
-              //     );
-              //   },
-              // ),
+              _ServiceCard(
+                icon: Icons.person_search_outlined,
+                title: 'Find a Lawyer',
+                subtitle: 'Browse by specialty',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LawyerDirectoryPage(),
+                    ),
+                  );
+                },
+              ),
 
             ],
           ),
