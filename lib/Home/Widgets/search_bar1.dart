@@ -19,6 +19,7 @@ class _SearchBar1State extends State<SearchBar1> {
 
   List<Map<String, dynamic>> _lawyerSuggestions = [];
   String? _botResponse; // AI-matched practice name
+  bool _noResults = false;
 
   @override
   void initState() {
@@ -42,6 +43,7 @@ class _SearchBar1State extends State<SearchBar1> {
       setState(() {
         _lawyerSuggestions = [];
         _botResponse = null;
+        _noResults = false;
       });
       return;
     }
@@ -68,6 +70,7 @@ class _SearchBar1State extends State<SearchBar1> {
       setState(() {
         _lawyerSuggestions = lawyers;
         _botResponse = null;
+        _noResults = false;
       });
     } catch (e) {
       print('Error fetching lawyers: $e');
@@ -89,11 +92,11 @@ class _SearchBar1State extends State<SearchBar1> {
           .toList();
 
       if (practices.isEmpty) {
-        print('⚠️ No practices found in database.');
         setState(() {
           _isLoading = false;
           _lawyerSuggestions = [];
           _botResponse = null;
+          _noResults = true;
         });
         return;
       }
@@ -118,12 +121,11 @@ class _SearchBar1State extends State<SearchBar1> {
       }
 
       if (matchedPractice == null) {
-        print(
-            '⚠️ AI response "$cleanedResponse" did not match any known practice.');
         setState(() {
           _isLoading = false;
           _lawyerSuggestions = [];
           _botResponse = null;
+          _noResults = true;
         });
         return;
       }
@@ -131,8 +133,10 @@ class _SearchBar1State extends State<SearchBar1> {
       final practiceId = matchedPractice['Practice ID'];
       await _fetchLawyersByPractice(practiceId, cleanedResponse);
     } catch (e) {
-      print('Error in AI handling: $e');
-      setState(() => _isLoading = false);
+      setState(() {
+        _isLoading = false;
+        _noResults = true;
+      });
     }
   }
 
@@ -158,10 +162,13 @@ class _SearchBar1State extends State<SearchBar1> {
         _lawyerSuggestions = lawyers;
         _botResponse = practiceName;
         _isLoading = false;
+        _noResults = lawyers.isEmpty;
       });
     } catch (e) {
-      print('Error fetching lawyers by practice: $e');
-      setState(() => _isLoading = false);
+      setState(() {
+        _isLoading = false;
+        _noResults = true;
+      });
     }
   }
 
@@ -170,9 +177,10 @@ class _SearchBar1State extends State<SearchBar1> {
     final query = _controller.text.trim();
     if (query.isEmpty) return;
 
+    setState(() => _noResults = false);
+
     // If there are already matching lawyers, don't call AI
     if (_lawyerSuggestions.isNotEmpty) {
-      print('✅ Direct match found. No AI needed.');
       return;
     }
 
@@ -244,6 +252,31 @@ class _SearchBar1State extends State<SearchBar1> {
             ],
           ),
         ),
+
+        // ❌ No results message
+        if (_noResults && _lawyerSuggestions.isEmpty)
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey[900],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'No lawyers found for your query.',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Try searching by a lawyer\'s name, or tap "Send" with a description like "divorce", "criminal defence", or "land dispute" to find the right legal expert.',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
 
         // 📜 Suggestions Section
         if (_lawyerSuggestions.isNotEmpty)

@@ -8,11 +8,13 @@ import 'trending_topics.dart';
 class RedesignedHomeContent extends StatefulWidget {
   final Function(int)? onTabChange;
   final User? currentUser;
+  final String? userName;
 
   const RedesignedHomeContent({
     super.key,
     this.onTabChange,
     this.currentUser,
+    this.userName,
   });
 
   @override
@@ -47,6 +49,9 @@ class _RedesignedHomeContentState extends State<RedesignedHomeContent>
   }
 
   String get _userName {
+    if (widget.userName != null && widget.userName!.isNotEmpty) {
+      return widget.userName!;
+    }
     if (widget.currentUser?.displayName != null) {
       return widget.currentUser!.displayName!.split(' ').first;
     }

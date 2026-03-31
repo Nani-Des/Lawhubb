@@ -10,6 +10,7 @@ import 'package:nhap/Appointments/referral_form.dart';
 import 'package:nhap/Appointments/Referral%20screens/referral_details_page.dart';
 import '../../Auth/auth_screen.dart';
 import '../../Auth/auth_service.dart';
+import '../../main_layout.dart';
 import '../../booking_page.dart';
 import '../../main.dart';
 import '../../Settings/blocked_users_page.dart';
@@ -823,7 +824,6 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                 child: ElevatedButton.icon(
                                   onPressed: () async {
                                     try {
-                                      await GoogleSignIn().signOut();
                                       await Provider.of<AuthService>(context,
                                               listen: false)
                                           .signOut();
@@ -839,7 +839,8 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                         Navigator.pushAndRemoveUntil(
                                           context,
                                           MaterialPageRoute(
-                                              builder: (context) => HomePage()),
+                                              builder: (context) =>
+                                                  const MainLayout()),
                                           (route) => false,
                                         );
                                       }

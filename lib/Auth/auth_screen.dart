@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nhap/main.dart';
+import 'package:nhap/main_layout.dart';
 import 'package:provider/provider.dart';
 import 'auth_service.dart';
-import 'package:nhap/Home/home_page.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -88,9 +88,16 @@ class _AuthScreenState extends State<AuthScreen> {
       );
     }
 
-    if (success) {
-      // Navigate back instead of replacing to maintain navigation stack
-      Navigator.pop(context, true);
+    if (success && context.mounted) {
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context, true);
+      } else {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const MainLayout()),
+          (route) => false,
+        );
+      }
     }
   }
 
@@ -98,10 +105,22 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
 
-    return Scaffold(
-      backgroundColor: Colors.black, // Black background
-      body: SafeArea(
-        child: SingleChildScrollView(
+    return PopScope(
+      canPop: !_isRegistering && !_isForgotPassword,
+      onPopInvoked: (didPop) {
+        if (!didPop && (_isRegistering || _isForgotPassword)) {
+          setState(() {
+            _isRegistering = false;
+            _isForgotPassword = false;
+          });
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
+          children: [
+            SafeArea(
+              child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
           child: Form(
             key: _formKey,
@@ -255,12 +274,13 @@ class _AuthScreenState extends State<AuthScreen> {
                           : () async {
                               bool success =
                                   await authService.signInWithGoogle(context);
-                              if (success) {
-                                Navigator.pushReplacement(
+                              if (success && context.mounted) {
+                                Navigator.pushAndRemoveUntil(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => HomePage(),
+                                    builder: (context) => const MainLayout(),
                                   ),
+                                  (route) => false,
                                 );
                               }
                             },
@@ -312,8 +332,8 @@ class _AuthScreenState extends State<AuthScreen> {
                           _isForgotPassword
                               ? 'Back to Login'
                               : _isRegistering
-                                  ? '${appLocalization!.alreadyHaveAccount} Login'
-                                  : '${appLocalization!.needAnAccount}',
+                                  ? '${appLocalization!.alreadyHaveAccount} Sign In'
+                                  : '${appLocalization!.needAnAccount} Register',
                           style: const TextStyle(
                               color: Colors.white, fontSize: 12), // White text
                         ),
@@ -324,6 +344,16 @@ class _AuthScreenState extends State<AuthScreen> {
               ],
             ),
           ),
+        ),
+          ),
+          if (authService.isLoading)
+            Container(
+              color: Colors.black54,
+              child: const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
+            ),
+          ],
         ),
       ),
     );

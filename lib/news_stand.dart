@@ -12,7 +12,21 @@ class NewsStandApp extends StatelessWidget {
       title: 'Law News Stand',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.indigo,
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: Colors.black,
+        colorScheme: ColorScheme.dark(
+          primary: Colors.white,
+          surface: const Color(0xFF1C1C1E),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        cardTheme: CardTheme(
+          color: const Color(0xFF1C1C1E),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
         useMaterial3: true,
       ),
       home: const NewsStandPage(),
@@ -75,7 +89,7 @@ class NewsStandPage extends StatelessWidget {
     final headlineArticle = lawData[0]["articles"][0];
 
     return Scaffold(
-      backgroundColor: Colors.grey[300],
+      backgroundColor: Colors.black,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.black,
@@ -147,11 +161,13 @@ class NewsStandPage extends StatelessWidget {
 
             // 🔍 Search Bar
             TextField(
+              style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 hintText: "Search articles...",
-                prefixIcon: const Icon(Icons.search),
+                hintStyle: TextStyle(color: Colors.grey[500]),
+                prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: const Color(0xFF1C1C1E),
                 contentPadding:
                 const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                 border: OutlineInputBorder(
@@ -165,7 +181,7 @@ class NewsStandPage extends StatelessWidget {
             // 📚 Categories
             const Text(
               "Categories",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             const SizedBox(height: 12),
             SizedBox(
@@ -189,20 +205,14 @@ class NewsStandPage extends StatelessWidget {
                       width: 150,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: const Color(0xFF1C1C1E),
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
+                        border: Border.all(color: Colors.grey[800]!, width: 1),
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(category["icon"], size: 30, color: Colors.indigo),
+                          Icon(category["icon"], size: 30, color: Colors.white70),
                           const SizedBox(height: 4),
                           Text(
                             category["category"],
@@ -210,6 +220,7 @@ class NewsStandPage extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
+                              color: Colors.white,
                             ),
                           ),
                         ],
@@ -224,16 +235,17 @@ class NewsStandPage extends StatelessWidget {
             // 📄 Latest Articles
             const Text(
               "Latest Articles",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             const SizedBox(height: 12),
             ...lawData.expand((category) => category["articles"]).map((article) {
-              return Card(
+              return Container(
                 margin: const EdgeInsets.only(bottom: 12),
-                shape: RoundedRectangleBorder(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1C1C1E),
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey[800]!, width: 1),
                 ),
-                elevation: 2,
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(12),
                   leading: ClipRRect(
@@ -248,12 +260,13 @@ class NewsStandPage extends StatelessWidget {
                   title: Text(
                     article["title"],
                     style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 15),
+                        fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white),
                   ),
                   subtitle: Text(
                     article["content"],
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: Colors.grey[400]),
                   ),
                   onTap: () {
                     Navigator.push(
@@ -273,7 +286,6 @@ class NewsStandPage extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: CustomBottomNavBar(selectedIndex: 1, setup: 5),
     );
   }
 }
@@ -288,20 +300,25 @@ class CategoryPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final List articles = category["articles"];
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(category["category"]),
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: Text(category["category"], style: const TextStyle(color: Colors.white)),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(12),
         itemCount: articles.length,
         itemBuilder: (context, index) {
           final article = articles[index];
-          return Card(
+          return Container(
             margin: const EdgeInsets.only(bottom: 12),
-            shape: RoundedRectangleBorder(
+            decoration: BoxDecoration(
+              color: const Color(0xFF1C1C1E),
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey[800]!, width: 1),
             ),
-            elevation: 2,
             child: ListTile(
               contentPadding: const EdgeInsets.all(12),
               leading: ClipRRect(
@@ -315,11 +332,12 @@ class CategoryPage extends StatelessWidget {
               ),
               title: Text(article["title"],
                   style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 15)),
+                      fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white)),
               subtitle: Text(
                 article["content"],
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: Colors.grey[400]),
               ),
               onTap: () {
                 Navigator.push(
@@ -357,7 +375,13 @@ class ArticleDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: Text(title, style: const TextStyle(color: Colors.white)),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -371,17 +395,16 @@ class ArticleDetailPage extends StatelessWidget {
             Text(
               title,
               style: const TextStyle(
-                  fontSize: 22, fontWeight: FontWeight.bold),
+                  fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             const SizedBox(height: 12),
             Text(
               content,
-              style: const TextStyle(fontSize: 16, height: 1.5),
+              style: TextStyle(fontSize: 16, height: 1.5, color: Colors.grey[300]),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: CustomBottomNavBar(selectedIndex: 2, setup:5),
     );
   }
 }

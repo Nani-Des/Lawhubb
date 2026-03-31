@@ -114,11 +114,18 @@ class GeneralHospitalPage extends StatelessWidget {
                   backgroundColor: Colors.teal,
                   elevation: 6.0,
                   automaticallyImplyLeading: false,
-                  leadingWidth: 220, // expand width to fit 2 buttons
+                  leadingWidth: 280,
                   leading: Padding(
-                    padding: const EdgeInsets.only(left: 8.0),
+                    padding: const EdgeInsets.only(left: 4.0),
                     child: Row(
                       children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back, color: Colors.white),
+                          onPressed: () => Navigator.pop(context),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                        const SizedBox(width: 2),
                         SizedBox(
                           width: 100,
                           child: TextButton.icon(
@@ -207,7 +214,6 @@ class GeneralHospitalPage extends StatelessWidget {
               ],
             ),
           ),
-          bottomNavigationBar: CustomBottomNavBar(selectedIndex: 0, setup: 2),
         );
       },
     );

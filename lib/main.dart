@@ -16,9 +16,11 @@ import 'package:nhap/l10n/app_localizations.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'Auth/auth_service.dart';
+import 'Auth/auth_screen.dart';
 import 'ChatModule/chat_module.dart';
 import 'main_layout.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nhap/l10n/app_localizations.dart';
@@ -204,7 +206,7 @@ class MyApp extends StatelessWidget {
             ),
             home: const CustomTransitionScreen(),
             debugShowCheckedModeBanner: false,
-            navigatorKey: navigatorKey, // Add navigator key
+            navigatorKey: navigatorKey,
           ),
         ),
       ),
@@ -224,6 +226,33 @@ class _CustomTransitionScreenState extends State<CustomTransitionScreen>
   late AnimationController _controller;
   late Animation<double> _rotationAnimation;
   late Animation<double> _scaleAnimation;
+
+  Future<void> _navigateFromSplash() async {
+    if (!mounted) return;
+    final prefs = await SharedPreferences.getInstance();
+    final locationAsked = prefs.getBool('locationPermissionAsked') ?? false;
+    final user = FirebaseAuth.instance.currentUser;
+    if (!mounted) return;
+    if (user != null) {
+      // Already logged in — go straight to the app
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainLayout()),
+      );
+    } else if (!locationAsked) {
+      // First-time user — ask for location then go to auth
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LocationPermissionScreen()),
+      );
+    } else {
+      // Returning user who is logged out — go to login
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const AuthScreen()),
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -249,38 +278,14 @@ class _CustomTransitionScreenState extends State<CustomTransitionScreen>
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
 
-    _controller.forward().then((_) {
-      // #region agent log
-      _debugLog(
-        hypothesisId: 'A',
-        location: 'main.dart:CustomTransitionScreen.afterForward',
-        message: 'Splash animation completed',
-        data: {},
-      );
-      // #endregion
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-            builder: (context) => const LocationPermissionScreen()),
-      );
-      // #region agent log
-      _debugLog(
-        hypothesisId: 'B',
-        location: 'main.dart:CustomTransitionScreen.afterNavigate',
-        message: 'Navigation from splash triggered',
-        data: {},
-      );
-      // #endregion
+    _controller.forward().then((_) async {
+      await _navigateFromSplash();
     });
 
-    // Add failsafe timeout to force navigation even if Firebase/network is stuck
-    Future.delayed(const Duration(seconds: 5), () {
+    // Failsafe: if animation or network stalls, force navigation after 5 seconds
+    Future.delayed(const Duration(seconds: 5), () async {
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) => const LocationPermissionScreen()),
-        );
+        await _navigateFromSplash();
       }
     });
   }
@@ -355,30 +360,38 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
               const SizedBox(height: 30),
               ElevatedButton(
                 onPressed: () async {
-                  // #region agent log
-                  _debugLog(
-                    hypothesisId: 'C',
-                    location: 'main.dart:LocationPermissionScreen.allow',
-                    message: 'Allow location tapped',
-                    data: {},
-                  );
-                  // #endregion
                   await _requestLocationPermission();
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const MainLayout()),
-                  );
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('locationPermissionAsked', true);
+                  if (context.mounted) {
+                    final user = FirebaseAuth.instance.currentUser;
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            user != null ? const MainLayout() : const AuthScreen(),
+                      ),
+                    );
+                  }
                 },
                 child: Text(localizations?.allowLocationButton ??
                     'Allow Location Access'),
               ),
               const SizedBox(height: 10),
               TextButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const MainLayout()),
-                  );
+                onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('locationPermissionAsked', true);
+                  if (context.mounted) {
+                    final user = FirebaseAuth.instance.currentUser;
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            user != null ? const MainLayout() : const AuthScreen(),
+                      ),
+                    );
+                  }
                 },
                 child: Text(localizations?.skipButton ?? 'Skip for Now'),
               ),

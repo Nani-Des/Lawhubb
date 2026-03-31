@@ -501,27 +501,76 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         ),
         actions: [
           StreamBuilder<DocumentSnapshot>(
-            stream: FirebaseFirestore.instance.collection('Consultations').doc(widget.chatId).snapshots(),
+            stream: FirebaseFirestore.instance
+                .collection('Consultations')
+                .doc(widget.chatId)
+                .snapshots(),
             builder: (context, snapshot) {
-              return FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance
-                    .collection('Users')
-                    .doc(FirebaseAuth.instance.currentUser!.uid)
-                    .get(),
-                builder: (context, userSnapshot) {
-                  final isCurrentUserLawyer = userSnapshot.hasData && 
-                      userSnapshot.data!.exists && 
-                      (userSnapshot.data!.data() as Map<String, dynamic>?)?['Role'] == true;
-                  
-                  if (!snapshot.hasData || !snapshot.data!.exists) {
-                    return IconButton(
-                      icon: Icon(Icons.videocam, color: Colors.white),
-                      tooltip: isCurrentUserLawyer ? "Start Video Consultation" : "Only lawyers can start video consultations",
-                      onPressed: FirebaseAuth.instance.currentUser!.uid != widget.recipientId && isCurrentUserLawyer
-                          ? () async {
-                        await FirebaseFirestore.instance.collection('Consultations').doc(widget.chatId).set({
+              final currentUid = FirebaseAuth.instance.currentUser!.uid;
+
+              if (!snapshot.hasData || !snapshot.data!.exists) {
+                return IconButton(
+                  icon: const Icon(Icons.videocam, color: Colors.white),
+                  tooltip: "Start Video Consultation",
+                  onPressed: currentUid != widget.recipientId
+                      ? () async {
+                          await FirebaseFirestore.instance
+                              .collection('Consultations')
+                              .doc(widget.chatId)
+                              .set({
+                            'chatId': widget.chatId,
+                            'initiatorId': currentUid,
+                            'recipientId': widget.recipientId,
+                            'status': 'active',
+                            'timestamp': FieldValue.serverTimestamp(),
+                          });
+                          if (context.mounted) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ConsultationScreen(
+                                  channelName: widget.chatId,
+                                  isInitiator: true,
+                                ),
+                              ),
+                            );
+                          }
+                        }
+                      : null,
+                );
+              }
+
+              final consultData =
+                  snapshot.data!.data() as Map<String, dynamic>;
+              if (consultData['status'] == 'active') {
+                return IconButton(
+                  icon: const Icon(Icons.videocam, color: Colors.greenAccent),
+                  tooltip: "Join Video Consultation",
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ConsultationScreen(
+                          channelName: widget.chatId,
+                          isInitiator: consultData['initiatorId'] == currentUid,
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }
+
+              return IconButton(
+                icon: const Icon(Icons.videocam, color: Colors.white),
+                tooltip: "Start Video Consultation",
+                onPressed: currentUid != widget.recipientId
+                    ? () async {
+                        await FirebaseFirestore.instance
+                            .collection('Consultations')
+                            .doc(widget.chatId)
+                            .set({
                           'chatId': widget.chatId,
-                          'initiatorId': FirebaseAuth.instance.currentUser!.uid,
+                          'initiatorId': currentUid,
                           'recipientId': widget.recipientId,
                           'status': 'active',
                           'timestamp': FieldValue.serverTimestamp(),
@@ -538,72 +587,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           );
                         }
                       }
-                          : isCurrentUserLawyer == false
-                              ? () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text("Only lawyers can start video consultations"),
-                                      backgroundColor: Colors.orange,
-                                    ),
-                                  );
-                                }
-                              : null,
-                    );
-                  }
-                  final consultData = snapshot.data!.data() as Map<String, dynamic>;
-                  if (consultData['status'] == 'active') {
-                    return IconButton(
-                      icon: Icon(Icons.videocam, color: Colors.greenAccent),
-                      tooltip: "Join Video Consultation",
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ConsultationScreen(
-                              channelName: widget.chatId,
-                              isInitiator: consultData['initiatorId'] == FirebaseAuth.instance.currentUser!.uid,
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  }
-                  return IconButton(
-                    icon: Icon(Icons.videocam, color: Colors.white),
-                    tooltip: isCurrentUserLawyer ? "Start Video Consultation" : "Only lawyers can start video consultations",
-                    onPressed: FirebaseAuth.instance.currentUser!.uid != widget.recipientId && isCurrentUserLawyer
-                        ? () async {
-                      await FirebaseFirestore.instance.collection('Consultations').doc(widget.chatId).set({
-                        'chatId': widget.chatId,
-                        'initiatorId': FirebaseAuth.instance.currentUser!.uid,
-                        'recipientId': widget.recipientId,
-                        'status': 'active',
-                        'timestamp': FieldValue.serverTimestamp(),
-                      });
-                      if (context.mounted) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ConsultationScreen(
-                              channelName: widget.chatId,
-                              isInitiator: true,
-                            ),
-                          ),
-                        );
-                      }
-                    }
-                        : isCurrentUserLawyer == false
-                            ? () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("Only lawyers can start video consultations"),
-                                    backgroundColor: Colors.orange,
-                                  ),
-                                );
-                              }
-                            : null,
-                  );
-                },
+                    : null,
               );
             },
           ),

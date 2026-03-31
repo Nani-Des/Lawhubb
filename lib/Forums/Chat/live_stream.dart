@@ -42,8 +42,11 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
   bool _showEmojiPicker = false;
 
   int _likes = 0;
+  bool _hasLiked = false;
   int _viewerCount = 1;
   Timer? _viewerCountTimer;
+  Timer? _viewerTimeoutTimer;
+  bool _showComments = true;
 
   String initiatorName = "";
   String initiatorPic = "";
@@ -118,9 +121,18 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
             if (widget.isInitiator) {
               _startViewerCountSync();
             } else {
-              // For viewers, try to get the current broadcaster's UID
-              // This handles the case where broadcaster joined before viewer
               _checkForExistingBroadcaster();
+              // Auto-exit if host never appears within 45 seconds
+              _viewerTimeoutTimer = Timer(const Duration(seconds: 45), () {
+                if (!mounted || _isDisposing || _remoteUid != null) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Host hasn't joined yet. Leaving stream."),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+                Navigator.pop(context);
+              });
             }
           },
           onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
@@ -132,7 +144,8 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
               });
               _updateViewerCount();
             } else {
-              // Viewer: broadcaster joined
+              // Viewer: broadcaster joined — cancel the timeout
+              _viewerTimeoutTimer?.cancel();
               setState(() {
                 _remoteUid = remoteUid;
               });
@@ -351,6 +364,7 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
     _isDisposing = true;
 
     _viewerCountTimer?.cancel();
+    _viewerTimeoutTimer?.cancel();
 
     try {
       if (widget.isInitiator) {
@@ -403,8 +417,24 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
   void dispose() {
     _isDisposing = true;
     _viewerCountTimer?.cancel();
+    _viewerTimeoutTimer?.cancel();
     _commentController.dispose();
-    _endStreamCleanup();
+    // Always mark the stream as ended in Firestore when the widget is disposed,
+    // even if the user force-closed the app and came back.
+    if (widget.isInitiator) {
+      FirebaseFirestore.instance
+          .collection('Consultations')
+          .doc(widget.chatId)
+          .update({
+        'status': 'ended',
+        'endTimestamp': FieldValue.serverTimestamp(),
+      }).catchError((_) {});
+    }
+    if (_engine != null) {
+      _engine!.leaveChannel().catchError((_) {});
+      _engine!.release().catchError((_) {});
+      _engine = null;
+    }
     super.dispose();
   }
 
@@ -429,6 +459,33 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
     }
 
     if (widget.isInitiator) {
+      if (!_isVideoEnabled) {
+        return Container(
+          color: Colors.black,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircleAvatar(
+                  radius: 48,
+                  backgroundImage: initiatorPic.isNotEmpty
+                      ? NetworkImage(initiatorPic)
+                      : null,
+                  backgroundColor: Colors.grey[800],
+                  child: initiatorPic.isEmpty
+                      ? const Icon(Icons.person, size: 48, color: Colors.white)
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Camera is off',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
       return AgoraVideoView(
         controller: VideoViewController(
           rtcEngine: _engine!,
@@ -721,10 +778,21 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
                 border: Border.all(color: Colors.white.withOpacity(0.3)),
               ),
               child: IconButton(
-                icon: const Icon(Icons.favorite, color: Colors.red, size: 24),
+                icon: Icon(
+                  _hasLiked ? Icons.favorite : Icons.favorite_border,
+                  color: Colors.red,
+                  size: 24,
+                ),
                 onPressed: () {
-                  setState(() => _likes++);
-                  // Haptic feedback would be nice here
+                  setState(() {
+                    if (_hasLiked) {
+                      _likes = (_likes > 0) ? _likes - 1 : 0;
+                      _hasLiked = false;
+                    } else {
+                      _likes++;
+                      _hasLiked = true;
+                    }
+                  });
                 },
                 padding: const EdgeInsets.all(12),
               ),
@@ -827,7 +895,7 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
       body: Stack(
         children: [
           Positioned.fill(child: _renderVideo()),
-          _buildCommentsOverlay(),
+          if (_showComments) _buildCommentsOverlay(),
           _buildOverlayButtons(),
           _buildCommentInput(),
           
@@ -895,7 +963,7 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          initiatorName.isNotEmpty ? initiatorName : "Loading...",
+                          initiatorName.isNotEmpty ? initiatorName : 'Loading...',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
@@ -927,6 +995,18 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
                         ),
                       ],
                     ),
+                  ),
+                  // Comments toggle button
+                  IconButton(
+                    icon: Icon(
+                      _showComments
+                          ? Icons.chat_bubble
+                          : Icons.chat_bubble_outline,
+                      color: Colors.white70,
+                    ),
+                    tooltip: _showComments ? 'Hide comments' : 'Show comments',
+                    onPressed: () =>
+                        setState(() => _showComments = !_showComments),
                   ),
                 ],
               ),

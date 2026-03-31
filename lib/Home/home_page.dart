@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 import '../Auth/auth_screen.dart';
+import '../Forums/Public/Widgets/user_profile_screen.dart';
+import '../bot/chat_bot.dart';
 import 'Widgets/profile_drawer.dart';
 import 'Widgets/redesigned_home_content.dart';
 import 'Widgets/app_bar.dart';
@@ -24,6 +26,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   User? currentUser;
   String? userImageUrl;
+  String? userFirstName;
   bool showProfileDrawer = false;
   AnimationController? _drawerController;
   Animation<Offset>? _slideAnimation;
@@ -106,6 +109,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           setState(() {
             currentUser = user;
             userImageUrl = docSnapshot.data()?['User Pic'] ?? '';
+            userFirstName = docSnapshot.data()?['Fname'] as String?;
           });
         }
       } catch (e) {
@@ -119,6 +123,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         setState(() {
           currentUser = null;
           userImageUrl = null;
+          userFirstName = null;
         });
       }
     }
@@ -130,12 +135,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         context,
         MaterialPageRoute(builder: (context) => const AuthScreen()),
       );
-      // Refresh user data after returning from auth screen
       if (result == true || result == null) {
         _fetchUserData();
       }
     } else {
-      _toggleProfileDrawer();
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => UserProfileScreen(userId: currentUser!.uid),
+        ),
+      );
     }
   }
 
@@ -168,6 +177,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         userImageUrl: userImageUrl,
         onAvatarTap: _onAvatarTap,
       ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        tooltip: 'Legal Aid Assistant',
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ChatBotScreen()),
+        ),
+        child: const Icon(Icons.smart_toy),
+      ),
       body: RefreshIndicator(
         onRefresh: _fetchUserData,
         color: Colors.white,
@@ -179,6 +198,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               child: RedesignedHomeContent(
                 onTabChange: widget.onTabChange,
                 currentUser: currentUser,
+                userName: userFirstName,
               ),
             ),
             if (_drawerController != null && _slideAnimation != null)
