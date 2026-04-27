@@ -364,7 +364,7 @@ class NotificationService {
       await FirebaseFirestore.instance
           .collection('Users')
           .doc(user.uid)
-          .update({'fcmToken': token});
+          .set({'fcmToken': token}, SetOptions(merge: true));
       debugPrint('FCM token stored for user ${user.uid}');
     } catch (e) {
       debugPrint('Error storing FCM token: $e');
@@ -379,7 +379,7 @@ class NotificationService {
         await FirebaseFirestore.instance
             .collection('Users')
             .doc(userId)
-            .update({'fcmToken': token});
+            .set({'fcmToken': token}, SetOptions(merge: true));
         debugPrint('FCM token stored for user $userId');
       }
     } catch (e) {

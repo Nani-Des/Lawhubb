@@ -58,6 +58,8 @@ class AuthService with ChangeNotifier {
           return 'Please choose a stronger password (at least 8 characters).';
         case 'network-request-failed':
           return 'Network error. Check your connection and try again.';
+            case 'too-many-requests':
+          return 'Too many attempts. Please wait a few minutes before trying again.';
         // All account-state and credential errors get the same generic message
         // to prevent user enumeration and credential confirmation attacks.
         case 'user-not-found':
@@ -104,20 +106,28 @@ class AuthService with ChangeNotifier {
 
       User? user = userCredential.user;
       if (user != null) {
-        await _firestore.collection('Users').doc(user.uid).set({
-          'Role': false,
-          'Fname': firstName,
-          'Lname': lastName,
-          'Email': email,
-          'User ID': user.uid,
-          'Mobile Number': phoneNumber,
-          'Region': region,
-          'Status': true,
-          'User Pic': defaultProfilePic,
-          'CreatedAt': Timestamp.now(),
-        });
+        try {
+          await _firestore.collection('Users').doc(user.uid).set({
+            'Role': false,
+            'Fname': firstName,
+            'Lname': lastName,
+            'Email': email,
+            'User ID': user.uid,
+            'Mobile Number': phoneNumber,
+            'Region': region,
+            'Status': true,
+            'User Pic': defaultProfilePic,
+            'CreatedAt': Timestamp.now(),
+          });
+        } catch (firestoreError) {
+          // Firestore write failed — delete the Auth account so the user
+          // can retry registration rather than getting email-already-in-use.
+          await user.delete();
+          rethrow;
+        }
 
         _currentUser = user;
+        _isLoading = false;
         // Store FCM token after registration
         final notificationService = NotificationService();
         await notificationService.storeTokenForUserId(user.uid);
@@ -163,6 +173,7 @@ class AuthService with ChangeNotifier {
               .timeout(const Duration(seconds: 8));
           if (userDoc.exists && userDoc['Status'] == true) {
             _currentUser = user;
+            _isLoading = false;
             final notificationService = NotificationService();
             await notificationService.storeTokenForUserId(user.uid);
             notifyListeners();
@@ -173,12 +184,14 @@ class AuthService with ChangeNotifier {
           } else {
             // Doc doesn't exist yet (race condition) — still allow login
             _currentUser = user;
+            _isLoading = false;
             notifyListeners();
             return true;
           }
         } catch (_) {
           // Firestore unreachable — trust Firebase Auth and proceed
           _currentUser = user;
+          _isLoading = false;
           notifyListeners();
           return true;
         }

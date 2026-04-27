@@ -1,30 +1,35 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For nhap, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:nhap/main.dart';
+import 'package:hive/hive.dart';
+import 'package:nhap/Services/language_provider.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  late Directory tempDir;
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  setUpAll(() async {
+    tempDir = Directory.systemTemp.createTempSync('hive_test_');
+    Hive.init(tempDir.path);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  tearDownAll(() async {
+    await Hive.close();
+    tempDir.deleteSync(recursive: true);
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  test('LanguageProvider initializes with default English locale', () async {
+    final languageProvider = LanguageProvider();
+    await languageProvider.init();
+
+    expect(languageProvider.isInitialized, isTrue);
+    expect(languageProvider.currentLanguageCode, 'en');
+  });
+
+  test('LanguageProvider persists language change', () async {
+    final languageProvider = LanguageProvider();
+    await languageProvider.init();
+    await languageProvider.changeLanguage('fr');
+
+    expect(languageProvider.currentLanguageCode, 'fr');
   });
 }

@@ -43,9 +43,10 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
 
   int _likes = 0;
   bool _hasLiked = false;
-  int _viewerCount = 1;
-  Timer? _viewerCountTimer;
+  int _viewerCount = 0;
   Timer? _viewerTimeoutTimer;
+  StreamSubscription<DocumentSnapshot>? _viewerCountSubscription;
+  bool _viewerCountIncremented = false;
   bool _showComments = true;
 
   String initiatorName = "";
@@ -118,9 +119,11 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
           onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
             if (!mounted || _isDisposing) return;
             setState(() => _localUserJoined = true);
+            _listenToViewerCount();
             if (widget.isInitiator) {
-              _startViewerCountSync();
+              // nothing extra — Firestore listener shows the count
             } else {
+              _incrementViewerCount();
               _checkForExistingBroadcaster();
               // Auto-exit if host never appears within 45 seconds
               _viewerTimeoutTimer = Timer(const Duration(seconds: 45), () {
@@ -137,33 +140,20 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
           },
           onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
             if (!mounted || _isDisposing) return;
-            if (widget.isInitiator) {
-              // Broadcaster: someone (viewer) joined
-              setState(() {
-                _viewerCount++;
-              });
-              _updateViewerCount();
-            } else {
+            if (!widget.isInitiator) {
               // Viewer: broadcaster joined — cancel the timeout
               _viewerTimeoutTimer?.cancel();
-              setState(() {
-                _remoteUid = remoteUid;
-              });
+              setState(() => _remoteUid = remoteUid);
             }
+            // Note: onUserJoined does NOT fire for audience members in
+            // channelProfileLiveBroadcasting — viewer count is tracked via
+            // Firestore increments, not Agora events.
           },
           onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
             if (!mounted || _isDisposing) return;
-            if (widget.isInitiator) {
-              // Broadcaster: viewer left
-              setState(() {
-                _viewerCount = (_viewerCount > 1) ? _viewerCount - 1 : 1;
-              });
-              _updateViewerCount();
-            } else {
+            if (!widget.isInitiator) {
               // Viewer: broadcaster left
-              setState(() {
-                _remoteUid = null;
-              });
+              setState(() => _remoteUid = null);
             }
           },
           onRemoteVideoStateChanged: (RtcConnection connection, int remoteUid, RemoteVideoState state, RemoteVideoStateReason reason, int elapsed) {
@@ -228,15 +218,49 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
     }
   }
 
-  void _startViewerCountSync() {
-    _viewerCountTimer?.cancel();
-    _viewerCountTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (_isDisposing || !mounted) {
-        timer.cancel();
-        return;
+  // Subscribe to the Firestore document so _viewerCount stays in sync for everyone.
+  void _listenToViewerCount() {
+    _viewerCountSubscription?.cancel();
+    _viewerCountSubscription = FirebaseFirestore.instance
+        .collection('Consultations')
+        .doc(widget.chatId)
+        .snapshots()
+        .listen((snapshot) {
+      if (!mounted || _isDisposing) return;
+      if (snapshot.exists) {
+        final count = (snapshot.data()?['viewerCount'] ?? 0) as int;
+        setState(() => _viewerCount = count);
       }
-      _updateViewerCount();
     });
+  }
+
+  // Called once when a viewer joins — atomic increment, no race condition.
+  Future<void> _incrementViewerCount() async {
+    if (_viewerCountIncremented || _isDisposing) return;
+    _viewerCountIncremented = true;
+    try {
+      await FirebaseFirestore.instance
+          .collection('Consultations')
+          .doc(widget.chatId)
+          .set({'viewerCount': FieldValue.increment(1)}, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('Error incrementing viewer count: $e');
+      _viewerCountIncremented = false;
+    }
+  }
+
+  // Called once when a viewer leaves — atomic decrement.
+  Future<void> _decrementViewerCount() async {
+    if (!_viewerCountIncremented) return;
+    _viewerCountIncremented = false;
+    try {
+      await FirebaseFirestore.instance
+          .collection('Consultations')
+          .doc(widget.chatId)
+          .set({'viewerCount': FieldValue.increment(-1)}, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('Error decrementing viewer count: $e');
+    }
   }
 
   // Check for existing broadcaster when viewer joins
@@ -256,18 +280,6 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
       // We just need to ensure we're listening properly
     } catch (e) {
       debugPrint("Error checking for broadcaster: $e");
-    }
-  }
-
-  Future<void> _updateViewerCount() async {
-    if (!widget.isInitiator || _isDisposing) return;
-    try {
-      await FirebaseFirestore.instance
-          .collection('Consultations')
-          .doc(widget.chatId)
-          .update({'viewerCount': _viewerCount});
-    } catch (e) {
-      debugPrint("Error updating viewer count: $e");
     }
   }
 
@@ -363,8 +375,8 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
     if (_isDisposing) return;
     _isDisposing = true;
 
-    _viewerCountTimer?.cancel();
     _viewerTimeoutTimer?.cancel();
+    _viewerCountSubscription?.cancel();
 
     try {
       if (widget.isInitiator) {
@@ -373,23 +385,10 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
             .doc(widget.chatId)
             .update({
           'status': 'ended',
-          'viewerCount': _viewerCount,
           'endTimestamp': FieldValue.serverTimestamp(),
         });
       } else {
-        final snapshot = await FirebaseFirestore.instance
-            .collection('Consultations')
-            .doc(widget.chatId)
-            .get();
-        if (snapshot.exists) {
-          final currentCount = snapshot.data()?['viewerCount'] ?? 0;
-          await FirebaseFirestore.instance
-              .collection('Consultations')
-              .doc(widget.chatId)
-              .update({
-            'viewerCount': (currentCount > 0) ? currentCount - 1 : 0,
-          });
-        }
+        await _decrementViewerCount();
       }
     } catch (e) {
       debugPrint("Error updating consultation status: $e");
@@ -416,11 +415,9 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
   @override
   void dispose() {
     _isDisposing = true;
-    _viewerCountTimer?.cancel();
     _viewerTimeoutTimer?.cancel();
+    _viewerCountSubscription?.cancel();
     _commentController.dispose();
-    // Always mark the stream as ended in Firestore when the widget is disposed,
-    // even if the user force-closed the app and came back.
     if (widget.isInitiator) {
       FirebaseFirestore.instance
           .collection('Consultations')
@@ -429,6 +426,13 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
         'status': 'ended',
         'endTimestamp': FieldValue.serverTimestamp(),
       }).catchError((_) {});
+    } else if (_viewerCountIncremented) {
+      // Viewer closed the app without going through _endStreamCleanup
+      FirebaseFirestore.instance
+          .collection('Consultations')
+          .doc(widget.chatId)
+          .set({'viewerCount': FieldValue.increment(-1)}, SetOptions(merge: true))
+          .catchError((_) {});
     }
     if (_engine != null) {
       _engine!.leaveChannel().catchError((_) {});
@@ -580,9 +584,9 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
                     margin: const EdgeInsets.symmetric(vertical: 2),
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.7),
+                      color: Colors.black.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -590,7 +594,7 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
                         Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: Colors.redAccent.withOpacity(0.3),
+                            color: Colors.redAccent.withValues(alpha: 0.3),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.person, color: Colors.white, size: 14),
@@ -636,7 +640,7 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
             end: Alignment.bottomCenter,
             colors: [
               Colors.transparent,
-              Colors.black.withOpacity(0.8),
+              Colors.black.withValues(alpha: 0.8),
             ],
           ),
         ),
@@ -668,9 +672,9 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(25),
-                        border: Border.all(color: Colors.white.withOpacity(0.3)),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                       ),
                       child: TextField(
                         controller: _commentController,
@@ -721,7 +725,7 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.4),
+              color: Colors.black.withValues(alpha: 0.4),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -747,9 +751,9 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.7),
+                color: Colors.black.withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withOpacity(0.3)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -773,9 +777,9 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
             Container(
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.7),
+                color: Colors.black.withValues(alpha: 0.7),
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white.withOpacity(0.3)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
               ),
               child: IconButton(
                 icon: Icon(
@@ -908,7 +912,7 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.8),
+                    Colors.black.withValues(alpha: 0.8),
                     Colors.transparent,
                   ],
                 ),
