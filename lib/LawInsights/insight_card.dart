@@ -30,6 +30,7 @@ class _InsightCardState extends State<InsightCard>
   final LawInsightsService _service = LawInsightsService();
   final TextEditingController _commentController = TextEditingController();
   bool _showComments = false;
+  bool _isDescriptionExpanded = false;
   Map<String, dynamic>? _userData;
   bool _hasViewed = false;
   bool _isDeleting = false;
@@ -438,14 +439,12 @@ class _InsightCardState extends State<InsightCard>
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  widget.insightData['description'] ?? '',
-                  style: TextStyle(
-                    color: Colors.grey[300],
-                    fontSize: 14,
-                  ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
+                _ExpandableDescription(
+                  description:
+                      widget.insightData['description'] as String? ?? '',
+                  isExpanded: _isDescriptionExpanded,
+                  onToggle: () => setState(
+                      () => _isDescriptionExpanded = !_isDescriptionExpanded),
                 ),
               ],
             ),
@@ -663,6 +662,52 @@ class _InsightCardState extends State<InsightCard>
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ExpandableDescription extends StatelessWidget {
+  final String description;
+  final bool isExpanded;
+  final VoidCallback onToggle;
+
+  const _ExpandableDescription({
+    required this.description,
+    required this.isExpanded,
+    required this.onToggle,
+  });
+
+  // ~60 chars per line at 14 px on a typical phone — 3 lines ≈ 180 chars.
+  static const int _threshold = 180;
+
+  @override
+  Widget build(BuildContext context) {
+    final needsToggle = description.length > _threshold;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          description,
+          style: TextStyle(color: Colors.grey[300], fontSize: 14),
+          maxLines: isExpanded ? null : 3,
+          overflow:
+              isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+        ),
+        if (needsToggle) ...[
+          const SizedBox(height: 4),
+          GestureDetector(
+            onTap: onToggle,
+            child: Text(
+              isExpanded ? 'less' : 'more',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

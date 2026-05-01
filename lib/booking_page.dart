@@ -11,7 +11,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
-import 'Home/home_page.dart';
 import 'booking_details.dart';
 
 // Background message handler (must be top-level or static)
@@ -605,13 +604,7 @@ class _BookingPageState extends State<BookingPage> with SingleTickerProviderStat
           elevation: 0,
           leading: IconButton(
             icon: Icon(Icons.arrow_back_ios_new, color: Colors.white),
-            onPressed: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => HomePage()),
-                    (route) => false,
-              );
-            },
+            onPressed: () => Navigator.pop(context),
           ),
           bottom: TabBar(
             onTap: (index) => setState(() => _selectedTabIndex = index),
