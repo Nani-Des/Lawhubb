@@ -1,19 +1,12 @@
-import 'dart:convert';
-import 'dart:io';
-import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:nhap/l10n/app_localizations.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'Auth/auth_service.dart';
 import 'Auth/auth_screen.dart';
@@ -23,51 +16,16 @@ import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:nhap/l10n/app_localizations.dart';
-
 import 'Services/config_service.dart';
 import 'Services/language_provider.dart';
 import 'Services/notification_service.dart';
-import 'booking_page.dart';
-
-// #region agent log helper
-void _debugLog({
-  required String hypothesisId,
-  required String location,
-  required String message,
-  required Map<String, dynamic> data,
-}) {
-  try {
-    final logFile = File(
-        r'c:\Users\HP\PROJECTS\flutter_projects\lawhubb\Lawhubb\.cursor\debug.log');
-    if (!logFile.parent.existsSync()) {
-      logFile.parent.createSync(recursive: true);
-    }
-    logFile.writeAsStringSync(
-      jsonEncode({
-            'sessionId': 'debug-session',
-            'runId': 'pre-fix',
-            'hypothesisId': hypothesisId,
-            'location': location,
-            'message': message,
-            'data': data,
-            'timestamp': DateTime.now().millisecondsSinceEpoch,
-          }) +
-          '\n',
-      mode: FileMode.append,
-    );
-  } catch (_) {}
-}
-// #endregion
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final appDir = await getApplicationDocumentsDirectory();
-  Hive.init(appDir.path);
+  await Hive.initFlutter();
   await Hive.openBox('reading_archive');
   await Hive.openBox('notes_box');
   await Hive.openBox('achievements_box');
-  await Hive.initFlutter();
   await Hive.openBox('translations');
   await dotenv.load();
   await Firebase.initializeApp(
@@ -126,7 +84,6 @@ void main() async {
 // Global navigator key for notification navigation
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-final appLocalization = AppLocalizations.of(navigatorKey.currentContext!);
 
 Future<void> _requestLocationPermission() async {
   LocationPermission permission = await Geolocator.checkPermission();
@@ -154,15 +111,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // #region agent log
-    _debugLog(
-      hypothesisId: 'D',
-      location: 'main.dart:MyApp.build',
-      message: 'MyApp build invoked',
-      data: {},
-    );
-    // #endregion
-
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthService()),
@@ -229,27 +177,28 @@ class _CustomTransitionScreenState extends State<CustomTransitionScreen>
 
   Future<void> _navigateFromSplash() async {
     if (!mounted) return;
-    final prefs = await SharedPreferences.getInstance();
-    final locationAsked = prefs.getBool('locationPermissionAsked') ?? false;
     final user = FirebaseAuth.instance.currentUser;
-    if (!mounted) return;
     if (user != null) {
-      // Already logged in — go straight to the app
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const MainLayout()),
       );
-    } else if (!locationAsked) {
-      // First-time user — ask for location then go to auth
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LocationPermissionScreen()),
-      );
-    } else {
-      // Returning user who is logged out — go to login
+      return;
+    }
+    final permission = await Geolocator.checkPermission();
+    final hasPermission = permission == LocationPermission.always ||
+        permission == LocationPermission.whileInUse;
+    if (!mounted) return;
+    if (hasPermission) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const AuthScreen()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LocationPermissionScreen()),
       );
     }
   }
@@ -257,14 +206,6 @@ class _CustomTransitionScreenState extends State<CustomTransitionScreen>
   @override
   void initState() {
     super.initState();
-    // #region agent log
-    _debugLog(
-      hypothesisId: 'A',
-      location: 'main.dart:CustomTransitionScreen.initState',
-      message: 'Splash init started',
-      data: {},
-    );
-    // #endregion
     _controller = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,

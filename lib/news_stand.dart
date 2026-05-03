@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'Home/Widgets/custom_bottom_navbar.dart';
 
-
 class NewsStandApp extends StatelessWidget {
   const NewsStandApp({super.key});
 
@@ -23,9 +22,10 @@ class NewsStandApp extends StatelessWidget {
           foregroundColor: Colors.white,
           elevation: 0,
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           color: const Color(0xFF1C1C1E),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
         useMaterial3: true,
       ),
@@ -40,13 +40,11 @@ final List<Map<String, dynamic>> lawData = [
     "category": "Constitutional Law",
     "icon": Icons.gavel,
     "articles": [
-
       {
         "title": "Separation of Powers",
         "content":
-        "The doctrine of separation of powers divides the government into three branches...",
-        "image":
-        "https://images.unsplash.com/photo-1501594907352-04cda38ebc29"
+            "The doctrine of separation of powers divides the government into three branches...",
+        "image": "https://images.unsplash.com/photo-1501594907352-04cda38ebc29"
       },
     ]
   },
@@ -57,24 +55,20 @@ final List<Map<String, dynamic>> lawData = [
       {
         "title": "Cybercrime in Modern Era",
         "content":
-        "Cybercrime has expanded with technology. Laws now cover hacking, phishing...",
-        "image":
-        "https://images.unsplash.com/photo-1556740772-1a741367b93e"
+            "Cybercrime has expanded with technology. Laws now cover hacking, phishing...",
+        "image": "https://images.unsplash.com/photo-1556740772-1a741367b93e"
       },
-
     ]
   },
   {
     "category": "International Law",
     "icon": Icons.public,
     "articles": [
-
       {
         "title": "Law of the Sea",
         "content":
-        "The Law of the Sea regulates territorial waters, exclusive economic zones...",
-        "image":
-        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e"
+            "The Law of the Sea regulates territorial waters, exclusive economic zones...",
+        "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e"
       },
     ]
   },
@@ -96,7 +90,8 @@ class NewsStandPage extends StatelessWidget {
         foregroundColor: Colors.white,
         title: const Text(
           "Law News Stand",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white),
+          style: TextStyle(
+              fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white),
         ),
         centerTitle: true,
       ),
@@ -132,7 +127,10 @@ class NewsStandPage extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     gradient: LinearGradient(
-                      colors: [Colors.black.withOpacity(0.7), Colors.transparent],
+                      colors: [
+                        Colors.black.withOpacity(0.7),
+                        Colors.transparent
+                      ],
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                     ),
@@ -169,7 +167,7 @@ class NewsStandPage extends StatelessWidget {
                 filled: true,
                 fillColor: const Color(0xFF1C1C1E),
                 contentPadding:
-                const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -181,7 +179,10 @@ class NewsStandPage extends StatelessWidget {
             // 📚 Categories
             const Text(
               "Categories",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
             ),
             const SizedBox(height: 12),
             SizedBox(
@@ -212,7 +213,8 @@ class NewsStandPage extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(category["icon"], size: 30, color: Colors.white70),
+                          Icon(category["icon"],
+                              size: 30, color: Colors.white70),
                           const SizedBox(height: 4),
                           Text(
                             category["category"],
@@ -235,10 +237,15 @@ class NewsStandPage extends StatelessWidget {
             // 📄 Latest Articles
             const Text(
               "Latest Articles",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
             ),
             const SizedBox(height: 12),
-            ...lawData.expand((category) => category["articles"]).map((article) {
+            ...lawData
+                .expand((category) => category["articles"])
+                .map((article) {
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
@@ -260,7 +267,9 @@ class NewsStandPage extends StatelessWidget {
                   title: Text(
                     article["title"],
                     style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: Colors.white),
                   ),
                   subtitle: Text(
                     article["content"],
@@ -305,7 +314,8 @@ class CategoryPage extends StatelessWidget {
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: Text(category["category"], style: const TextStyle(color: Colors.white)),
+        title: Text(category["category"],
+            style: const TextStyle(color: Colors.white)),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(12),
@@ -332,7 +342,9 @@ class CategoryPage extends StatelessWidget {
               ),
               title: Text(article["title"],
                   style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white)),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: Colors.white)),
               subtitle: Text(
                 article["content"],
                 maxLines: 2,
@@ -395,12 +407,15 @@ class ArticleDetailPage extends StatelessWidget {
             Text(
               title,
               style: const TextStyle(
-                  fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
             ),
             const SizedBox(height: 12),
             Text(
               content,
-              style: TextStyle(fontSize: 16, height: 1.5, color: Colors.grey[300]),
+              style:
+                  TextStyle(fontSize: 16, height: 1.5, color: Colors.grey[300]),
             ),
           ],
         ),

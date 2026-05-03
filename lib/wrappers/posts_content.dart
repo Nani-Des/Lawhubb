@@ -16,14 +16,14 @@ class PostsContent extends StatefulWidget {
 }
 
 class _PostsContentState extends State<PostsContent> {
-
   Future<void> _startPublicConsultation() async {
     try {
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please log in to start a consultation')),
+            const SnackBar(
+                content: Text('Please log in to start a consultation')),
           );
         }
         return;
@@ -124,7 +124,8 @@ class _PostsContentState extends State<PostsContent> {
                     if (currentUser != null) {
                       showDialog(
                         context: context,
-                        builder: (context) => CreatePostDialog(userId: currentUser.uid),
+                        builder: (context) =>
+                            CreatePostDialog(userId: currentUser.uid),
                       );
                     }
                   },
@@ -133,7 +134,7 @@ class _PostsContentState extends State<PostsContent> {
                 _OptionTile(
                   icon: Icons.videocam_outlined,
                   title: 'Live Stream',
-                  subtitle: 'Start a live consultation',
+                  subtitle: 'Start a live stream',
                   onTap: () {
                     Navigator.pop(context);
                     _startPublicConsultation();
@@ -307,4 +308,3 @@ class _OptionTile extends StatelessWidget {
     );
   }
 }
-

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nhap/bot/widget/chat_service.dart';
 import 'package:nhap/bot/widget/openai_service.dart';
-import 'package:nhap/main.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 
 class ChatBotScreen extends StatefulWidget {
   const ChatBotScreen({super.key});
@@ -189,24 +189,24 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
   Widget _buildWalkthroughGrid() {
     final guides = [
       {
-        "title": appLocalization!.bookAppointment,
+        "title": AppLocalizations.of(context)!.bookAppointment,
         "icon": Icons.calendar_today,
-        "query": appLocalization!.book_appointment
+        "query": AppLocalizations.of(context)!.book_appointment
       },
       {
-        "title": appLocalization!.findLawyer,
+        "title": AppLocalizations.of(context)!.findLawyer,
         "icon": Icons.person_search,
-        "query": appLocalization!.type_of_lawyer
+        "query": AppLocalizations.of(context)!.type_of_lawyer
       },
       {
-        "title": appLocalization!.lawServices,
+        "title": AppLocalizations.of(context)!.lawServices,
         "icon": Icons.local_hospital,
-        "query": appLocalization!.services_provided
+        "query": AppLocalizations.of(context)!.services_provided
       },
       {
-        "title": appLocalization!.help,
+        "title": AppLocalizations.of(context)!.help,
         "icon": Icons.warning,
-        "query": appLocalization!.sue_someone
+        "query": AppLocalizations.of(context)!.sue_someone
       },
     ];
 
