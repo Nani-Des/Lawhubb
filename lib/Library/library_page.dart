@@ -1,10 +1,14 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:nhap/l10n/app_localizations.dart';
-import 'upload_pdf.dart';
+
+import 'library_book_gate.dart';
 import 'pdf_reader_page.dart';
+import 'upload_pdf.dart';
 
 class LibraryPage extends StatefulWidget {
   const LibraryPage({super.key});
@@ -18,6 +22,10 @@ class _LibraryPageState extends State<LibraryPage> {
   bool loading = true;
   final TextEditingController searchController = TextEditingController();
 
+  Set<String> _purchasedBookIds = {};
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _purchaseSub;
+  StreamSubscription<User?>? _authSub;
+
   late Box archiveBox;
   late Box notesBox;
   late Box achievementsBox;
@@ -30,6 +38,70 @@ class _LibraryPageState extends State<LibraryPage> {
     super.initState();
     _initBoxes();
     _fetchPDFs();
+    _listenPurchases();
+    _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user == null) {
+        if (mounted) {
+          setState(() => _purchasedBookIds = {});
+        }
+        _purchaseSub?.cancel();
+        _purchaseSub = null;
+        return;
+      }
+      _listenPurchases();
+    });
+  }
+
+  void _listenPurchases() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    _purchaseSub?.cancel();
+    _purchaseSub = FirebaseFirestore.instance
+        .collection('libraryPurchases')
+        .where('buyerId', isEqualTo: uid)
+        .limit(500)
+        .snapshots()
+        .listen((snap) {
+      final ids = <String>{};
+      for (final d in snap.docs) {
+        final x = d.data();
+        if (x['status'] == 'success' && x['bookId'] is String) {
+          ids.add(x['bookId'] as String);
+        }
+      }
+      if (mounted) setState(() => _purchasedBookIds = ids);
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    _purchaseSub?.cancel();
+    searchController.dispose();
+    super.dispose();
+  }
+
+  Map<String, dynamic>? _findPdfForLibraryDoc(Map<String, dynamic> partial) {
+    final bid =
+        partial['bookId']?.toString() ?? partial['id']?.toString() ?? '';
+    final url = partial['url']?.toString() ?? '';
+    if (bid.isNotEmpty) {
+      for (final p in pdfs) {
+        if (p['id']?.toString() == bid) return Map<String, dynamic>.from(p);
+      }
+    }
+    if (url.isNotEmpty) {
+      for (final p in pdfs) {
+        if (p['url']?.toString() == url) return Map<String, dynamic>.from(p);
+      }
+    }
+    return null;
+  }
+
+  Map<String, dynamic> _mergeWithLibraryMetadata(Map<String, dynamic> partial) {
+    final lib = _findPdfForLibraryDoc(partial);
+    if (lib == null) return partial;
+    return {...lib, ...partial};
   }
 
   Future<void> _initBoxes() async {
@@ -62,7 +134,7 @@ class _LibraryPageState extends State<LibraryPage> {
         .get();
 
     if (!userDoc.exists) return false;
-    return (userDoc.data() as Map<String, dynamic>?)?['Role'] == true;
+    return userDoc.data()?['Role'] == true;
   }
 
   void _showAccessDeniedDialog() {
@@ -114,19 +186,33 @@ class _LibraryPageState extends State<LibraryPage> {
     return items;
   }
 
-  void _openReader(Map<String, dynamic> pdf,
+  Future<void> _openReader(Map<String, dynamic> pdf,
       {bool fromNote = false, int? page}) async {
+    final merged = _mergeWithLibraryMetadata(pdf);
+    if (!libraryBookCanAccess(merged, _purchasedBookIds)) {
+      final ok = await promptLibraryBookPurchase(
+        context,
+        merged,
+        onBookPurchased: (id) {
+          if (mounted) {
+            setState(() => _purchasedBookIds = {..._purchasedBookIds, id});
+          }
+        },
+      );
+      if (!ok) return;
+    }
+    if (!mounted) return;
     await Navigator.push(
         context,
         MaterialPageRoute(
             builder: (_) => PDFReaderPage(
-                  title: pdf['title'] ?? 'Untitled',
-                  url: pdf['url'] ?? '',
-                  id: pdf['id'] ?? pdf['title'],
+                  title: merged['title'] ?? 'Untitled',
+                  url: merged['url'] ?? '',
+                  id: merged['id'] ?? merged['title'],
                   fromNote: fromNote,
                   initialPage: page,
                 )));
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   Widget _bookCard(Map<String, dynamic> pdf) {
@@ -135,6 +221,7 @@ class _LibraryPageState extends State<LibraryPage> {
     final saved = archiveBox.get(id);
     final progress =
         saved != null ? (saved['progress'] as num?)?.toDouble() ?? 0.0 : 0.0;
+    final locked = price > 0 && !libraryBookCanAccess(pdf, _purchasedBookIds);
 
     return GestureDetector(
       onTap: () => _openReader(pdf),
@@ -156,14 +243,33 @@ class _LibraryPageState extends State<LibraryPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[850],
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.picture_as_pdf,
-                        color: Colors.white, size: 28),
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[850],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.picture_as_pdf,
+                            color: Colors.white, size: 28),
+                      ),
+                      if (locked)
+                        Positioned(
+                          right: -4,
+                          top: -4,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.black87,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.lock,
+                                color: Colors.amber, size: 14),
+                          ),
+                        ),
+                    ],
                   ),
                   if (progress > 0)
                     Container(
@@ -250,6 +356,8 @@ class _LibraryPageState extends State<LibraryPage> {
                         archiveBox.delete(id);
                       } else {
                         archiveBox.put(id, {
+                          'id': id,
+                          'bookId': pdf['id'],
                           'url': pdf['url'],
                           'title': pdf['title'] ?? 'Untitled',
                           'progress': progress,
@@ -301,7 +409,11 @@ class _LibraryPageState extends State<LibraryPage> {
           final it = cont[i];
           final progress = (it['progress'] as num?)?.toDouble() ?? 0.0;
           return GestureDetector(
-            onTap: () => _openReader(it, page: it['progressPage']),
+            onTap: () {
+              final merged = _mergeWithLibraryMetadata(
+                  Map<String, dynamic>.from(it));
+              _openReader(merged, page: it['progressPage'] as int?);
+            },
             child: Container(
               width: 240,
               decoration: BoxDecoration(
@@ -663,8 +775,15 @@ class _LibraryPageState extends State<LibraryPage> {
                       final k = keys[idx];
                       final note = notesBox.get(k);
                       return InkWell(
-                        onTap: () => _openReader(note,
-                            fromNote: true, page: note['page']),
+                        onTap: () {
+                          final noteMap =
+                              Map<String, dynamic>.from(note as Map);
+                          final merged =
+                              _mergeWithLibraryMetadata(noteMap);
+                          _openReader(merged,
+                              fromNote: true,
+                              page: note['page'] as int?);
+                        },
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
                           padding: const EdgeInsets.all(14),

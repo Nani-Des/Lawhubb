@@ -9,6 +9,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'chat_module.dart';
 import 'expert_post_details_page.dart'; // Import the ExpertPostDetailsPage
 import '../Services/config_service.dart';
+import 'package:nhap/utils/country_utils.dart';
 
 
 class TranslationService {
@@ -743,6 +744,7 @@ void _showAddPostDialog(BuildContext context, FirebaseFirestore firestore) {
                 final userData = userSnapshot.data() as Map<String, dynamic>;
                 final String fullName = "${userData['Fname'] ?? 'Unknown'} ${userData['Lname'] ?? ''}".trim();
                 final String userRegion = userData['Region'] ?? 'Unknown Region';
+                final String userCountryCode = effectiveCountryCode(userData);
 
                 await firestore.collection('ExpertPosts').add({
                   'content': postController.text.trim(),
@@ -756,6 +758,7 @@ void _showAddPostDialog(BuildContext context, FirebaseFirestore firestore) {
                   postController.text.trim(),
                   currentUserId,
                   userRegion,
+                  userCountryCode,
                 );
 
                 postController.clear();
@@ -776,7 +779,12 @@ void _showAddPostDialog(BuildContext context, FirebaseFirestore firestore) {
   );
 }
 
-Future<void> _processMessageForHealthInsights(String messageText, String userId, String userRegion) async {
+Future<void> _processMessageForHealthInsights(
+  String messageText,
+  String userId,
+  String userRegion,
+  String userCountryCode,
+) async {
   // Define health categories and keywords
   final Map<String, List<String>> healthCategories = {
     'symptoms': [
@@ -831,7 +839,7 @@ Future<void> _processMessageForHealthInsights(String messageText, String userId,
         final querySnapshot = await healthInsightsCollection
             .where('category', isEqualTo: category)
             .where('messageType', isEqualTo: 'experts')
-            .where('region', isEqualTo: userRegion)
+            .where('countryCode', isEqualTo: userCountryCode)
             .where('keyword', isEqualTo: keyword)
             .get();
 
@@ -849,6 +857,7 @@ Future<void> _processMessageForHealthInsights(String messageText, String userId,
             'keyword': keyword,
             'count': matchedCategories[category]![keyword],
             'region': userRegion,
+            'countryCode': userCountryCode,
             'messageType': 'experts',
             'timestamp': FieldValue.serverTimestamp(),
             'lastUpdated': FieldValue.serverTimestamp(),

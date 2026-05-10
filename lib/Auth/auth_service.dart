@@ -2,9 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import '../Services/notification_service.dart';
+import '../utils/country_utils.dart';
 
 class AuthService with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -78,6 +78,7 @@ class AuthService with ChangeNotifier {
     required String password,
     required String phoneNumber,
     String region = '',
+    String countryCode = kDefaultCountryCode,
   }) async {
     if (!isValidEmail(email)) {
       _errorMessage = 'Please enter a valid email address.';
@@ -106,6 +107,8 @@ class AuthService with ChangeNotifier {
           'User ID': user.uid,
           'Mobile Number': phoneNumber,
           'Region': region,
+          'Country': countryCode.trim().toUpperCase(),
+          'CountryRequired': false,
           'Status': true,
           'User Pic': defaultProfilePic,
           'CreatedAt': Timestamp.now(),
@@ -152,6 +155,19 @@ class AuthService with ChangeNotifier {
         DocumentSnapshot userDoc =
         await _firestore.collection('Users').doc(user.uid).get();
         if (userDoc.exists && userDoc['Status'] == true) {
+          final data = userDoc.data() as Map<String, dynamic>?;
+          if (data != null &&
+              (data['Country'] == null ||
+                  (data['Country'] is String &&
+                      (data['Country'] as String).trim().isEmpty))) {
+            await userDoc.reference.set(
+              {
+                'Country': kDefaultCountryCode,
+                'CountryRequired': false,
+              },
+              SetOptions(merge: true),
+            );
+          }
           _currentUser = user;
           // Store FCM token after login
           final notificationService = NotificationService();
@@ -200,38 +216,42 @@ class AuthService with ChangeNotifier {
   }
 
   // --- Sign in with Google ---
-  Future<bool> signInWithGoogle(BuildContext context) async {
+  /// Returns success and whether the user must pick a country (new Google account or incomplete).
+  Future<({bool success, bool needsCountrySelection})> signInWithGoogle(
+      BuildContext context) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
+    var needsCountrySelection = false;
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         _errorMessage = 'Google sign-in was cancelled.';
         notifyListeners();
-        return false;
+        return (success: false, needsCountrySelection: false);
       }
 
       final GoogleSignInAuthentication googleAuth =
-      await googleUser.authentication;
+          await googleUser.authentication;
       final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      UserCredential userCredential =
-      await _auth.signInWithCredential(credential);
-      User? user = userCredential.user;
+      final UserCredential userCredential =
+          await _auth.signInWithCredential(credential);
+      final User? user = userCredential.user;
 
       if (user != null) {
-        DocumentSnapshot userDoc =
-        await _firestore.collection('Users').doc(user.uid).get();
+        final DocumentSnapshot userDoc =
+            await _firestore.collection('Users').doc(user.uid).get();
 
-        String displayName = user.displayName ?? '';
-        String firstName =
-        displayName.isNotEmpty ? displayName.split(' ').first : 'User';
-        String lastName = displayName.contains(' ')
+        final String displayName = user.displayName ?? '';
+        final String firstName = displayName.isNotEmpty
+            ? displayName.split(' ').first
+            : 'User';
+        final String lastName = displayName.contains(' ')
             ? displayName.split(' ').sublist(1).join(' ')
             : '';
 
@@ -244,10 +264,12 @@ class AuthService with ChangeNotifier {
             'User ID': user.uid,
             'Mobile Number': '',
             'Region': '',
+            'CountryRequired': true,
             'Status': true,
             'User Pic': user.photoURL ?? defaultProfilePic,
             'CreatedAt': Timestamp.now(),
           });
+          needsCountrySelection = true;
         } else if (userDoc['Status'] != true) {
           await _firestore.collection('Users').doc(user.uid).update({
             'Role': false,
@@ -256,18 +278,39 @@ class AuthService with ChangeNotifier {
             'Email': user.email ?? googleUser.email,
             'Mobile Number': userDoc['Mobile Number'] ?? '',
             'Region': userDoc['Region'] ?? '',
+            'Country': userDoc['Country'] ?? kDefaultCountryCode,
+            'CountryRequired': false,
             'Status': true,
-            'User Pic': user.photoURL ?? userDoc['User Pic'] ?? defaultProfilePic,
+            'User Pic':
+                user.photoURL ?? userDoc['User Pic'] ?? defaultProfilePic,
             'UpdatedAt': Timestamp.now(),
           });
+        } else {
+          final data = userDoc.data() as Map<String, dynamic>?;
+          final countryMissing = data != null &&
+              (data['Country'] == null ||
+                  (data['Country'] is String &&
+                      (data['Country'] as String).trim().isEmpty));
+          if (countryMissing) {
+            if (data['CountryRequired'] == true) {
+              needsCountrySelection = true;
+            } else {
+              await _firestore.collection('Users').doc(user.uid).set(
+                    {
+                      'Country': kDefaultCountryCode,
+                      'CountryRequired': false,
+                    },
+                    SetOptions(merge: true),
+                  );
+            }
+          }
         }
 
         _currentUser = user;
-        // Store FCM token after Google sign in
         final notificationService = NotificationService();
         await notificationService.storeTokenForUserId(user.uid);
         notifyListeners();
-        return true;
+        return (success: true, needsCountrySelection: needsCountrySelection);
       }
     } catch (e) {
       _errorMessage = _handleAuthError(e);
@@ -275,7 +318,29 @@ class AuthService with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
-    return false;
+    return (success: false, needsCountrySelection: false);
+  }
+
+  /// Persists chosen ISO country after Google sign-in and clears [CountryRequired].
+  Future<bool> completeGoogleCountrySelection(String countryCode) async {
+    final User? user = _auth.currentUser;
+    if (user == null) return false;
+    final code = countryCode.trim().toUpperCase();
+    if (code.length != 2) return false;
+    try {
+      await _firestore.collection('Users').doc(user.uid).set(
+        {
+          'Country': code,
+          'CountryRequired': FieldValue.delete(),
+        },
+        SetOptions(merge: true),
+      );
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('completeGoogleCountrySelection: $e');
+      return false;
+    }
   }
 
   // --- Sign out ---

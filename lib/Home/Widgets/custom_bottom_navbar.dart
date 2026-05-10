@@ -1,11 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:nhap/Home/home_page.dart';
 import '../../Auth/auth_screen.dart';
-import '../../Forums/Chat/HomeScreen.dart';
-import '../../Hospital/general_hospital_page.dart';
-import '../../Library/library_page.dart';
 import '../../Services/unread_message_service.dart';
 import '../../main_layout.dart';
 import '../../wrappers/posts_content.dart';
@@ -63,19 +59,19 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
     }
   }
 
-  // Helper method to get SocialHubb index based on setup
-  int? _getSocialHubbIndex() {
+  /// Bottom-nav index of **Chats** for each setup (for unread message badge).
+  int? _getChatsTabIndex() {
     switch (widget.setup) {
       case 1:
-        return 3; // SocialHubb is at index 3
+        return 2;
       case 2:
-        return 2; // SocialHubb is at index 2
+        return 1;
       case 3:
-        return null; // No SocialHubb in setup 3
+        return 1;
       case 4:
-        return null; // No SocialHubb in setup 4
+        return null;
       case 5:
-        return 2; // SocialHubb is at index 2
+        return null;
       default:
         return null;
     }
@@ -235,8 +231,10 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
   }
 
   Widget _buildNavIcon(IconData icon, bool isSelected, int index) {
-    final socialHubbIndex = _getSocialHubbIndex();
-    final showBadge = socialHubbIndex != null && index == socialHubbIndex && _unreadCount > 0;
+    final chatsTabIndex = _getChatsTabIndex();
+    final showBadge = chatsTabIndex != null &&
+        index == chatsTabIndex &&
+        _unreadCount > 0;
 
     return Stack(
       clipBehavior: Clip.none,

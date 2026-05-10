@@ -48,10 +48,10 @@ class SearchScreen extends StatelessWidget {
                 ),
                 title: Text('${user['Fname']} ${user['Lname']}'),
                 subtitle: Text(user['Role'] ? 'Lawyer' : 'User'),
-                onTap: () async {
-                  String chatId = await _getOrCreateChat(
+                onTap: () {
+                  final chatId = _chatIdForUsers(
                     FirebaseAuth.instance.currentUser!.uid,
-                    user['User ID'],
+                    user['User ID'] as String,
                   );
                   Navigator.push(
                     context,
@@ -74,19 +74,10 @@ class SearchScreen extends StatelessWidget {
     );
   }
 
-  Future<String> _getOrCreateChat(String user1Id, String user2Id) async {
-    String chatId = user1Id.compareTo(user2Id) < 0
+  /// Deterministic 1:1 thread id; chat document is created on first message only.
+  String _chatIdForUsers(String user1Id, String user2Id) {
+    return user1Id.compareTo(user2Id) < 0
         ? '${user1Id}_$user2Id'
         : '${user2Id}_$user1Id';
-    var chatDoc =
-    await FirebaseFirestore.instance.collection('Chats').doc(chatId).get();
-    if (!chatDoc.exists) {
-      await FirebaseFirestore.instance.collection('Chats').doc(chatId).set({
-        'participants': [user1Id, user2Id],
-        'lastMessage': '',
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-    }
-    return chatId;
   }
 }

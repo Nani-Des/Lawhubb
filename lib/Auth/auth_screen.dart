@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:nhap/main.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'auth_service.dart';
-import 'package:nhap/Home/home_page.dart';
+import 'package:nhap/main_layout.dart';
+import 'package:nhap/utils/country_utils.dart';
+import 'package:nhap/widgets/searchable_country_sheet.dart';
+import 'package:nhap/Auth/lawyer_registration_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -21,6 +24,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _phoneNumberController = TextEditingController();
   bool _isRegistering = false;
   bool _isForgotPassword = false;
+  String _selectedCountryCode = kDefaultCountryCode;
 
   @override
   void dispose() {
@@ -79,6 +83,7 @@ class _AuthScreenState extends State<AuthScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
         phoneNumber: _phoneNumberController.text.trim(),
+        countryCode: _selectedCountryCode,
       );
     } else {
       success = await authService.signInUser(
@@ -97,6 +102,7 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.black, // Black background
@@ -108,12 +114,19 @@ class _AuthScreenState extends State<AuthScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (Navigator.of(context).canPop())
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => Navigator.maybePop(context),
+                    padding: EdgeInsets.zero,
+                    alignment: Alignment.centerLeft,
+                  ),
                 Text(
                   _isForgotPassword
                       ? 'Reset Password'
                       : _isRegistering
-                          ? appLocalization!.register
-                          : appLocalization!.login,
+                          ? l10n.register
+                          : l10n.login,
                   style: const TextStyle(
                     fontSize: 34,
                     fontWeight: FontWeight.bold,
@@ -125,8 +138,8 @@ class _AuthScreenState extends State<AuthScreen> {
                   _isForgotPassword
                       ? 'Enter your email to reset password'
                       : _isRegistering
-                          ? appLocalization!.createAccount
-                          : appLocalization!.welcomeBack,
+                          ? l10n.createAccount
+                          : l10n.welcomeBack,
                   style: TextStyle(color: Colors.grey[400]), // Light grey text
                 ),
                 const SizedBox(height: 20),
@@ -136,7 +149,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       Expanded(
                         child: _buildTextField(
                           controller: _firstNameController,
-                          label: appLocalization!.firstName,
+                          label: l10n.firstName,
                           validator: (value) =>
                               value!.isEmpty ? 'Enter first name' : null,
                           inputFormatters: [
@@ -149,7 +162,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       Expanded(
                         child: _buildTextField(
                           controller: _lastNameController,
-                          label: appLocalization!.lastName,
+                          label: l10n.lastName,
                           validator: (value) =>
                               value!.isEmpty ? 'Enter last name' : null,
                           inputFormatters: [
@@ -164,7 +177,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ],
                 _buildTextField(
                   controller: _emailController,
-                  label: appLocalization!.email,
+                  label: l10n.email,
                   validator: (value) {
                     if (value!.isEmpty) return 'Enter email';
                     if (!AuthService.isValidEmail(value.trim()))
@@ -176,7 +189,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   const SizedBox(height: 20),
                   _buildTextField(
                     controller: _passwordController,
-                    label: appLocalization!.password,
+                    label: l10n.password,
                     obscureText: true,
                     validator: (value) =>
                         value!.isEmpty ? 'Enter password' : null,
@@ -189,12 +202,49 @@ class _AuthScreenState extends State<AuthScreen> {
                   const SizedBox(height: 20),
                   _buildTextField(
                     controller: _phoneNumberController,
-                    label: appLocalization!.phoneNumber,
+                    label: l10n.phoneNumber,
                     validator: (value) =>
                         value!.isEmpty ? 'Enter phone number' : null,
                     inputFormatters: [
                       FilteringTextInputFormatter.digitsOnly,
                     ],
+                  ),
+                  const SizedBox(height: 16),
+                  InkWell(
+                    onTap: authService.isLoading
+                        ? null
+                        : () async {
+                            final code = await showSearchableCountryPicker(
+                              context,
+                              title: 'Country',
+                            );
+                            if (code != null && context.mounted) {
+                              setState(() => _selectedCountryCode = code);
+                            }
+                          },
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'Country',
+                        labelStyle: TextStyle(color: Colors.grey[400]),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey[600]!),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        focusedBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.tealAccent),
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[900],
+                        suffixIcon:
+                            const Icon(Icons.arrow_drop_down, color: Colors.white70),
+                      ),
+                      child: Text(
+                        '${countryNameFromCode(_selectedCountryCode)} ($_selectedCountryCode)',
+                        style: const TextStyle(
+                            fontSize: 16, color: Colors.white),
+                      ),
+                    ),
                   ),
                 ],
                 const SizedBox(height: 20),
@@ -225,8 +275,8 @@ class _AuthScreenState extends State<AuthScreen> {
                       _isForgotPassword
                           ? 'Send Reset Email'
                           : _isRegistering
-                              ? appLocalization!.register
-                              : appLocalization!.login,
+                              ? l10n.register
+                              : l10n.login,
                       style: const TextStyle(
                         fontSize: 18,
                         color: Colors.black, // Black text for contrast
@@ -234,7 +284,45 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
+                Center(
+                  child: FilledButton.icon(
+                    onPressed: authService.isLoading
+                        ? null
+                        : () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const LawyerRegistrationScreen(),
+                              ),
+                            );
+                          },
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 22,
+                        vertical: 14,
+                      ),
+                      backgroundColor: const Color(0xFF0D9488),
+                      foregroundColor: Colors.white,
+                      elevation: 3,
+                      shadowColor: const Color(0xFF0D9488).withOpacity(0.45),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    icon: const Icon(Icons.gavel_rounded, size: 20),
+                    label: const Text(
+                      'Register as a lawyer',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
                 if (!_isForgotPassword)
                   SizedBox(
                     width: double.infinity,
@@ -253,14 +341,37 @@ class _AuthScreenState extends State<AuthScreen> {
                       onPressed: authService.isLoading
                           ? null
                           : () async {
-                              bool success =
+                              final outcome =
                                   await authService.signInWithGoogle(context);
-                              if (success) {
-                                Navigator.pushReplacement(
+                              if (!context.mounted || !outcome.success) return;
+
+                              if (outcome.needsCountrySelection) {
+                                final code = await showSearchableCountryPicker(
                                   context,
+                                  title: 'Select your country',
+                                );
+                                if (!context.mounted) return;
+                                if (code == null || code.isEmpty) {
+                                  await authService.signOut();
+                                  return;
+                                }
+                                final ok = await authService
+                                    .completeGoogleCountrySelection(code);
+                                if (!ok) {
+                                  await authService.signOut();
+                                  return;
+                                }
+                              }
+
+                              if (!context.mounted) return;
+                              if (Navigator.of(context).canPop()) {
+                                Navigator.pop(context, true);
+                              } else {
+                                Navigator.of(context).pushAndRemoveUntil(
                                   MaterialPageRoute(
-                                    builder: (context) => HomePage(),
+                                    builder: (_) => const MainLayout(),
                                   ),
+                                  (route) => false,
                                 );
                               }
                             },
@@ -277,7 +388,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         },
                       ),
                       label: Text(
-                        appLocalization!.signInWithGoogle,
+                        l10n.signInWithGoogle,
                         style: TextStyle(
                             fontSize: 16, color: Colors.white), // White text
                         overflow: TextOverflow.ellipsis,
@@ -293,7 +404,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         TextButton(
                           onPressed: _toggleForgotPassword,
                           child: Text(
-                            '${appLocalization!.forgotPassword}',
+                            '${l10n.forgotPassword}',
                             style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 12), // White text
@@ -312,8 +423,8 @@ class _AuthScreenState extends State<AuthScreen> {
                           _isForgotPassword
                               ? 'Back to Login'
                               : _isRegistering
-                                  ? '${appLocalization!.alreadyHaveAccount} Login'
-                                  : '${appLocalization!.needAnAccount}',
+                                  ? '${l10n.alreadyHaveAccount} Login'
+                                  : '${l10n.needAnAccount}',
                           style: const TextStyle(
                               color: Colors.white, fontSize: 12), // White text
                         ),
@@ -336,6 +447,7 @@ class _AuthScreenState extends State<AuthScreen> {
     String? Function(String?)? validator,
     List<TextInputFormatter>? inputFormatters,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
@@ -344,11 +456,11 @@ class _AuthScreenState extends State<AuthScreen> {
         labelText: label,
         labelStyle: TextStyle(color: Colors.grey[400]), // Light grey label
         prefixIcon: Icon(
-          label.contains(appLocalization!.email)
+          label.contains(l10n.email)
               ? Icons.email
-              : label.contains(appLocalization!.password)
+              : label.contains(l10n.password)
                   ? Icons.lock
-                  : label.contains(appLocalization!.phoneNumber)
+                  : label.contains(l10n.phoneNumber)
                       ? Icons.phone
                       : Icons.person,
           color: Colors.white, // White icon for contrast

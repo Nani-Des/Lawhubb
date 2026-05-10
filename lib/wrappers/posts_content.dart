@@ -6,7 +6,7 @@ import '../Forums/Public/forum.dart';
 import '../Forums/Public/Widgets/create_post_dialog.dart';
 import '../Forums/Public/Widgets/user_profile_screen.dart';
 import '../Forums/Chat/live_stream.dart';
-import '../Auth/auth_screen.dart';
+import '../Auth/login_required_shell.dart';
 
 class PostsContent extends StatefulWidget {
   const PostsContent({super.key});
@@ -133,7 +133,7 @@ class _PostsContentState extends State<PostsContent> {
                 _OptionTile(
                   icon: Icons.videocam_outlined,
                   title: 'Live Stream',
-                  subtitle: 'Start a live consultation',
+                  subtitle: 'Start a live stream',
                   onTap: () {
                     Navigator.pop(context);
                     _startPublicConsultation();
@@ -152,20 +152,10 @@ class _PostsContentState extends State<PostsContent> {
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
-      // Redirect to login page
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AuthScreen()),
-          );
-        }
-      });
-      return Scaffold(
-        backgroundColor: Colors.black,
-        body: const Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        ),
+      return LoginRequiredShell(
+        title: 'Posts',
+        message: 'Sign in to view and create posts.',
+        onAuthResolved: () => setState(() {}),
       );
     }
     final loggedInUserId = currentUser.uid;
@@ -267,14 +257,15 @@ class _OptionTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.grey[800],
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(
+              color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: Colors.white, size: 24),

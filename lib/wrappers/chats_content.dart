@@ -5,29 +5,24 @@ import 'package:nhap/l10n/app_localizations.dart';
 import '../Forums/Chat/search_screen.dart';
 import '../Forums/Chat/chat_list.dart';
 import '../Forums/Public/Widgets/user_profile_screen.dart';
-import '../Auth/auth_screen.dart';
+import '../Auth/login_required_shell.dart';
 
-class ChatsContent extends StatelessWidget {
+class ChatsContent extends StatefulWidget {
   const ChatsContent({super.key});
 
+  @override
+  State<ChatsContent> createState() => _ChatsContentState();
+}
+
+class _ChatsContentState extends State<ChatsContent> {
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
-      // Redirect to login page
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AuthScreen()),
-          );
-        }
-      });
-      return Scaffold(
-        backgroundColor: Colors.black,
-        body: const Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        ),
+      return LoginRequiredShell(
+        title: AppLocalizations.of(context)?.chats ?? 'Chats',
+        message: 'Sign in to view and send messages.',
+        onAuthResolved: () => setState(() {}),
       );
     }
     final loggedInUserId = currentUser.uid;

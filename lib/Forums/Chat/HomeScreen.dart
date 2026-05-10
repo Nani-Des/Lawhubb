@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nhap/Forums/Chat/search_screen.dart';
-import '../../Home/Widgets/custom_bottom_navbar.dart';
-import '../../Hospital/doctor_profile.dart';
 import '../Public/forum.dart';
 import '../Public/Widgets/user_profile_screen.dart';
 import 'chat_list.dart';
@@ -166,7 +164,6 @@ class HomeScreen extends StatelessWidget {
           child: const Icon(Icons.videocam, color: Colors.white),
           tooltip: 'Start Public Consultation',
         ),
-        bottomNavigationBar: CustomBottomNavBar(selectedIndex: 2, setup:3),
       ),
     );
   }

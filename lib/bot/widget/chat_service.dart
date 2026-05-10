@@ -61,4 +61,28 @@ class ChatService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove("guest_messages");
   }
+
+  /// Deletes all assistant messages for the signed-in user (LawHub Assistant history).
+  static Future<void> clearFirestoreMessages() async {
+    final uid = _userId;
+    if (uid == null) return;
+
+    const chunk = 400;
+    while (true) {
+      final snap = await _firestore
+          .collection('Chats')
+          .doc(uid)
+          .collection('messages')
+          .limit(chunk)
+          .get();
+      if (snap.docs.isEmpty) break;
+
+      final batch = _firestore.batch();
+      for (final d in snap.docs) {
+        batch.delete(d.reference);
+      }
+      await batch.commit();
+      if (snap.docs.length < chunk) break;
+    }
+  }
 }

@@ -5,6 +5,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:nhap/Forums/Public/Widgets/postcard_media.dart';
 import '../../../Services/translation_service.dart';
+import '../../../utils/lawhubb_share.dart';
+import '../../../utils/share_remote_media.dart';
 import 'delete_post_service.dart';
 import 'full_screen.dart';
 import 'add_comment.dart';
@@ -204,24 +206,73 @@ class _PostCardState extends State<PostCard> {
     }
   }
 
-  void _sharePost() {
+  Future<void> _sharePost() async {
     final content = widget.postData['Content'] as String? ?? '';
     final videoUrl = widget.postData['VideoURL'] as String?;
     final imageUrl = widget.postData['ImageURL'] as String?;
 
-    final buffer = StringBuffer();
-    if (content.isNotEmpty) {
-      buffer.writeln(content);
-      buffer.writeln();
-    }
-    if (videoUrl != null && videoUrl.isNotEmpty) {
-      buffer.writeln('🎥 Watch: $videoUrl');
-    } else if (imageUrl != null && imageUrl.isNotEmpty) {
-      buffer.writeln('🖼️ View: $imageUrl');
-    }
-    buffer.writeln('\nShared from LawHubb');
+    final caption = content.trim();
+    final fallbackCaption =
+        caption.isEmpty ? 'Shared from LawHubb' : caption;
 
-    Share.share(buffer.toString().trim());
+    if (videoUrl != null && videoUrl.trim().isNotEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Preparing video to share…'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      final ok = await shareRemoteVideoWithCaption(
+        videoUrl: videoUrl.trim(),
+        caption: fallbackCaption,
+      );
+      if (ok) return;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not download the video. Sharing text only.'),
+          ),
+        );
+      }
+      await Share.share(
+        LawHubbShare.withFooter(fallbackCaption),
+        subject: LawHubbShare.storeListingName,
+      );
+      return;
+    }
+
+    if (imageUrl != null && imageUrl.trim().isNotEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Preparing image to share…'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      final ok = await shareRemoteImageWithCaption(
+        imageUrl: imageUrl.trim(),
+        caption: fallbackCaption,
+      );
+      if (ok) return;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not download the image. Sharing text only.'),
+          ),
+        );
+      }
+      await Share.share(
+        LawHubbShare.withFooter(fallbackCaption),
+        subject: LawHubbShare.storeListingName,
+      );
+      return;
+    }
+
+    await Share.share(
+      LawHubbShare.withFooter(caption.isEmpty ? fallbackCaption : caption),
+      subject: LawHubbShare.storeListingName,
+    );
   }
 
   Future<Map<String, String?>> _fetchUserDetails(String userId) async {
@@ -257,6 +308,16 @@ class _PostCardState extends State<PostCard> {
   }
 
   Future<void> _showTranslationOptions() async {
+    final localeCode = Localizations.localeOf(context).languageCode;
+    final appLanguageName = TranslationService.getLanguageName(localeCode);
+    final appLanguageLabel =
+        appLanguageName == 'Unknown' ? localeCode.toUpperCase() : appLanguageName;
+    final languageChoices = <MapEntry<String, String>>[
+      MapEntry('App ($appLanguageLabel)', localeCode),
+      ...TranslationService.languageCodes.entries
+          .map((entry) => MapEntry(entry.key, entry.value)),
+    ];
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.grey[900],
@@ -279,8 +340,9 @@ class _PostCardState extends State<PostCard> {
                 ),
               ),
             ),
-            ...['English', 'Spanish', 'French'].map((language) {
-              final languageCode = TranslationService.getLanguageCode(language);
+            ...languageChoices.map((choice) {
+              final language = choice.key;
+              final languageCode = choice.value;
               final isCurrentLanguage =
                   _currentTranslationLanguage == languageCode;
 

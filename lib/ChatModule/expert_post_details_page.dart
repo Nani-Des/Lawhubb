@@ -9,6 +9,7 @@ import 'dart:math';
 
 import 'chat_module.dart';
 import '../Services/config_service.dart';
+import 'package:nhap/utils/country_utils.dart';
 
 
 class TranslationService {
@@ -468,6 +469,7 @@ class _ExpertPostDetailsPageState extends State<ExpertPostDetailsPage> with Sing
                                 final userData = userSnapshot.data() as Map<String, dynamic>;
                                 final fullName = "${userData['Fname'] ?? 'Unknown'} ${userData['Lname'] ?? ''}".trim();
                                 final userRegion = userData['Region'] ?? 'Unknown Region';
+                                final userCountryCode = effectiveCountryCode(userData);
 
                                 // Prepare the comment data
                                 Map<String, dynamic> commentData = {
@@ -496,6 +498,7 @@ class _ExpertPostDetailsPageState extends State<ExpertPostDetailsPage> with Sing
                                   commentController.text, // Process the reply content
                                   currentUserId,
                                   userRegion,
+                                  userCountryCode,
                                 );
 
                                 // Clear the comment controller and reply state
@@ -1023,7 +1026,7 @@ class _ExpertPostDetailsPageState extends State<ExpertPostDetailsPage> with Sing
   }
 
   Future<void> _processMessageForHealthInsights(String messageText,
-      String userId, String userRegion) async {
+      String userId, String userRegion, String userCountryCode) async {
     // Define health categories and keywords
     final Map<String, List<String>> healthCategories = {
       'symptoms': [
@@ -1116,7 +1119,7 @@ class _ExpertPostDetailsPageState extends State<ExpertPostDetailsPage> with Sing
           final querySnapshot = await healthInsightsCollection
               .where('category', isEqualTo: category)
               .where('messageType', isEqualTo: 'experts')
-              .where('region', isEqualTo: userRegion)
+              .where('countryCode', isEqualTo: userCountryCode)
               .where('keyword', isEqualTo: keyword)
               .get();
 
@@ -1135,6 +1138,7 @@ class _ExpertPostDetailsPageState extends State<ExpertPostDetailsPage> with Sing
               'keyword': keyword,
               'count': matchedCategories[category]![keyword],
               'region': userRegion,
+              'countryCode': userCountryCode,
               'messageType': 'experts',
               'timestamp': FieldValue.serverTimestamp(),
               'lastUpdated': FieldValue.serverTimestamp(),

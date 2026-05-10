@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:permission_handler/permission_handler.dart';
+
+import '../../Services/config_service.dart';
 
 class ConsultationScreen extends StatefulWidget {
   final String channelName;
@@ -19,7 +23,11 @@ class ConsultationScreen extends StatefulWidget {
 }
 
 class _ConsultationScreenState extends State<ConsultationScreen> {
-  static const String _appId = "873c3e4a81ca45cb92806d6362381790";
+  /// Fallback if Remote Config is empty (legacy deployments).
+  static const String _fallbackAgoraAppId =
+      "873c3e4a81ca45cb92806d6362381790";
+
+  final ConfigService _configService = ConfigService();
   RtcEngine? _engine;
 
   bool _isJoined = false;
@@ -29,7 +37,6 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
   bool _loading = true;
   bool _isMuted = false;
   bool _isVideoEnabled = true;
-  bool _isDisposing = false;
 
   final TextEditingController _chatController = TextEditingController();
   final userId = FirebaseAuth.instance.currentUser!.uid;
@@ -39,10 +46,28 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
   final double previewWidth = 130;
   final double previewHeight = 180;
 
+  bool _hangUpDone = false;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _consultSub;
+
   @override
   void initState() {
     super.initState();
+    _listenConsultationStatus();
     _setup();
+  }
+
+  void _listenConsultationStatus() {
+    _consultSub = FirebaseFirestore.instance
+        .collection('Consultations')
+        .doc(widget.channelName)
+        .snapshots()
+        .listen((snap) {
+      if (!snap.exists || _hangUpDone || !mounted) return;
+      final status = snap.data()?['status'] as String?;
+      if (status != null && status != 'active') {
+        unawaited(_hangUp(popNavigator: true, skipFirestoreUpdate: true));
+      }
+    });
   }
 
   Future<void> _setup() async {
@@ -59,8 +84,11 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     }
 
     try {
+      final appId = _configService.agoraAppId.isNotEmpty
+          ? _configService.agoraAppId
+          : _fallbackAgoraAppId;
       final engine = createAgoraRtcEngine();
-      await engine.initialize(RtcEngineContext(appId: _appId));
+      await engine.initialize(RtcEngineContext(appId: appId));
       _engine = engine;
       _isEngineInitialized = true;
 
@@ -126,27 +154,46 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     }
   }
 
-  Future<void> _endConsultation() async {
-    try {
-      await FirebaseFirestore.instance
-          .collection("Consultations")
-          .doc(widget.channelName)
-          .update({
-        "status": "ended",
-        "endTimestamp": FieldValue.serverTimestamp(),
-      });
+  Future<void> _hangUp({
+    bool popNavigator = true,
+    bool skipFirestoreUpdate = false,
+  }) async {
+    if (_hangUpDone) return;
+    _hangUpDone = true;
 
+    await _consultSub?.cancel();
+    _consultSub = null;
+
+    try {
+      if (!skipFirestoreUpdate) {
+        await FirebaseFirestore.instance
+            .collection("Consultations")
+            .doc(widget.channelName)
+            .update({
+          "status": "ended",
+          "endTimestamp": FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (_) {}
+
+    try {
       await _engine?.stopPreview();
       await _engine?.leaveChannel();
       await _engine?.release();
+      _engine = null;
     } catch (_) {}
-    if (mounted) Navigator.pop(context);
+
+    if (popNavigator && mounted) {
+      Navigator.of(context).maybePop();
+    }
   }
 
   @override
   void dispose() {
     _chatController.dispose();
-    _endConsultation();
+    if (!_hangUpDone) {
+      unawaited(_hangUp(popNavigator: false));
+    }
     super.dispose();
   }
 
@@ -325,38 +372,47 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
       );
     }
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          Positioned.fill(child: _buildRemoteVideo()),
-          if (_isEngineInitialized) _buildDraggablePreview(),
-          _buildChatSheet(),
-          Positioned(
-            bottom: 100,
-            right: 20,
-            child: Column(
-              children: [
-                FloatingActionButton(
-                  heroTag: "share",
-                  backgroundColor: Colors.blueGrey[800],
-                  onPressed: _toggleScreenShare,
-                  child: Icon(
-                    _isScreenSharing ? Icons.stop_screen_share : Icons.screen_share,
-                    color: Colors.white,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) async {
+        if (didPop) return;
+        await _hangUp();
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
+          children: [
+            Positioned.fill(child: _buildRemoteVideo()),
+            if (_isEngineInitialized) _buildDraggablePreview(),
+            _buildChatSheet(),
+            Positioned(
+              bottom: 100,
+              right: 20,
+              child: Column(
+                children: [
+                  FloatingActionButton(
+                    heroTag: "share",
+                    backgroundColor: Colors.blueGrey[800],
+                    onPressed: _toggleScreenShare,
+                    child: Icon(
+                      _isScreenSharing
+                          ? Icons.stop_screen_share
+                          : Icons.screen_share,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                FloatingActionButton(
-                  heroTag: "end",
-                  backgroundColor: Colors.redAccent,
-                  onPressed: _endConsultation,
-                  child: const Icon(Icons.call_end, color: Colors.white),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  FloatingActionButton(
+                    heroTag: "end",
+                    backgroundColor: Colors.redAccent,
+                    onPressed: () => _hangUp(),
+                    child: const Icon(Icons.call_end, color: Colors.white),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

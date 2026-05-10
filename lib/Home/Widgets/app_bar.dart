@@ -5,14 +5,22 @@ import 'package:nhap/Services/language_provider.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? userImageUrl;
-  final VoidCallback onAvatarTap;
-  final VoidCallback? onAIAssistantTap;
+  /// When not logged in: opens sign-in (same as tapping avatar).
+  final VoidCallback onGuestAvatarTap;
+  /// Logged-in: opens profile sheet / drawer.
+  final VoidCallback onOpenProfile;
+  /// Logged-in only; when non-null, menu shows "Register as a lawyer".
+  final VoidCallback? onRegisterAsLawyer;
+
+  final bool isLoggedIn;
 
   const CustomAppBar({
     super.key,
     required this.userImageUrl,
-    required this.onAvatarTap,
-    this.onAIAssistantTap,
+    required this.onGuestAvatarTap,
+    required this.onOpenProfile,
+    this.onRegisterAsLawyer,
+    this.isLoggedIn = false,
   });
 
   String _getLanguageName(
@@ -160,33 +168,109 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
             Padding(
               padding: const EdgeInsets.only(right: 16.0),
-              child: GestureDetector(
-                onTap: onAvatarTap,
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.grey[800]!,
-                      width: 2,
+              child: isLoggedIn
+                  ? PopupMenuButton<String>(
+                      offset: const Offset(0, 44),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      color: Colors.grey[900],
+                      onSelected: (value) {
+                        if (value == 'profile') {
+                          onOpenProfile();
+                        } else if (value == 'lawyer') {
+                          onRegisterAsLawyer?.call();
+                        }
+                      },
+                      itemBuilder: (BuildContext context) {
+                        final items = <PopupMenuEntry<String>>[
+                          PopupMenuItem<String>(
+                            value: 'profile',
+                            child: Row(
+                              children: [
+                                Icon(Icons.person_outline,
+                                    color: Colors.grey[300], size: 22),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Profile',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ];
+                        if (onRegisterAsLawyer != null) {
+                          items.add(
+                            PopupMenuItem<String>(
+                              value: 'lawyer',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.gavel_rounded,
+                                      color: Colors.grey[300], size: 22),
+                                  const SizedBox(width: 12),
+                                  const Text(
+                                    'Register as a lawyer',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+                        return items;
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.grey[800]!,
+                            width: 2,
+                          ),
+                        ),
+                        child: CircleAvatar(
+                          radius: 18,
+                          backgroundColor: Colors.grey[850],
+                          backgroundImage: userImageUrl != null &&
+                                  userImageUrl!.isNotEmpty
+                              ? NetworkImage(userImageUrl!)
+                              : null,
+                          child: userImageUrl == null || userImageUrl!.isEmpty
+                              ? const Icon(
+                                  Icons.person_outline,
+                                  color: Colors.white,
+                                  size: 20,
+                                )
+                              : null,
+                        ),
+                      ),
+                    )
+                  : GestureDetector(
+                      onTap: onGuestAvatarTap,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.grey[800]!,
+                            width: 2,
+                          ),
+                        ),
+                        child: CircleAvatar(
+                          radius: 18,
+                          backgroundColor: Colors.grey[850],
+                          backgroundImage: userImageUrl != null &&
+                                  userImageUrl!.isNotEmpty
+                              ? NetworkImage(userImageUrl!)
+                              : null,
+                          child: userImageUrl == null || userImageUrl!.isEmpty
+                              ? const Icon(
+                                  Icons.person_outline,
+                                  color: Colors.white,
+                                  size: 20,
+                                )
+                              : null,
+                        ),
+                      ),
                     ),
-                  ),
-                  child: CircleAvatar(
-                    radius: 18,
-                    backgroundColor: Colors.grey[850],
-                    backgroundImage:
-                        userImageUrl != null && userImageUrl!.isNotEmpty
-                            ? NetworkImage(userImageUrl!)
-                            : null,
-                    child: userImageUrl == null || userImageUrl!.isEmpty
-                        ? const Icon(
-                            Icons.person_outline,
-                            color: Colors.white,
-                            size: 20,
-                          )
-                        : null,
-                  ),
-                ),
-              ),
             ),
           ],
           automaticallyImplyLeading: false,

@@ -11,7 +11,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
-import 'Home/home_page.dart';
+import 'main_layout.dart';
 import 'booking_details.dart';
 
 // Background message handler (must be top-level or static)
@@ -445,7 +445,6 @@ class _BookingPageState extends State<BookingPage> with SingleTickerProviderStat
   }
 
   void _handleNotificationTap(Map<String, dynamic> data) {
-    final type = data['type'];
     final bookingDateSeconds = data['bookingDate'];
     final userId = data['userId'];
     final doctorId = data['doctorId'];
@@ -551,7 +550,7 @@ class _BookingPageState extends State<BookingPage> with SingleTickerProviderStat
               child: CircularProgressIndicator(
                 value: _progressAnimation.value,
                 strokeWidth: 8,
-                backgroundColor: Colors.grey.withOpacity(0.2),
+                backgroundColor: Colors.grey.withValues(alpha: 0.2),
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
               ),
             ),
@@ -567,7 +566,7 @@ class _BookingPageState extends State<BookingPage> with SingleTickerProviderStat
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 10,
                     offset: Offset(0, 4),
                   ),
@@ -608,8 +607,10 @@ class _BookingPageState extends State<BookingPage> with SingleTickerProviderStat
             onPressed: () {
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (context) => HomePage()),
-                    (route) => false,
+                MaterialPageRoute(
+                  builder: (context) => const MainLayout(initialIndex: 0),
+                ),
+                (route) => false,
               );
             },
           ),
@@ -925,7 +926,7 @@ class _BookingPageState extends State<BookingPage> with SingleTickerProviderStat
     };
     return Chip(
       label: Text(status ?? 'Unknown', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-      backgroundColor: color.withOpacity(0.8),
+      backgroundColor: color.withValues(alpha: 0.8),
       padding: EdgeInsets.symmetric(horizontal: 8),
     );
   }
@@ -969,34 +970,6 @@ class _BookingPageState extends State<BookingPage> with SingleTickerProviderStat
 
   bool _isDateInPast(Timestamp timestamp) {
     return timestamp.toDate().isBefore(DateTime.now());
-  }
-
-  Future<void> _createBooking({
-    required String doctorId,
-    required DateTime date,
-    required String reason,
-    required String hospitalId,
-  }) async {
-    if (_isOffline) {
-      _showModernSnackBar(context, 'Cannot create booking offline', isError: true);
-      return;
-    }
-    try {
-      DocumentReference docRef = FirebaseFirestore.instance.collection('Bookings').doc(widget.currentUserId);
-      DocumentSnapshot doc = await docRef.get();
-      List<dynamic> bookings = doc.exists ? List.from(doc['Bookings'] ?? []) : [];
-      bookings.add({
-        'doctorId': doctorId,
-        'hospitalId': hospitalId,
-        'date': Timestamp.fromDate(date),
-        'status': 'Pending',
-        'reason': reason,
-      });
-      await docRef.set({'Bookings': bookings});
-      _showModernSnackBar(context, 'Booking created successfully');
-    } catch (e) {
-      _showModernSnackBar(context, 'Failed to create booking: $e', isError: true);
-    }
   }
 
   void _updateStatus(String userId, Timestamp date, String newStatus) async {

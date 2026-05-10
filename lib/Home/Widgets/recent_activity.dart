@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nhap/l10n/app_localizations.dart';
 import '../../Services/recent_activity_service.dart';
 import '../../booking_page.dart';
+import '../../Library/library_book_gate.dart';
 import '../../Library/library_page.dart';
-import '../../Library/pdf_reader_page.dart';
 import '../../Forums/Chat/chat_screen.dart';
 import 'package:hive/hive.dart';
 
@@ -141,16 +141,14 @@ class _RecentActivityState extends State<RecentActivity>
               final archiveBox = await Hive.openBox('reading_archive');
               final docData = archiveBox.get(documentId);
               if (docData is Map && docData['url'] != null) {
-                Navigator.push(
+                final map = Map<String, dynamic>.from(docData);
+                await openLibraryBookReader(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => PDFReaderPage(
-                      url: docData['url'],
-                      title: docData['title'] ?? 'Document',
-                      id: documentId,
-                      initialPage: docData['progressPage'] as int?,
-                    ),
-                  ),
+                  {
+                    'id': documentId.toString(),
+                    ...map,
+                  },
+                  initialPage: map['progressPage'] as int?,
                 );
               } else {
                 // Navigate to library to find the document

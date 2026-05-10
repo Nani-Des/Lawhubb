@@ -25,6 +25,7 @@ import 'package:flutter/services.dart';
 import 'experts_community_page.dart';
 import 'HealthInsightsPage.dart';
 import '../Services/config_service.dart';
+import 'package:nhap/utils/country_utils.dart';
 
 // ====================== Translation Service ======================
 class TranslationService {
@@ -1454,6 +1455,8 @@ class _ForumPageState extends State<ForumPage>
                           .trim();
                   final String userRegion =
                       userData['Region'] ?? 'Unknown Region';
+                  final String userCountryCode =
+                      effectiveCountryCode(userData);
 
                   await _firestore.collection('ForumPosts').add({
                     'content': postController.text.trim(),
@@ -1466,6 +1469,7 @@ class _ForumPageState extends State<ForumPage>
                     postController.text.trim(),
                     currentUserId,
                     userRegion,
+                    userCountryCode,
                   );
 
                   postController.clear();
@@ -1484,7 +1488,10 @@ class _ForumPageState extends State<ForumPage>
   }
 
   Future<void> _processMessageForHealthInsights(
-      String messageText, String userId, String userRegion) async {
+      String messageText,
+      String userId,
+      String userRegion,
+      String userCountryCode) async {
     final Map<String, List<String>> healthCategories = {
       'symptoms': [
         'fever',
@@ -1595,7 +1602,7 @@ class _ForumPageState extends State<ForumPage>
           final querySnapshot = await healthInsightsCollection
               .where('category', isEqualTo: category)
               .where('messageType', isEqualTo: 'forum')
-              .where('region', isEqualTo: userRegion)
+              .where('countryCode', isEqualTo: userCountryCode)
               .where('keyword', isEqualTo: keyword)
               .get();
 
@@ -1612,6 +1619,7 @@ class _ForumPageState extends State<ForumPage>
               'keyword': keyword,
               'count': matchedCategories[category]![keyword],
               'region': userRegion,
+              'countryCode': userCountryCode,
               'messageType': 'forum',
               'timestamp': FieldValue.serverTimestamp(),
               'lastUpdated': FieldValue.serverTimestamp(),
@@ -2035,6 +2043,8 @@ class _PostDetailsPageState extends State<PostDetailsPage>
                                         .trim();
                                 final userRegion =
                                     userData['Region'] ?? 'Unknown Region';
+                                final userCountryCode =
+                                    effectiveCountryCode(userData);
 
                                 // Prepare the comment data
                                 Map<String, dynamic> commentData = {
@@ -2066,6 +2076,7 @@ class _PostDetailsPageState extends State<PostDetailsPage>
                                       .text, // Process the reply content
                                   currentUserId,
                                   userRegion,
+                                  userCountryCode,
                                 );
 
                                 // Clear the comment controller and reply state
@@ -2631,7 +2642,10 @@ class _PostDetailsPageState extends State<PostDetailsPage>
   }
 
   Future<void> _processMessageForHealthInsights(
-      String messageText, String userId, String userRegion) async {
+      String messageText,
+      String userId,
+      String userRegion,
+      String userCountryCode) async {
     // Define health categories and keywords
     final Map<String, List<String>> healthCategories = {
       'symptoms': [
@@ -2748,7 +2762,7 @@ class _PostDetailsPageState extends State<PostDetailsPage>
           final querySnapshot = await healthInsightsCollection
               .where('category', isEqualTo: category)
               .where('messageType', isEqualTo: 'forum')
-              .where('region', isEqualTo: userRegion)
+              .where('countryCode', isEqualTo: userCountryCode)
               .where('keyword', isEqualTo: keyword)
               .get();
 
@@ -2767,6 +2781,7 @@ class _PostDetailsPageState extends State<PostDetailsPage>
               'keyword': keyword,
               'count': matchedCategories[category]![keyword],
               'region': userRegion,
+              'countryCode': userCountryCode,
               'messageType': 'forum',
               'timestamp': FieldValue.serverTimestamp(),
               'lastUpdated': FieldValue.serverTimestamp(),
@@ -3549,7 +3564,9 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
     // Fetch user's region from the Users collection
     DocumentSnapshot userDoc =
         await FirebaseFirestore.instance.collection('Users').doc(userId).get();
-    String userRegion = userDoc['Region'] ?? 'Unknown';
+    final ud = userDoc.data() as Map<String, dynamic>?;
+    String userRegion = ud?['Region'] ?? 'Unknown';
+    String userCountryCode = effectiveCountryCode(ud);
 
     // Define health categories and keywords
     final Map<String, List<String>> healthCategories = {
@@ -3665,7 +3682,7 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('HealthInsights')
           .where('category', isEqualTo: category)
-          .where('region', isEqualTo: userRegion)
+          .where('countryCode', isEqualTo: userCountryCode)
           .where('messageType', isEqualTo: messageType)
           .limit(1) // Limit the query to one result
           .get();
@@ -3677,18 +3694,19 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
           'count': FieldValue.increment(count),
         });
         print(
-            "Updated existing document for category: $category, region: $userRegion, messageType: $messageType");
+            "Updated existing document for category: $category, countryCode: $userCountryCode, messageType: $messageType");
       } else {
         // Document does not exist, create a new one
         await FirebaseFirestore.instance.collection('HealthInsights').add({
           'category': category,
           'count': count,
           'region': userRegion,
+          'countryCode': userCountryCode,
           'messageType': messageType,
           'timestamp': FieldValue.serverTimestamp(),
         });
         print(
-            "Created new document for category: $category, region: $userRegion, messageType: $messageType");
+            "Created new document for category: $category, countryCode: $userCountryCode, messageType: $messageType");
       }
     }
 

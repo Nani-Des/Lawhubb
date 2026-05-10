@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nhap/l10n/app_localizations.dart';
-import '../Auth/auth_screen.dart';
+import '../Auth/login_required_shell.dart';
 import 'create_insight_dialog.dart';
 import 'insight_card.dart';
 import 'Services/law_insights_service.dart';
@@ -20,7 +20,6 @@ class _LawInsightsPageState extends State<LawInsightsPage> {
   final FollowService _followService = FollowService();
   final ScrollController _scrollController = ScrollController();
   String _selectedFilter = 'All';
-  bool _isLoading = false;
   Set<String> _followingList = {};
 
   @override
@@ -53,9 +52,8 @@ class _LawInsightsPageState extends State<LawInsightsPage> {
   }
 
   Future<void> _refreshInsights() async {
-    setState(() => _isLoading = true);
     await Future.delayed(const Duration(milliseconds: 500));
-    setState(() => _isLoading = false);
+    if (mounted) setState(() {});
   }
 
   Future<bool> _isLawyer() async {
@@ -68,7 +66,7 @@ class _LawInsightsPageState extends State<LawInsightsPage> {
         .get();
 
     if (!userDoc.exists) return false;
-    return (userDoc.data() as Map<String, dynamic>?)?['Role'] == true;
+    return userDoc.data()?['Role'] == true;
   }
 
   void _showAccessDeniedDialog() {
@@ -103,26 +101,12 @@ class _LawInsightsPageState extends State<LawInsightsPage> {
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
 
-    // Check authentication and redirect if needed
     if (currentUser == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AuthScreen()),
-          ).then((_) {
-            // Refresh after login
-            if (mounted) {
-              setState(() {});
-            }
-          });
-        }
-      });
-      return Scaffold(
-        backgroundColor: Colors.black,
-        body: const Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        ),
+      final localizations = AppLocalizations.of(context);
+      return LoginRequiredShell(
+        title: localizations?.lawInsights ?? 'Law Insights',
+        message: 'Sign in to browse Law Insights.',
+        onAuthResolved: () => setState(() {}),
       );
     }
 

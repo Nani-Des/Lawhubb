@@ -3,6 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+
+import '../utils/lawhubb_share.dart';
+import '../utils/share_remote_media.dart';
 import 'package:video_player/video_player.dart';
 import '../../Hospital/doctor_profile.dart';
 import '../../ChatModule/chat_module.dart';
@@ -120,26 +123,54 @@ class _InsightCardState extends State<InsightCard>
     _commentController.clear();
   }
 
-  void _shareInsight() {
+  Future<void> _shareInsight() async {
     final title = widget.insightData['title'] ?? '';
     final description = widget.insightData['description'] ?? '';
-    final videoUrl = widget.insightData['videoUrl'] as String? ?? '';
+    final videoUrl = (widget.insightData['videoUrl'] as String?)?.trim() ?? '';
 
     final buffer = StringBuffer();
-    if (title.isNotEmpty) {
+    if (title.toString().isNotEmpty) {
       buffer.writeln(title);
       buffer.writeln();
     }
-    if (description.isNotEmpty) {
+    if (description.toString().isNotEmpty) {
       buffer.writeln(description);
-      buffer.writeln();
     }
-    if (videoUrl.isNotEmpty) {
-      buffer.writeln('🎥 Watch: $videoUrl');
-    }
-    buffer.writeln('\nShared from LawHubb');
+    final caption = buffer.toString().trim();
+    final fallback =
+        caption.isEmpty ? 'Law Insight from LawHubb' : caption;
 
-    Share.share(buffer.toString().trim());
+    if (videoUrl.isNotEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Preparing video to share…'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      final ok = await shareRemoteVideoWithCaption(
+        videoUrl: videoUrl,
+        caption: fallback,
+      );
+      if (ok) return;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not download the video. Sharing text only.'),
+          ),
+        );
+      }
+      await Share.share(
+        LawHubbShare.withFooter(fallback),
+        subject: LawHubbShare.storeListingName,
+      );
+      return;
+    }
+
+    await Share.share(
+      LawHubbShare.withFooter(fallback),
+      subject: LawHubbShare.storeListingName,
+    );
   }
 
   String _formatDate(Timestamp? timestamp) {
@@ -180,6 +211,18 @@ class _InsightCardState extends State<InsightCard>
         ),
       );
     }
+  }
+
+  void _openInsightDetail() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => InsightDetailPage(
+          insightId: widget.insightId,
+          insightData: widget.insightData,
+        ),
+      ),
+    );
   }
 
   Future<void> _deleteInsight() async {
@@ -423,48 +466,69 @@ class _InsightCardState extends State<InsightCard>
               ],
             ),
           ),
-          // Title & Description
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.insightData['title'] ?? '',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                  ),
+          // Title & Description (tap opens full detail — works for text-only insights too)
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _openInsightDetail,
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.insightData['title'] ?? '',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            widget.insightData['description'] ?? '',
+                            style: TextStyle(
+                              color: Colors.grey[300],
+                              fontSize: 14,
+                            ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Tap to view full insight',
+                            style: TextStyle(
+                              color: Colors.tealAccent.withValues(alpha: 0.85),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8, top: 4),
+                      child: Icon(
+                        Icons.chevron_right,
+                        color: Colors.grey[600],
+                        size: 22,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  widget.insightData['description'] ?? '',
-                  style: TextStyle(
-                    color: Colors.grey[300],
-                    fontSize: 14,
-                  ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+              ),
             ),
           ),
           const SizedBox(height: 12),
           // Video
           if (videoUrl.isNotEmpty)
             GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => InsightDetailPage(
-                      insightId: widget.insightId,
-                      insightData: widget.insightData,
-                    ),
-                  ),
-                );
-              },
+              onTap: _openInsightDetail,
               child: InsightVideoPlayer(videoUrl: videoUrl),
             ),
           // Metrics & Actions

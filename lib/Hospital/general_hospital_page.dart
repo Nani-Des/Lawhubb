@@ -2,14 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nhap/news_stand.dart';
-import '../Appointments/Referral screens/referral_details_page.dart';
-import '../Appointments/referral_form.dart';
-import '../Auth/auth_screen.dart';
-import '../Emergency/knowledge_packs_page.dart';
-import '../Home/Widgets/custom_bottom_navbar.dart';
 import '../Home/Widgets/organization_list_view.dart';
 import '../Library/library_page.dart';
-import '../Login/login_screen1.dart';
 
 class GeneralHospitalPage extends StatelessWidget {
   // Function to check if the user is an active doctor
@@ -29,26 +23,11 @@ class GeneralHospitalPage extends StatelessWidget {
     return isDoctor && isActive;
   }
 
-  // Function to get the hospital ID
-  Future<String?> _getHospitalId() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return null;
-
-    final userDoc =
-    await FirebaseFirestore.instance.collection('Users').doc(user.uid).get();
-
-    return userDoc.exists && userDoc.data() != null
-        ? (userDoc.data()!['Chamber ID'] as String?)
-        : null;
-  }
-
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
       future: _isActiveDoctor(),
       builder: (context, snapshot) {
-        bool isActiveDoctor = snapshot.data ?? false;
-
         return Scaffold(
           body: Container(
             decoration: BoxDecoration(
@@ -182,7 +161,7 @@ class GeneralHospitalPage extends StatelessWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => NewsStandApp(),
+                                  builder: (context) => const NewsStandPage(),
                                 ),
                               );
                             },
@@ -207,7 +186,6 @@ class GeneralHospitalPage extends StatelessWidget {
               ],
             ),
           ),
-          bottomNavigationBar: CustomBottomNavBar(selectedIndex: 0, setup: 2),
         );
       },
     );

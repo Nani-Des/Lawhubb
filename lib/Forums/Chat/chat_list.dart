@@ -95,6 +95,12 @@ class _ChatListState extends State<ChatList> {
     for (var chatDoc in chats) {
       try {
         final chatId = chatDoc.id;
+        final chatData = chatDoc.data() as Map<String, dynamic>;
+        final participants = List<String>.from(chatData['participants'] ?? []);
+        if (participants.length != 2 ||
+            !participants.contains(currentUserId)) {
+          continue;
+        }
 
         // Get last message timestamp
         final lastMessageQuery = await FirebaseFirestore.instance
@@ -105,10 +111,12 @@ class _ChatListState extends State<ChatList> {
             .limit(1)
             .get();
 
-        Timestamp? lastMessageTimestamp;
-        if (lastMessageQuery.docs.isNotEmpty) {
-          lastMessageTimestamp = lastMessageQuery.docs.first.data()['timestamp'] as Timestamp?;
+        if (lastMessageQuery.docs.isEmpty) {
+          continue;
         }
+
+        Timestamp? lastMessageTimestamp =
+            lastMessageQuery.docs.first.data()['timestamp'] as Timestamp?;
 
         // Get unread count
         final unreadQuery = await FirebaseFirestore.instance

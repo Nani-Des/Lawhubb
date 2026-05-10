@@ -15,12 +15,12 @@ if (localPropertiesFile.exists()) {
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
-    flutterVersionCode = '10'
+    flutterVersionCode = '17'
 }
 
 def flutterVersionName = localProperties.getProperty('flutter.versionName')
 if (flutterVersionName == null) {
-    flutterVersionName = '1.0.5'
+    flutterVersionName = '1.0.12'
 }
 
 def keystoreProperties = new Properties()
@@ -34,7 +34,9 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace "com.lawapp.lawhubb"
     compileSdk flutter.compileSdkVersion
-    ndkVersion flutter.ndkVersion
+    // NDK r28+ builds 16 KB ELF–aligned .so by default (required on 16 KB page devices).
+    // Install via SDK Manager if Gradle reports this revision is missing.
+    ndkVersion "28.1.13356709"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -71,6 +73,13 @@ android {
             }
         }
     }
+    // Uncompressed JNI + AGP 8.5.1+ yields 16 KB zip alignment for Play bundles (avoid legacy compressed JNI).
+    packaging {
+        jniLibs {
+            useLegacyPackaging false
+        }
+    }
+
     buildTypes {
         debug {
             debuggable true

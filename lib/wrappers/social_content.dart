@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../Forums/Chat/search_screen.dart';
-import '../Hospital/doctor_profile.dart';
 import '../Forums/Public/forum.dart';
 import '../Forums/Public/Widgets/create_post_dialog.dart';
 import '../Forums/Public/Widgets/user_profile_screen.dart';
 import '../LawInsights/law_insights_page.dart';
 import '../Forums/Chat/live_stream.dart';
-import '../Auth/auth_screen.dart';
-import '../Auth/auth_screen.dart';
+import '../Auth/login_required_shell.dart';
 
 class SocialContent extends StatefulWidget {
   final int initialTabIndex;
@@ -47,7 +45,7 @@ class _SocialContentState extends State<SocialContent>
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-                content: Text('Please log in to start a consultation')),
+                content: Text('Please log in to start a live stream')),
           );
         }
         return;
@@ -93,10 +91,14 @@ class _SocialContentState extends State<SocialContent>
         );
       }
     } catch (e) {
-      print('Error starting public consultation: $e');
+      debugPrint('Error starting live stream: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to start consultation: $e')),
+          const SnackBar(
+            content: Text(
+              'Could not start the live stream. Please try again.',
+            ),
+          ),
         );
       }
     }
@@ -106,25 +108,10 @@ class _SocialContentState extends State<SocialContent>
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
-      // Redirect to login page
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AuthScreen()),
-          ).then((_) {
-            // Refresh after login
-            if (mounted) {
-              setState(() {});
-            }
-          });
-        }
-      });
-      return Scaffold(
-        backgroundColor: Colors.black,
-        body: const Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        ),
+      return LoginRequiredShell(
+        title: 'SocialHubb',
+        message: 'Sign in to use SocialHubb.',
+        onAuthResolved: () => setState(() {}),
       );
     }
     final loggedInUserId = currentUser.uid;

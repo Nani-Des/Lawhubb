@@ -1,0 +1,67 @@
+[
+  {
+    "category": "Criminal Law",
+    "articles": [
+      {
+        "title": "Theft",
+        "content": "Theft is the unlawful taking of another person’s property with the intent to permanently deprive them of it. It is often classified into petty theft (small value items) and grand theft (large value items). Penalties may include fines, restitution, or imprisonment. Risk factors include financial hardship, opportunity, or organized criminal activity.\n\nTo prevent theft, property owners should use locks, security cameras, and tracking devices. Communities can reduce theft by creating awareness and strengthening law enforcement. Legal consequences help deter future crimes.\n\nTheft cases are handled by criminal courts. A defense may argue lack of intent, mistaken identity, or ownership disputes. Prosecutors must prove beyond a reasonable doubt that theft occurred."
+      },
+      {
+        "title": "Assault",
+        "content": "Assault is an unlawful act that intentionally causes another person to fear imminent harm or offensive contact. It can involve threats, attempts, or actual physical violence. Risk factors include disputes, alcohol use, and prior criminal history.\n\nTo prosecute assault, evidence such as witness testimony, medical reports, or video footage may be presented. Penalties vary depending on whether the assault is simple or aggravated. Aggravated assault usually involves weapons or serious injury.\n\nTo prevent assault, conflict resolution, community policing, and public awareness campaigns are effective. Victims may seek restraining orders or compensation through civil suits."
+      }
+    ]
+  },
+  {
+    "category": "Contract Law",
+    "articles": [
+      {
+        "title": "Breach of Contract",
+        "content": "A breach of contract occurs when one party fails to perform their obligations under a valid agreement. Breaches can be minor, material, or anticipatory. Common examples include failure to deliver goods, late payments, or poor-quality work.\n\nRemedies for breach include damages, specific performance, or contract termination. Courts examine the terms of the agreement and evidence of performance.\n\nTo prevent breaches, contracts should be clear, detailed, and signed by all parties. Mediation or arbitration may be used to resolve disputes quickly."
+      },
+      {
+        "title": "Offer and Acceptance",
+        "content": "Offer and acceptance are the foundation of contract formation. An offer is a clear proposal to enter into an agreement, while acceptance is the unqualified agreement to its terms. Both must be communicated clearly between parties.\n\nAn offer can be revoked before acceptance, unless consideration is given to keep it open. Acceptance must match the terms of the offer; otherwise, it may be considered a counter-offer.\n\nClear communication, written agreements, and legal advice reduce misunderstandings in contract formation."
+      }
+    ]
+  },
+  {
+    "category": "Constitutional Law",
+    "articles": [
+      {
+        "title": "Fundamental Rights",
+        "content": "Fundamental rights are basic rights guaranteed by a country’s constitution, such as freedom of speech, equality, and the right to life. These rights protect individuals from abuse by the state and ensure justice.\n\nCourts often interpret constitutional rights to balance individual freedom with public interest. Rights may have reasonable restrictions for national security, morality, or public order.\n\nTo safeguard rights, citizens should be aware of their constitutional protections and seek legal redress when they are violated."
+      },
+      {
+        "title": "Separation of Powers",
+        "content": "Separation of powers is a principle that divides government authority among the legislative, executive, and judicial branches. It prevents abuse of power and ensures checks and balances.\n\nFor example, legislatures make laws, executives enforce them, and courts interpret them. Overlapping powers may exist, but independence of each branch is crucial.\n\nThis principle strengthens democracy and accountability, reducing corruption and concentration of power."
+      }
+    ]
+  },
+  {
+    "category": "Family Law",
+    "articles": [
+      {
+        "title": "Marriage",
+        "content": "Marriage is a legally recognized union between two people. Laws regulate age, consent, and procedures for a valid marriage. Some jurisdictions recognize civil, religious, or customary marriages.\n\nMarriage grants rights such as inheritance, tax benefits, and decision-making in medical matters. However, it also imposes duties of support and fidelity.\n\nTo avoid disputes, couples may use premarital agreements. Divorce or annulment may be sought if marriage obligations are not met."
+      },
+      {
+        "title": "Child Custody",
+        "content": "Child custody determines who has legal responsibility for a child after separation or divorce. Courts prioritize the best interests of the child, considering factors like safety, health, and stability.\n\nTypes of custody include sole, joint, legal, and physical custody. Custody disputes may involve visitation rights and child support.\n\nMediation is often encouraged to reduce conflict. Courts ensure that custody arrangements protect the child’s welfare."
+      }
+    ]
+  },
+  {
+    "category": "Property Law",
+    "articles": [
+      {
+        "title": "Land Ownership",
+        "content": "Land ownership laws define who has legal rights to possess, use, and transfer land. Title deeds, leases, or customary rights may serve as proof of ownership. Disputes often arise from unclear titles, encroachment, or inheritance claims.\n\nTo resolve disputes, courts examine land records, surveys, and witness testimony. Ownership may be transferred through sale, gift, or succession.\n\nLand laws protect property rights but also regulate land use for public welfare, such as zoning and environmental laws."
+      },
+      {
+        "title": "Intellectual Property",
+        "content": "Intellectual property (IP) protects creations of the mind, such as inventions, designs, brands, and artistic works. Types include patents, trademarks, copyrights, and trade secrets.\n\nIP laws encourage innovation and creativity by granting exclusive rights to creators. Violations, such as piracy or counterfeiting, may result in lawsuits and penalties.\n\nTo protect IP, creators should register their works, use licensing agreements, and enforce rights through courts."
+      }
+    ]
+  }
+]

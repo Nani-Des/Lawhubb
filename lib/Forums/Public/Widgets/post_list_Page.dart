@@ -33,7 +33,11 @@ class _PostListPageState extends State<PostListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Posts')),
+      appBar: AppBar(
+        title: Text('Posts'),
+        foregroundColor: Colors.black87,
+        iconTheme: const IconThemeData(color: Colors.black87),
+      ),
       body: RefreshIndicator(
         onRefresh: _refreshPosts, // Trigger the refresh when the user drags the page down
         child: ListView.builder(

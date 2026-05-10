@@ -1,11 +1,11 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/material.dart';
 
 class TranslationService {
-  static const String _googleTranslateApiUrl =
-      'https://translate.googleapis.com/translate_a/element.js?cb=googleTranslateElementInit';
+  static final Map<String, String> _cache = <String, String>{};
 
-  // Language codes for translation
+  // Language codes for static translation menus
   static const Map<String, String> languageCodes = {
     'English': 'en',
     'Spanish': 'es',
@@ -18,20 +18,44 @@ class TranslationService {
     'fr': 'French',
   };
 
+  /// Extended set used in community modules.
+  static const Map<String, String> ghanaianLanguages = {
+    'en': 'English',
+    'tw': 'Twi',
+    'ee': 'Ewe',
+    'gaa': 'Ga',
+    'fat': 'Fante',
+    'yo': 'Yoruba',
+    'dag': 'Dagbani',
+    'ki': 'Kikuyu',
+    'gur': 'Gurune',
+    'luo': 'Luo',
+    'mer': 'Kimeru',
+    'kus': 'Kusaal',
+  };
+
   /// Translate text using Google Translate API
   /// Returns translated text or original text if translation fails
   static Future<String> translateText(
     String text,
-    String targetLanguageCode,
-  ) async {
+    String targetLanguageCode, {
+    String sourceLanguage = 'auto',
+  }) async {
     if (text.isEmpty) {
       return text;
     }
+    if (targetLanguageCode.isEmpty || targetLanguageCode == sourceLanguage) {
+      return text;
+    }
+
+    final cacheKey = '$sourceLanguage|$targetLanguageCode|$text';
+    final cached = _cache[cacheKey];
+    if (cached != null) return cached;
 
     try {
       // Using google translate free API endpoint
       final String url =
-          'https://translate.google.com/translate_a/single?client=gtx&sl=auto&tl=$targetLanguageCode&dt=t&q=${Uri.encodeComponent(text)}';
+          'https://translate.google.com/translate_a/single?client=gtx&sl=$sourceLanguage&tl=$targetLanguageCode&dt=t&q=${Uri.encodeComponent(text)}';
 
       final response = await http.get(Uri.parse(url)).timeout(
             const Duration(seconds: 10),
@@ -53,17 +77,31 @@ class TranslationService {
             }
           }
 
-          return translatedText.toString();
+          final translated = translatedText.toString();
+          _cache[cacheKey] = translated;
+          return translated;
         }
       }
 
       // Return original text if translation fails
+      _cache[cacheKey] = text;
       return text;
     } catch (e) {
       print('Translation error: $e');
       // Return original text on error
+      _cache[cacheKey] = text;
       return text;
     }
+  }
+
+  /// Translate text to currently selected app locale.
+  static Future<String> translateForContext(
+    BuildContext context,
+    String text,
+  ) async {
+    final targetCode = Localizations.localeOf(context).languageCode;
+    if (targetCode == 'en') return text;
+    return translateText(text, targetCode);
   }
 
   /// Translate multiple texts

@@ -206,6 +206,8 @@ class _KnowledgePacksPageState extends State<KnowledgePacksPage> with SingleTick
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        foregroundColor: Colors.black87,
+        iconTheme: const IconThemeData(color: Colors.black87),
         title: Text(
           showArchived ? "Archived Library" : "Knowledge Library",
           style: TextStyle(

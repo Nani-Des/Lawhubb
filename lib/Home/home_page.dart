@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 import '../Auth/auth_screen.dart';
+import '../Auth/lawyer_registration_screen.dart';
 import 'Widgets/profile_drawer.dart';
 import 'Widgets/redesigned_home_content.dart';
 import 'Widgets/app_bar.dart';
@@ -24,6 +25,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   User? currentUser;
   String? userImageUrl;
+  /// Mirrors Firestore `Users` doc — drives avatar menu "Register as a lawyer".
+  bool _userIsLawyer = false;
+  String? _lawyerVerificationStatus;
   bool showProfileDrawer = false;
   AnimationController? _drawerController;
   Animation<Offset>? _slideAnimation;
@@ -103,9 +107,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             {'docExists': docSnapshot.exists, 'userId': user.uid});
 
         if (mounted) {
+          final data = docSnapshot.data();
           setState(() {
             currentUser = user;
-            userImageUrl = docSnapshot.data()?['User Pic'] ?? '';
+            userImageUrl = data?['User Pic'] ?? '';
+            _userIsLawyer = data?['Role'] == true;
+            _lawyerVerificationStatus =
+                data?['lawyerVerificationStatus'] as String?;
           });
         }
       } catch (e) {
@@ -119,24 +127,32 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         setState(() {
           currentUser = null;
           userImageUrl = null;
+          _userIsLawyer = false;
+          _lawyerVerificationStatus = null;
         });
       }
     }
   }
 
-  void _onAvatarTap() async {
-    if (currentUser == null) {
-      final result = await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const AuthScreen()),
-      );
-      // Refresh user data after returning from auth screen
-      if (result == true || result == null) {
-        _fetchUserData();
-      }
-    } else {
-      _toggleProfileDrawer();
+  Future<void> _onGuestAvatarTap() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AuthScreen()),
+    );
+    if (result == true || result == null) {
+      _fetchUserData();
     }
+  }
+
+  void _openLawyerRegistration() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const LawyerRegistrationScreen(),
+      ),
+    ).then((_) {
+      if (mounted) _fetchUserData();
+    });
   }
 
   void _toggleProfileDrawer() async {
@@ -166,7 +182,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       backgroundColor: Colors.black,
       appBar: CustomAppBar(
         userImageUrl: userImageUrl,
-        onAvatarTap: _onAvatarTap,
+        isLoggedIn: currentUser != null,
+        onGuestAvatarTap: _onGuestAvatarTap,
+        onOpenProfile: _toggleProfileDrawer,
+        onRegisterAsLawyer: currentUser != null &&
+                !_userIsLawyer &&
+                _lawyerVerificationStatus != 'pending'
+            ? _openLawyerRegistration
+            : null,
       ),
       body: RefreshIndicator(
         onRefresh: _fetchUserData,

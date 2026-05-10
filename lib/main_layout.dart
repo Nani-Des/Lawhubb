@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:nhap/utils/location_permission.dart';
 import 'Home/home_page.dart';
-import 'Library/library_page.dart';
 import 'LawInsights/law_insights_page.dart';
-import 'wrappers/chambers_content.dart';
-import 'wrappers/social_content.dart';
 import 'wrappers/posts_content.dart';
 import 'wrappers/chats_content.dart';
 import 'Home/Widgets/custom_bottom_navbar.dart';
-import 'package:nhap/ChatModule/chat_module.dart';
 
 class MainLayout extends StatefulWidget {
   final int initialIndex;
@@ -32,6 +29,9 @@ class _MainLayoutState extends State<MainLayout> {
     super.initState();
     _selectedIndex = widget.initialIndex;
     _currentSetup = widget.setup;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      requestAppLocationPermission();
+    });
   }
 
   void _onItemTapped(int index) {

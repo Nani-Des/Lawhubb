@@ -39,6 +39,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Timer? _recordTimer;
   int _recordSeconds = 0;
   String? _localFilePath;
+  /// After recording stops (preview before send).
+  String? _pendingVoicePath;
+  int _pendingVoiceDurationSec = 0;
+  static const String _previewPlaybackId = '__local_preview__';
   // Slide-to-cancel
   double _startLocalDx = 0.0;
   bool _willCancel = false;
@@ -55,6 +59,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _verifyChatAccess();
     _setUserOnline();
     _markMessagesAsRead(); // Mark messages as read when chat opens
     _durationSub = _audioPlayer.durationStream.listen((d) {
@@ -73,8 +78,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _durationSub?.cancel();
     _audioPlayer.dispose();
     _recordTimer?.cancel();
+    try {
+      _recorder.dispose();
+    } catch (_) {}
+    _deletePendingVoiceFileSync();
     messageController.dispose();
     super.dispose();
+  }
+
+  void _deletePendingVoiceFileSync() {
+    final p = _pendingVoicePath;
+    if (p == null) return;
+    try {
+      final f = File(p);
+      if (f.existsSync()) f.deleteSync();
+    } catch (_) {}
   }
 
   // App lifecycle -> update presence
@@ -87,6 +105,45 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         state == AppLifecycleState.detached) {
       _setUserOffline();
     }
+  }
+
+  /// Ensures this thread id matches the two participants (WhatsApp-style 1:1).
+  Future<void> _verifyChatAccess() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    final expectedId = uid.compareTo(widget.recipientId) < 0
+        ? '${uid}_${widget.recipientId}'
+        : '${widget.recipientId}_${uid}';
+    if (widget.chatId != expectedId) {
+      if (mounted) Navigator.maybePop(context);
+      return;
+    }
+    final doc = await FirebaseFirestore.instance
+        .collection('Chats')
+        .doc(widget.chatId)
+        .get();
+    if (!mounted) return;
+    if (!doc.exists) return;
+    final parts = List<String>.from(doc.data()?['participants'] ?? []);
+    if (parts.length != 2 ||
+        !parts.contains(uid) ||
+        !parts.contains(widget.recipientId)) {
+      Navigator.maybePop(context);
+    }
+  }
+
+  Future<void> _ensureChatRoomMetadata() async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final other = widget.recipientId;
+    final participants =
+        uid.compareTo(other) < 0 ? [uid, other] : [other, uid];
+    await FirebaseFirestore.instance
+        .collection('Chats')
+        .doc(widget.chatId)
+        .set({
+      'participants': participants,
+      'timestamp': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
   }
 
   Future<void> _setUserOnline() async {
@@ -187,75 +244,173 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
   }
 
-  // Stop, upload and send
-  Future<void> _stopAndSendRecording() async {
+  /// Finishes recording and opens preview (send / discard / replay) instead of sending immediately.
+  Future<void> _finishRecordingToPreview() async {
     try {
       final path = await _recorder.stop();
       _recordTimer?.cancel();
       setState(() => _isRecording = false);
-      if (path == null) {
-        // nothing recorded
+
+      if (path == null || path.isEmpty) return;
+
+      final file = File(path);
+      if (!await file.exists() || await file.length() == 0) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Nothing recorded.')),
+          );
+        }
         return;
       }
-      final file = File(path);
-      if (!await file.exists()) return;
 
-      // Upload to Firebase Storage
-      final fileName = 'audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child('chat_audios')
-          .child(widget.chatId)
-          .child(fileName);
-      final uploadTask = ref.putFile(file);
-      final snapshot = await uploadTask.whenComplete(() {});
-      final downloadUrl = await snapshot.ref.getDownloadURL();
+      var durationSec = _recordSeconds.clamp(0, 86400);
+      if (durationSec < 1) durationSec = 1;
 
-      // Save message in Firestore
-      await FirebaseFirestore.instance
-          .collection('Chats')
-          .doc(widget.chatId)
-          .collection('Messages')
-          .add({
-        'content': '',
-        'audioUrl': downloadUrl,
-        'senderId': FirebaseAuth.instance.currentUser!.uid,
-        'recipientId': widget.recipientId,
-        'timestamp': FieldValue.serverTimestamp(),
-        'read': false,
-        'type': 'audio',
-      });
-
-      await FirebaseFirestore.instance
-          .collection('Chats')
-          .doc(widget.chatId)
-          .update({
-        'lastMessage': '[Voice message]',
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-
-      // Optionally delete local temp file
       try {
-        if (await file.exists()) await file.delete();
+        await _audioPlayer.stop();
+        await _audioPlayer.setFilePath(path);
+        final d = _audioPlayer.duration;
+        if (d != null && d.inMilliseconds > 0) {
+          durationSec = d.inSeconds.clamp(1, 86400);
+        }
       } catch (_) {}
-    } catch (e) {
-      // handle errors
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Recording failed: $e')));
-      setState(() => _isRecording = false);
-      _recordTimer?.cancel();
-    } finally {
+
       setState(() {
+        _pendingVoicePath = path;
+        _pendingVoiceDurationSec = durationSec;
         _localFilePath = null;
         _recordSeconds = 0;
         _willCancel = false;
       });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Recording failed: $e')),
+        );
+      }
+      setState(() {
+        _isRecording = false;
+        _recordSeconds = 0;
+        _willCancel = false;
+      });
+      _recordTimer?.cancel();
     }
+  }
+
+  Future<void> _discardVoicePreview() async {
+    try {
+      await _audioPlayer.stop();
+    } catch (_) {}
+    _playingUrl = '';
+    final path = _pendingVoicePath;
+    setState(() {
+      _pendingVoicePath = null;
+      _pendingVoiceDurationSec = 0;
+    });
+    if (path != null) {
+      try {
+        final f = File(path);
+        if (await f.exists()) await f.delete();
+      } catch (_) {}
+    }
+  }
+
+  Future<void> _togglePreviewPlayback() async {
+    final path = _pendingVoicePath;
+    if (path == null) return;
+    try {
+      if (_playingUrl == _previewPlaybackId && _audioPlayer.playing) {
+        await _audioPlayer.pause();
+        setState(() {});
+        return;
+      }
+      await _audioPlayer.stop();
+      await _audioPlayer.setFilePath(path);
+      _playingUrl = _previewPlaybackId;
+      await _audioPlayer.play();
+      setState(() {});
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Playback error: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _sendPendingVoice() async {
+    final path = _pendingVoicePath;
+    final durationSec = _pendingVoiceDurationSec;
+    if (path == null) return;
+
+    try {
+      await _audioPlayer.stop();
+      _playingUrl = '';
+
+      await _uploadAndSendVoiceFile(path, durationSec);
+
+      setState(() {
+        _pendingVoicePath = null;
+        _pendingVoiceDurationSec = 0;
+      });
+
+      try {
+        final f = File(path);
+        if (await f.exists()) await f.delete();
+      } catch (_) {}
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not send voice message: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _uploadAndSendVoiceFile(String path, int durationSec) async {
+    final file = File(path);
+    if (!await file.exists()) return;
+
+    final fileName = 'audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+    final ref = FirebaseStorage.instance
+        .ref()
+        .child('chat_audios')
+        .child(widget.chatId)
+        .child(fileName);
+    final uploadTask = ref.putFile(file);
+    final snapshot = await uploadTask.whenComplete(() {});
+    final downloadUrl = await snapshot.ref.getDownloadURL();
+
+    await _ensureChatRoomMetadata();
+
+    await FirebaseFirestore.instance
+        .collection('Chats')
+        .doc(widget.chatId)
+        .collection('Messages')
+        .add({
+      'content': '',
+      'audioUrl': downloadUrl,
+      'audioDurationSeconds': durationSec,
+      'senderId': FirebaseAuth.instance.currentUser!.uid,
+      'recipientId': widget.recipientId,
+      'timestamp': FieldValue.serverTimestamp(),
+      'read': false,
+      'type': 'audio',
+    });
+
+    await FirebaseFirestore.instance.collection('Chats').doc(widget.chatId).update({
+      'lastMessage': '[Voice message]',
+      'timestamp': FieldValue.serverTimestamp(),
+    });
   }
 
   // Playback helpers with progress UI
   Future<void> _playAudioUrl(String url) async {
     try {
+      if (_playingUrl == _previewPlaybackId) {
+        await _audioPlayer.stop();
+        _playingUrl = '';
+      }
       if (_playingUrl == url && _audioPlayer.playing) {
         await _audioPlayer.pause();
         return;
@@ -275,20 +430,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
-  Widget _buildAudioMessageWidget(String url) {
+  int? _audioDurationFromMessage(Map<String, dynamic> message) {
+    final v = message['audioDurationSeconds'];
+    if (v == null) return null;
+    if (v is int) return v;
+    if (v is num) return v.round();
+    return int.tryParse(v.toString());
+  }
+
+  Widget _buildAudioMessageWidget(String url, {int? storedDurationSec}) {
     final isPlaying = (_playingUrl == url && _audioPlayer.playing);
-    final position = _currentPosition;
     final duration = _currentDuration;
 
     // Only show meaningful duration/position when playing the same url
     final showPosition = _playingUrl == url;
-
-    double sliderValue = 0.0;
-    double max = 1.0;
-    if (showPosition && duration.inMilliseconds > 0) {
-      sliderValue = position.inMilliseconds / duration.inMilliseconds;
-      max = 1.0;
-    }
+    final totalSeconds = storedDurationSec ?? duration.inSeconds;
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
@@ -341,15 +497,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            showPosition
+                            showPosition && duration.inMilliseconds > 0
                                 ? _formatDuration(_currentPosition.inSeconds)
                                 : "00:00",
                             style: TextStyle(color: Colors.white, fontSize: 12),
                           ),
                           Text(
-                            showPosition
+                            showPosition && duration.inMilliseconds > 0
                                 ? _formatDuration(_currentDuration.inSeconds)
-                                : "--:--",
+                                : (totalSeconds > 0
+                                    ? _formatDuration(totalSeconds)
+                                    : '--:--'),
                             style: TextStyle(color: Colors.white, fontSize: 12),
                           ),
                         ],
@@ -389,7 +547,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
             ] else if (type == 'audio') ...[
               if (message['audioUrl'] != null)
-                _buildAudioMessageWidget(message['audioUrl'])
+                _buildAudioMessageWidget(
+                  message['audioUrl'] as String,
+                  storedDurationSec: _audioDurationFromMessage(message),
+                )
               else
                 Text('Voice message', style: TextStyle(color: Colors.white)),
             ],
@@ -444,13 +605,98 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (_willCancel) {
       _cancelRecording();
     } else {
-      _stopAndSendRecording();
+      _finishRecordingToPreview();
     }
   }
 
   // helper to start recording sequence (separated for clarity)
   void _startLocalRecordingSequence() {
     _startLocalRecording();
+  }
+
+  Widget _buildVoicePreviewBar() {
+    final dur = _pendingVoiceDurationSec;
+    final previewPlaying =
+        _playingUrl == _previewPlaybackId && _audioPlayer.playing;
+    final previewActive = _playingUrl == _previewPlaybackId;
+    final durMs = _currentDuration.inMilliseconds;
+
+    final String timeLine;
+    if (previewActive && durMs > 0) {
+      timeLine =
+          '${_formatDuration(_currentPosition.inSeconds)} / ${_formatDuration(_currentDuration.inSeconds)}';
+    } else {
+      timeLine = _formatDuration(dur);
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      color: Colors.grey[900],
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+            tooltip: 'Discard',
+            onPressed: _discardVoicePreview,
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        previewPlaying
+                            ? Icons.pause_circle_filled
+                            : Icons.play_circle_filled,
+                        color: Colors.white,
+                        size: 36,
+                      ),
+                      onPressed: _togglePreviewPlayback,
+                      tooltip: previewPlaying ? 'Pause' : 'Play',
+                    ),
+                    Expanded(
+                      child: Text(
+                        timeLine,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (previewActive && durMs > 0)
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 2,
+                      thumbShape:
+                          const RoundSliderThumbShape(enabledThumbRadius: 6),
+                    ),
+                    child: Slider(
+                      value: (_currentPosition.inMilliseconds / durMs)
+                          .clamp(0.0, 1.0),
+                      onChanged: (v) {
+                        final ms = (v * durMs).toInt();
+                        _audioPlayer.seek(Duration(milliseconds: ms));
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.send, color: Colors.tealAccent),
+            tooltip: 'Send',
+            onPressed: _sendPendingVoice,
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -460,6 +706,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       appBar: AppBar(
         backgroundColor: Colors.grey[900],
         elevation: 0,
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.maybePop(context),
+        ),
         title: Row(
           children: [
             CircleAvatar(
@@ -622,7 +874,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
-                final docs = snapshot.data!.docs;
+                final uid = FirebaseAuth.instance.currentUser!.uid;
+                final docs = snapshot.data!.docs.where((d) {
+                  final m = d.data() as Map<String, dynamic>;
+                  final sid = m['senderId'] as String?;
+                  final rid = m['recipientId'] as String?;
+                  return sid == uid || rid == uid;
+                }).toList();
                 return ListView.builder(
                   reverse: true,
                   padding: EdgeInsets.all(10),
@@ -635,8 +893,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             ),
           ),
 
-          // Input Row
-          Container(
+          // Input row or voice preview
+          _pendingVoicePath != null
+              ? _buildVoicePreviewBar()
+              : Container(
             padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             color: Colors.grey[900],
             child: Row(
@@ -699,6 +959,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     onPressed: () async {
                       final text = messageController.text.trim();
                       if (text.isEmpty) return;
+                      await _ensureChatRoomMetadata();
                       await FirebaseFirestore.instance
                           .collection('Chats')
                           .doc(widget.chatId)

@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
@@ -26,9 +27,11 @@ class LiveConsultationScreen extends StatefulWidget {
 }
 
 class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
+  static const String _kStreamViewersSubcollection = 'streamViewers';
+
   final ConfigService _configService = ConfigService();
   RtcEngine? _engine;
-  
+
   bool _localUserJoined = false;
   int? _remoteUid;
   bool _isEngineInitialized = false;
@@ -42,17 +45,37 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
   bool _showEmojiPicker = false;
 
   int _likes = 0;
-  int _viewerCount = 1;
-  Timer? _viewerCountTimer;
 
   String initiatorName = "";
   String initiatorPic = "";
+
+  /// Prevents double cleanup (back + dispose, or Firestore + user action).
+  bool _exitInProgress = false;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _consultationSub;
+  bool _viewerPresenceRegistered = false;
 
   @override
   void initState() {
     super.initState();
     _loadInitiatorDetails();
+    _listenForRemoteEnd();
     _setup();
+  }
+
+  void _listenForRemoteEnd() {
+    _consultationSub = FirebaseFirestore.instance
+        .collection('Consultations')
+        .doc(widget.chatId)
+        .snapshots()
+        .listen((snap) {
+      if (!snap.exists || _exitInProgress || !mounted) return;
+      final data = snap.data();
+      if (data == null) return;
+      final status = data['status'] as String?;
+      if (status != null && status != 'active') {
+        unawaited(_leaveLiveStream(reason: 'remote_ended'));
+      }
+    });
   }
 
   Future<void> _loadInitiatorDetails() async {
@@ -115,24 +138,16 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
           onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
             if (!mounted || _isDisposing) return;
             setState(() => _localUserJoined = true);
-            if (widget.isInitiator) {
-              _startViewerCountSync();
-            } else {
-              // For viewers, try to get the current broadcaster's UID
-              // This handles the case where broadcaster joined before viewer
+            if (!widget.isInitiator) {
+              unawaited(_registerViewerPresence());
               _checkForExistingBroadcaster();
             }
           },
           onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
             if (!mounted || _isDisposing) return;
             if (widget.isInitiator) {
-              // Broadcaster: someone (viewer) joined
-              setState(() {
-                _viewerCount++;
-              });
-              _updateViewerCount();
+              // Broadcaster: optional UI refresh; viewer count comes from Firestore presence.
             } else {
-              // Viewer: broadcaster joined
               setState(() {
                 _remoteUid = remoteUid;
               });
@@ -141,13 +156,8 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
           onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
             if (!mounted || _isDisposing) return;
             if (widget.isInitiator) {
-              // Broadcaster: viewer left
-              setState(() {
-                _viewerCount = (_viewerCount > 1) ? _viewerCount - 1 : 1;
-              });
-              _updateViewerCount();
+              // Presence docs remain accurate via viewer unregister on exit.
             } else {
-              // Viewer: broadcaster left
               setState(() {
                 _remoteUid = null;
               });
@@ -163,12 +173,8 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
             }
           },
           onError: (ErrorCodeType err, String msg) {
+            // Log only — avoid exposing Agora API messages in the UI.
             debugPrint("⚠️ Agora error: $err - $msg");
-            if (mounted && !_isDisposing) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("Error: $msg"), backgroundColor: Colors.red),
-              );
-            }
           },
         ),
       );
@@ -202,9 +208,11 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
       debugPrint("⚠️ Agora init error: $e");
       if (mounted && !_isDisposing) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Failed to start live consultation: $e"),
-            backgroundColor: Colors.red,
+          const SnackBar(
+            content: Text(
+              'Unable to start the live stream. Check your connection and try again.',
+            ),
+            backgroundColor: Colors.black87,
           ),
         );
       }
@@ -215,15 +223,63 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
     }
   }
 
-  void _startViewerCountSync() {
-    _viewerCountTimer?.cancel();
-    _viewerCountTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (_isDisposing || !mounted) {
-        timer.cancel();
-        return;
+  Future<void> _registerViewerPresence() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || widget.isInitiator || _exitInProgress) return;
+    try {
+      await FirebaseFirestore.instance
+          .collection('Consultations')
+          .doc(widget.chatId)
+          .collection(_kStreamViewersSubcollection)
+          .doc(uid)
+          .set({
+        'joinedAt': FieldValue.serverTimestamp(),
+        'userId': uid,
+      });
+      _viewerPresenceRegistered = true;
+    } catch (e) {
+      debugPrint('Error registering viewer presence: $e');
+    }
+  }
+
+  Future<void> _unregisterViewerPresence() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || !_viewerPresenceRegistered) return;
+    try {
+      await FirebaseFirestore.instance
+          .collection('Consultations')
+          .doc(widget.chatId)
+          .collection(_kStreamViewersSubcollection)
+          .doc(uid)
+          .delete();
+    } catch (e) {
+      debugPrint('Error unregistering viewer presence: $e');
+    }
+    _viewerPresenceRegistered = false;
+  }
+
+  Future<void> _deleteAllViewerPresenceDocs() async {
+    try {
+      final qs = await FirebaseFirestore.instance
+          .collection('Consultations')
+          .doc(widget.chatId)
+          .collection(_kStreamViewersSubcollection)
+          .get();
+      var batch = FirebaseFirestore.instance.batch();
+      var n = 0;
+      for (final d in qs.docs) {
+        batch.delete(d.reference);
+        n++;
+        if (n >= 450) {
+          await batch.commit();
+          batch = FirebaseFirestore.instance.batch();
+          n = 0;
+        }
       }
-      _updateViewerCount();
-    });
+      if (n > 0) await batch.commit();
+    } catch (e) {
+      debugPrint('Error clearing viewer presence: $e');
+    }
   }
 
   // Check for existing broadcaster when viewer joins
@@ -243,18 +299,6 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
       // We just need to ensure we're listening properly
     } catch (e) {
       debugPrint("Error checking for broadcaster: $e");
-    }
-  }
-
-  Future<void> _updateViewerCount() async {
-    if (!widget.isInitiator || _isDisposing) return;
-    try {
-      await FirebaseFirestore.instance
-          .collection('Consultations')
-          .doc(widget.chatId)
-          .update({'viewerCount': _viewerCount});
-    } catch (e) {
-      debugPrint("Error updating viewer count: $e");
     }
   }
 
@@ -346,39 +390,35 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
     }
   }
 
-  Future<void> _endStreamCleanup() async {
-    if (_isDisposing) return;
+  /// Ends RTC session and updates Firestore. Call [popNavigator] false from [dispose].
+  Future<void> _leaveLiveStream({
+    String reason = 'user_left',
+    bool popNavigator = true,
+  }) async {
+    if (_exitInProgress) return;
+    _exitInProgress = true;
     _isDisposing = true;
 
-    _viewerCountTimer?.cancel();
+    await _consultationSub?.cancel();
+    _consultationSub = null;
 
     try {
       if (widget.isInitiator) {
+        await _deleteAllViewerPresenceDocs();
         await FirebaseFirestore.instance
             .collection('Consultations')
             .doc(widget.chatId)
             .update({
           'status': 'ended',
-          'viewerCount': _viewerCount,
+          'viewerCount': 0,
           'endTimestamp': FieldValue.serverTimestamp(),
+          'endReason': reason,
         });
       } else {
-        final snapshot = await FirebaseFirestore.instance
-            .collection('Consultations')
-            .doc(widget.chatId)
-            .get();
-        if (snapshot.exists) {
-          final currentCount = snapshot.data()?['viewerCount'] ?? 0;
-          await FirebaseFirestore.instance
-              .collection('Consultations')
-              .doc(widget.chatId)
-              .update({
-            'viewerCount': (currentCount > 0) ? currentCount - 1 : 0,
-          });
-        }
+        await _unregisterViewerPresence();
       }
     } catch (e) {
-      debugPrint("Error updating consultation status: $e");
+      debugPrint('Firestore live exit error: $e');
     }
 
     try {
@@ -391,20 +431,29 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
         _engine = null;
       }
     } catch (e) {
-      debugPrint("Error cleaning up Agora engine: $e");
+      debugPrint('Agora cleanup error: $e');
     }
 
-    if (mounted) {
-      Navigator.pop(context);
+    if (popNavigator && mounted) {
+      Navigator.of(context).maybePop();
     }
+  }
+
+  /// Cleanup without navigation — used when the widget is torn down (dispose / app background edge cases).
+  Future<void> _silentDisposeCleanup() async {
+    await _leaveLiveStream(
+      reason: 'screen_disposed',
+      popNavigator: false,
+    );
   }
 
   @override
   void dispose() {
-    _isDisposing = true;
-    _viewerCountTimer?.cancel();
     _commentController.dispose();
-    _endStreamCleanup();
+    if (!_exitInProgress) {
+      _isDisposing = true;
+      unawaited(_silentDisposeCleanup());
+    }
     super.dispose();
   }
 
@@ -523,9 +572,9 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
                     margin: const EdgeInsets.symmetric(vertical: 2),
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.7),
+                      color: Colors.black.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -533,7 +582,7 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
                         Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: Colors.redAccent.withOpacity(0.3),
+                            color: Colors.redAccent.withValues(alpha: 0.3),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.person, color: Colors.white, size: 14),
@@ -579,7 +628,7 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
             end: Alignment.bottomCenter,
             colors: [
               Colors.transparent,
-              Colors.black.withOpacity(0.8),
+              Colors.black.withValues(alpha: 0.8),
             ],
           ),
         ),
@@ -611,9 +660,9 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(25),
-                        border: Border.all(color: Colors.white.withOpacity(0.3)),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                       ),
                       child: TextField(
                         controller: _commentController,
@@ -664,7 +713,7 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.4),
+              color: Colors.black.withValues(alpha: 0.4),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -686,28 +735,39 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
       child: SafeArea(
         child: Column(
           children: [
-            // Viewer count
+            // Viewer count — Firestore presence (accurate join/leave)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.7),
+                color: Colors.black.withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withOpacity(0.3)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.remove_red_eye, color: Colors.white, size: 18),
-                  const SizedBox(width: 6),
-                  Text(
-                    '$_viewerCount',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+              child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: FirebaseFirestore.instance
+                    .collection('Consultations')
+                    .doc(widget.chatId)
+                    .collection(_kStreamViewersSubcollection)
+                    .snapshots(),
+                builder: (context, snap) {
+                  final n = snap.hasData ? snap.data!.docs.length : 0;
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.remove_red_eye,
+                          color: Colors.white, size: 18),
+                      const SizedBox(width: 6),
+                      Text(
+                        '$n',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
             const SizedBox(height: 16),
@@ -716,9 +776,9 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
             Container(
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.7),
+                color: Colors.black.withValues(alpha: 0.7),
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white.withOpacity(0.3)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
               ),
               child: IconButton(
                 icon: const Icon(Icons.favorite, color: Colors.red, size: 24),
@@ -769,27 +829,7 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
               _buildControlButton(
                 icon: Icons.call_end,
                 onPressed: () async {
-                  final shouldEnd = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      backgroundColor: Colors.grey[900],
-                      title: const Text("End Live Consultation?", style: TextStyle(color: Colors.white)),
-                      content: const Text("Are you sure you want to end this live consultation?", style: TextStyle(color: Colors.white70)),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text("Cancel", style: TextStyle(color: Colors.white70)),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text("End", style: TextStyle(color: Colors.red)),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (shouldEnd == true) {
-                    await _endStreamCleanup();
-                  }
+                  await _leaveLiveStream(reason: 'host_end_button');
                 },
                 backgroundColor: Colors.red,
                 tooltip: "End stream",
@@ -822,7 +862,13 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
       );
     }
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) async {
+        if (didPop) return;
+        await _leaveLiveStream(reason: 'system_back');
+      },
+      child: Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
@@ -840,7 +886,7 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.8),
+                    Colors.black.withValues(alpha: 0.8),
                     Colors.transparent,
                   ],
                 ),
@@ -850,31 +896,7 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () async {
-                      if (widget.isInitiator) {
-                        final shouldEnd = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            backgroundColor: Colors.grey[900],
-                            title: const Text("End Live Consultation?", style: TextStyle(color: Colors.white)),
-                            content: const Text("Are you sure you want to end this live consultation?", style: TextStyle(color: Colors.white70)),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text("Cancel", style: TextStyle(color: Colors.white70)),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text("End", style: TextStyle(color: Colors.red)),
-                              ),
-                            ],
-                          ),
-                        );
-                        if (shouldEnd == true) {
-                          await _endStreamCleanup();
-                        }
-                      } else {
-                        Navigator.pop(context);
-                      }
+                      await _leaveLiveStream(reason: 'back_button');
                     },
                   ),
                   const SizedBox(width: 8),
@@ -934,6 +956,7 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 }

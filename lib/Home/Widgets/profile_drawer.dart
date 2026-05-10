@@ -9,12 +9,15 @@ import 'package:nhap/l10n/app_localizations.dart';
 import 'package:nhap/Appointments/referral_form.dart';
 import 'package:nhap/Appointments/Referral%20screens/referral_details_page.dart';
 import '../../Auth/auth_screen.dart';
+import '../../Auth/lawyer_registration_screen.dart';
 import '../../Auth/auth_service.dart';
 import '../../booking_page.dart';
 import '../../main.dart';
 import '../../Settings/blocked_users_page.dart';
 import '../home_page.dart';
 import 'package:provider/provider.dart';
+import 'package:nhap/utils/country_utils.dart';
+import 'package:nhap/widgets/searchable_country_sheet.dart';
 
 class ProfileDrawer extends StatefulWidget {
   final AnimationController controller;
@@ -42,6 +45,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
+  String _editCountryCode = kDefaultCountryCode;
 
   DocumentSnapshot? _cachedUserData;
   bool _isCacheValid = false;
@@ -146,6 +150,8 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
         'Mobile Number': _mobileController.text,
         'Region': _regionController.text,
         'Email': _emailController.text,
+        'Country': _editCountryCode.trim().toUpperCase(),
+        'CountryRequired': false,
       };
       await FirebaseFirestore.instance
           .collection('Users')
@@ -462,6 +468,8 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                           userData['Mobile Number'] as String?;
                       final String? region = userData['Region'] as String?;
                       final String? email = userData['Email'] as String?;
+                      final String countryLine =
+                          effectiveCountryCode(userData);
 
                       if (_isEditing) {
                         _regionController.text = region ?? '';
@@ -482,7 +490,11 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                   if (_isEditing) {
                                     _updateUserData();
                                   } else {
-                                    setState(() => _isEditing = true);
+                                    setState(() {
+                                      _isEditing = true;
+                                      _editCountryCode =
+                                          effectiveCountryCode(userData);
+                                    });
                                   }
                                 },
                                 child: Text(
@@ -602,12 +614,61 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                                 TextStyle(color: Colors.white),
                                           ),
                                           SizedBox(height: 12),
+                                          InkWell(
+                                            onTap: () async {
+                                              final code =
+                                                  await showSearchableCountryPicker(
+                                                context,
+                                                title: 'Country',
+                                              );
+                                              if (code != null && mounted) {
+                                                setState(() =>
+                                                    _editCountryCode = code);
+                                              }
+                                            },
+                                            child: InputDecorator(
+                                              decoration: InputDecoration(
+                                                labelText: 'Country',
+                                                labelStyle: TextStyle(
+                                                    color: Colors.grey[400]),
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                enabledBorder:
+                                                    OutlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                      color: Colors.grey[700]!),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                focusedBorder:
+                                                    OutlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                      color: Colors.white),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                filled: true,
+                                                fillColor: Colors.grey[850],
+                                                suffixIcon: const Icon(
+                                                  Icons.arrow_drop_down,
+                                                  color: Colors.white70,
+                                                ),
+                                              ),
+                                              child: Text(
+                                                '${countryNameFromCode(_editCountryCode)} ($_editCountryCode)',
+                                                style: const TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(height: 12),
                                           TextFormField(
                                             controller: _regionController,
                                             decoration: InputDecoration(
                                               labelText:
-                                                  localizations?.region ??
-                                                      'Region',
+                                                  'State / region (local)',
                                               labelStyle: TextStyle(
                                                   color: Colors.grey[400]),
                                               border: OutlineInputBorder(
@@ -692,9 +753,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                                 color: Colors.grey[600]),
                                           ),
                                           Text(
-                                            region ??
-                                                (localizations?.noRegion ??
-                                                    'No region'),
+                                            '$countryLine  •  ${region ?? (localizations?.noRegion ?? 'No region')}',
                                             style: TextStyle(
                                                 fontSize: 8,
                                                 color: Colors.grey[400]),
@@ -750,6 +809,66 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                 ],
                               ),
                             ),
+                          if (userData['Role'] != true) ...[
+                            SizedBox(height: 16),
+                            Container(
+                              margin: EdgeInsets.symmetric(horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[850],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey[800]!),
+                              ),
+                              child: ListTile(
+                                leading: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[800],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    (userData['lawyerVerificationStatus'] ==
+                                            'pending')
+                                        ? Icons.hourglass_top
+                                        : Icons.gavel_outlined,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                                title: Text(
+                                  userData['lawyerVerificationStatus'] ==
+                                          'pending'
+                                      ? 'Lawyer application pending'
+                                      : 'Apply to be a lawyer',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 15),
+                                ),
+                                subtitle: Text(
+                                  userData['lawyerVerificationStatus'] ==
+                                          'pending'
+                                      ? 'Awaiting admin verification'
+                                      : 'Submit documents for admin review',
+                                  style: TextStyle(
+                                      color: Colors.grey[500], fontSize: 12),
+                                ),
+                                trailing: Icon(Icons.arrow_forward_ios,
+                                    color: Colors.grey[600], size: 16),
+                                onTap: userData['lawyerVerificationStatus'] ==
+                                        'pending'
+                                    ? null
+                                    : () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                const LawyerRegistrationScreen(),
+                                          ),
+                                        );
+                                      },
+                              ),
+                            ),
+                          ],
                           SizedBox(height: 16),
                           Container(
                             margin: EdgeInsets.symmetric(horizontal: 16),
@@ -907,7 +1026,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),

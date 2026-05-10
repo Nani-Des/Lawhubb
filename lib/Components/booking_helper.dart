@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import '../Appointments/AppointmentScreen.dart';
 import '../Auth/auth_screen.dart';
-import '../Login/login_screen1.dart';
 import '../booking_page.dart';
 
 Future<void> handleBookAppointment(
@@ -16,15 +14,15 @@ Future<void> handleBookAppointment(
   final user = FirebaseAuth.instance.currentUser;
 
   if (user == null) {
-    final userId = await Navigator.push(
+    await Navigator.push<bool>(
       context,
-      MaterialPageRoute(builder: (context) => AuthScreen()),
+      MaterialPageRoute(builder: (context) => const AuthScreen()),
     );
-
-    if (userId != null) {
+    final signedIn = FirebaseAuth.instance.currentUser;
+    if (signedIn != null) {
       await _bookAppointment(
         context,
-        patientId: userId,
+        patientId: signedIn.uid,
         doctorId: doctorId,
         hospitalId: hospitalId,
         selectedDate: selectedDate,

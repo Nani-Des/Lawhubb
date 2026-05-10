@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:nhap/utils/country_utils.dart';
 
 enum MessageType { private, forum, experts }
 
@@ -15,6 +17,7 @@ class _HealthInsightsPageState extends State<HealthInsightsPage>
     with SingleTickerProviderStateMixin {
   MessageType _selectedType = MessageType.private;
   String _selectedRegion = 'All Regions';
+  String _viewerCountryCode = kDefaultCountryCode;
   late AnimationController _animationController;
   late Animation<double> _animation;
 
@@ -75,6 +78,20 @@ class _HealthInsightsPageState extends State<HealthInsightsPage>
     );
     _animation = Tween<double>(begin: 0, end: 1).animate(_animationController);
     _animationController.forward();
+    _loadViewerCountry();
+  }
+
+  Future<void> _loadViewerCountry() async {
+    final u = FirebaseAuth.instance.currentUser;
+    if (u == null) return;
+    try {
+      final d =
+          await FirebaseFirestore.instance.collection('Users').doc(u.uid).get();
+      if (!mounted) return;
+      setState(() {
+        _viewerCountryCode = effectiveCountryCode(d.data());
+      });
+    } catch (_) {}
   }
 
   @override
@@ -122,7 +139,8 @@ class _HealthInsightsPageState extends State<HealthInsightsPage>
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: DropdownButtonFormField<String>(
-          value: _selectedRegion,
+          key: ValueKey(_selectedRegion),
+          initialValue: _selectedRegion,
           decoration: InputDecoration(
             labelText: 'Select Region',
             labelStyle: TextStyle(color: Colors.teal[800]),
@@ -194,23 +212,6 @@ class _HealthInsightsPageState extends State<HealthInsightsPage>
         ),
       ),
     );
-  }
-
-// Helper methods for option 3
-  IconData _getIconForType(MessageType type) {
-    switch (type) {
-      case MessageType.private: return Icons.chat;
-      case MessageType.forum: return Icons.forum;
-      case MessageType.experts: return Icons.medical_services;
-    }
-  }
-
-  String _getLabelForType(MessageType type) {
-    switch (type) {
-      case MessageType.private: return 'Private';
-      case MessageType.forum: return 'Forum';
-      case MessageType.experts: return 'Experts';
-    }
   }
 
   Widget _buildHealthTopicsChart() {
@@ -484,11 +485,13 @@ class _HealthInsightsPageState extends State<HealthInsightsPage>
   }
 
   Future<Map<String, int>> fetchHealthInsights() async {
-    Query query = FirebaseFirestore.instance.collection('HealthInsights');
+    Query query = FirebaseFirestore.instance
+        .collection('HealthInsights')
+        .where('countryCode', isEqualTo: _viewerCountryCode)
+        .where('messageType', isEqualTo: _selectedType.name);
     if (_selectedRegion != 'All Regions') {
       query = query.where('region', isEqualTo: _selectedRegion);
     }
-    query = query.where('messageType', isEqualTo: _selectedType.name);
     QuerySnapshot snapshot = await query.get();
     Map<String, int> topicCounts = {};
 

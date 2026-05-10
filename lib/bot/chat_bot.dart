@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nhap/bot/widget/chat_service.dart';
 import 'package:nhap/bot/widget/openai_service.dart';
-import 'package:nhap/main.dart';
+import 'package:nhap/l10n/app_localizations.dart';
 
 class ChatBotScreen extends StatefulWidget {
   const ChatBotScreen({super.key});
@@ -42,26 +42,36 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
   }
 
   Future<void> _sendMessage(String query) async {
-    if (query.trim().isEmpty) return;
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return;
 
     setState(() {
       _isLoading = true;
-      _guestMessages.add({"role": "user", "text": query});
+      _guestMessages.add({"role": "user", "text": trimmed});
     });
 
     _messageController.clear();
-    await ChatService.saveMessage("user", query);
+    await ChatService.saveMessage("user", trimmed);
 
-    // ✅ Only send to AI when necessary
-    final response = await OpenAIService.sendMessage(query);
-    await ChatService.saveMessage("bot", response);
-
-    setState(() {
-      _guestMessages.add({"role": "bot", "text": response});
-      _isLoading = false;
-    });
-
-    _scrollToBottom();
+    try {
+      final response = await OpenAIService.sendMessage(trimmed);
+      await ChatService.saveMessage("bot", response);
+      if (!mounted) return;
+      setState(() {
+        _guestMessages.add({"role": "bot", "text": response});
+      });
+    } catch (e) {
+      const fallback =
+          'Something went wrong while contacting the assistant. Please try again.';
+      await ChatService.saveMessage("bot", fallback);
+      if (!mounted) return;
+      setState(() {
+        _guestMessages.add({"role": "bot", "text": fallback});
+      });
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+      _scrollToBottom();
+    }
   }
 
   Future<void> _deleteMessage(int index, {String? docId}) async {
@@ -77,7 +87,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+            child: const Text("Delete"),
           ),
         ],
       ),
@@ -113,17 +123,43 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     final chatStream = ChatService.getMessagesStream();
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text("LawHub Assistant"),
-        backgroundColor: Colors.redAccent,
+        foregroundColor: Colors.white,
+        backgroundColor: Colors.black,
+        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete_forever),
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Clear chat',
             onPressed: () async {
+              final ok = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Clear all messages?'),
+                  content: const Text(
+                    'This removes your LawHub Assistant conversation.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('Clear'),
+                    ),
+                  ],
+                ),
+              );
+              if (ok != true) return;
+
               if (chatStream == null) {
                 await ChatService.clearLocalMessages();
-                setState(() => _guestMessages.clear());
+                if (mounted) setState(() => _guestMessages.clear());
+              } else {
+                await ChatService.clearFirestoreMessages();
               }
             },
           ),
@@ -161,30 +197,32 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
   }
 
   Widget _buildWalkthroughGrid() {
+    final l10n = AppLocalizations.of(context);
     final guides = [
       {
-        "title": appLocalization!.bookAppointment,
+        "title": l10n?.bookAppointment ?? 'Book Appointment',
         "icon": Icons.calendar_today,
-        "query": appLocalization!.book_appointment
+        "query": l10n?.book_appointment ?? 'Book appointment'
       },
       {
-        "title": appLocalization!.findLawyer,
+        "title": l10n?.findLawyer ?? 'Find lawyer',
         "icon": Icons.person_search,
-        "query": appLocalization!.type_of_lawyer
+        "query": l10n?.type_of_lawyer ?? 'Type of lawyer'
       },
       {
-        "title": appLocalization!.lawServices,
+        "title": l10n?.lawServices ?? 'Law services',
         "icon": Icons.local_hospital,
-        "query": appLocalization!.services_provided
+        "query": l10n?.services_provided ?? 'Services provided'
       },
       {
-        "title": appLocalization!.help,
+        "title": l10n?.help ?? 'Help',
         "icon": Icons.warning,
-        "query": appLocalization!.sue_someone
+        "query": l10n?.sue_someone ?? 'Help me sue someone'
       },
     ];
 
     return Container(
+      color: Colors.grey.shade50,
       padding: const EdgeInsets.all(8),
       child: GridView.builder(
         shrinkWrap: true,
@@ -202,14 +240,14 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
             onTap: () => _sendMessage(guide["query"] as String),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.redAccent.withOpacity(0.1),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: Colors.redAccent, width: 1),
+                border: Border.all(color: Colors.black26, width: 1),
               ),
               padding: const EdgeInsets.all(8),
               child: Row(
                 children: [
-                  Icon(guide["icon"] as IconData, color: Colors.redAccent),
+                  Icon(guide["icon"] as IconData, color: Colors.black87),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -236,11 +274,28 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
       itemCount: messages.length + (_isLoading ? 1 : 0),
       itemBuilder: (context, index) {
         if (_isLoading && index == messages.length) {
-          return const Align(
+          return Align(
             alignment: Alignment.centerLeft,
             child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text("LawHub Assistant is typing..."),
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'LawHub Assistant is typing…',
+                    style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+                  ),
+                ],
+              ),
             ),
           );
         }
@@ -257,13 +312,16 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
               margin: const EdgeInsets.symmetric(vertical: 6),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: isUser ? Colors.redAccent : Colors.white,
+                color: isUser ? Colors.black87 : Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isUser ? Colors.black : Colors.black12,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 5,
-                    offset: const Offset(0, 3),
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
@@ -278,6 +336,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                       style: TextStyle(
                         color: isUser ? Colors.white : Colors.black87,
                         fontSize: 14,
+                        height: 1.35,
                       ),
                     ),
                   ),
@@ -298,7 +357,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withValues(alpha: 0.2),
             spreadRadius: 2,
             blurRadius: 10,
             offset: const Offset(0, -2),
@@ -316,10 +375,10 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                 hintText: "Ask LawHub Assistant...",
                 hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
                 filled: true,
-                fillColor: Colors.grey[100],
+                fillColor: Colors.grey.shade100,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide.none,
+                  borderSide: const BorderSide(color: Colors.black12),
                 ),
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -329,7 +388,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                     child: Icon(
                       _isListening ? Icons.mic : Icons.mic_none,
                       key: ValueKey(_isListening),
-                      color: Colors.redAccent,
+                      color: Colors.black54,
                     ),
                   ),
                   onPressed: () {
@@ -341,10 +400,13 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
           ),
           const SizedBox(width: 12),
           FloatingActionButton(
-            onPressed: () => _sendMessage(_messageController.text),
-            backgroundColor: Colors.redAccent,
+            onPressed: _isLoading
+                ? null
+                : () => _sendMessage(_messageController.text),
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,
             elevation: 2,
-            child: const Icon(Icons.send, color: Colors.white),
+            child: const Icon(Icons.send),
           ),
         ],
       ),

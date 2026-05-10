@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'Home/Widgets/custom_bottom_navbar.dart';
-
-
 class NewsStandApp extends StatelessWidget {
   const NewsStandApp({super.key});
 
@@ -273,7 +270,6 @@ class NewsStandPage extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: CustomBottomNavBar(selectedIndex: 1, setup: 5),
     );
   }
 }
@@ -290,6 +286,8 @@ class CategoryPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(category["category"]),
+        foregroundColor: Colors.black87,
+        iconTheme: const IconThemeData(color: Colors.black87),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(12),
@@ -357,7 +355,11 @@ class ArticleDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(
+        title: Text(title),
+        foregroundColor: Colors.black87,
+        iconTheme: const IconThemeData(color: Colors.black87),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -381,7 +383,6 @@ class ArticleDetailPage extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: CustomBottomNavBar(selectedIndex: 2, setup:5),
     );
   }
 }

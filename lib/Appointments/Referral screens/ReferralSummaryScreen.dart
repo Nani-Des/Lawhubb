@@ -9,6 +9,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
+
+import '../../utils/lawhubb_share.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ReferralSummaryScreen extends StatefulWidget {
@@ -290,7 +292,9 @@ class _ReferralSummaryScreenState extends State<ReferralSummaryScreen> {
     await Share.shareXFiles(
       [XFile(filePath, mimeType: 'application/pdf')],
       subject: 'Referral Receipt - ${widget.serialNumber}',
-      text: 'Here is the referral receipt for ${widget.patientName}.',
+      text: LawHubbShare.withFooter(
+        'Here is the referral receipt for ${widget.patientName}.',
+      ),
     );
   }
 

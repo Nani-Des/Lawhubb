@@ -22,6 +22,13 @@ class UnreadMessageService {
 
       for (var chatDoc in chatsSnapshot.docs) {
         try {
+          final data = chatDoc.data();
+          final participants = List<String>.from(data['participants'] ?? []);
+          if (participants.length != 2 ||
+              !participants.contains(currentUser.uid)) {
+            continue;
+          }
+
           final unreadSnapshot = await _firestore
               .collection('Chats')
               .doc(chatDoc.id)

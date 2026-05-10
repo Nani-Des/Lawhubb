@@ -1,16 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:nhap/l10n/app_localizations.dart';
 import 'package:path_provider/path_provider.dart';
@@ -18,15 +14,12 @@ import 'package:showcaseview/showcaseview.dart';
 import 'Auth/auth_service.dart';
 import 'ChatModule/chat_module.dart';
 import 'main_layout.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:nhap/l10n/app_localizations.dart';
 
 import 'Services/config_service.dart';
 import 'Services/language_provider.dart';
 import 'Services/notification_service.dart';
-import 'booking_page.dart';
 
 // #region agent log helper
 void _debugLog({
@@ -124,24 +117,6 @@ void main() async {
 // Global navigator key for notification navigation
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-final appLocalization = AppLocalizations.of(navigatorKey.currentContext!);
-
-Future<void> _requestLocationPermission() async {
-  LocationPermission permission = await Geolocator.checkPermission();
-  if (permission == LocationPermission.denied) {
-    permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.denied) {
-      print('Location permissions denied');
-      return;
-    }
-  }
-  if (permission == LocationPermission.deniedForever) {
-    print('Location permissions permanently denied');
-    return;
-  }
-  print('Location permissions granted');
-}
-
 class MyApp extends StatelessWidget {
   final LanguageProvider languageProvider;
 
@@ -201,6 +176,11 @@ class MyApp extends StatelessWidget {
             theme: ThemeData(
               colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
               useMaterial3: true,
+              appBarTheme: const AppBarTheme(
+                foregroundColor: Colors.white,
+                iconTheme: IconThemeData(color: Colors.white),
+                surfaceTintColor: Colors.transparent,
+              ),
             ),
             home: const CustomTransitionScreen(),
             debugShowCheckedModeBanner: false,
@@ -224,6 +204,16 @@ class _CustomTransitionScreenState extends State<CustomTransitionScreen>
   late AnimationController _controller;
   late Animation<double> _rotationAnimation;
   late Animation<double> _scaleAnimation;
+  bool _didNavigateFromSplash = false;
+
+  void _navigateToMainLayout() {
+    if (_didNavigateFromSplash || !mounted) return;
+    _didNavigateFromSplash = true;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const MainLayout()),
+    );
+  }
 
   @override
   void initState() {
@@ -258,11 +248,7 @@ class _CustomTransitionScreenState extends State<CustomTransitionScreen>
         data: {},
       );
       // #endregion
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-            builder: (context) => const LocationPermissionScreen()),
-      );
+      _navigateToMainLayout();
       // #region agent log
       _debugLog(
         hypothesisId: 'B',
@@ -275,13 +261,7 @@ class _CustomTransitionScreenState extends State<CustomTransitionScreen>
 
     // Add failsafe timeout to force navigation even if Firebase/network is stuck
     Future.delayed(const Duration(seconds: 5), () {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) => const LocationPermissionScreen()),
-        );
-      }
+      _navigateToMainLayout();
     });
   }
 
@@ -308,82 +288,6 @@ class _CustomTransitionScreenState extends State<CustomTransitionScreen>
               ),
             );
           },
-        ),
-      ),
-    );
-  }
-}
-
-class LocationPermissionScreen extends StatefulWidget {
-  const LocationPermissionScreen({super.key});
-
-  @override
-  State<LocationPermissionScreen> createState() =>
-      _LocationPermissionScreenState();
-}
-
-class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
-  @override
-  Widget build(BuildContext context) {
-    final localizations = AppLocalizations.of(context);
-
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset('assets/Icons/Icon.png', width: 100, height: 100),
-              const SizedBox(height: 20),
-              Text(
-                localizations?.locationPermissionTitle ??
-                    'We Need Your Location',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                localizations?.locationPermissionDescription ??
-                    'To provide you with the best experience, we need your location to find Lawyers and Chambers near you.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: () async {
-                  // #region agent log
-                  _debugLog(
-                    hypothesisId: 'C',
-                    location: 'main.dart:LocationPermissionScreen.allow',
-                    message: 'Allow location tapped',
-                    data: {},
-                  );
-                  // #endregion
-                  await _requestLocationPermission();
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const MainLayout()),
-                  );
-                },
-                child: Text(localizations?.allowLocationButton ??
-                    'Allow Location Access'),
-              ),
-              const SizedBox(height: 10),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const MainLayout()),
-                  );
-                },
-                child: Text(localizations?.skipButton ?? 'Skip for Now'),
-              ),
-            ],
-          ),
         ),
       ),
     );

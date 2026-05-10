@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nhap/Hospital/specialty_details.dart';
 import 'package:nhap/l10n/app_localizations.dart';
@@ -8,7 +7,6 @@ import '../Forums/Chat/voice_call_screen.dart';
 import 'doctor_availability_calendar.dart';
 import 'hospital_page.dart';
 import 'package:uuid/uuid.dart';
-import 'package:provider/provider.dart';
 import '../Services/follow_service.dart';
 
 class DoctorInfoWidget extends StatelessWidget {
@@ -68,7 +66,7 @@ class DoctorInfoWidget extends StatelessWidget {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
+                                color: Colors.black.withValues(alpha: 0.3),
                                 blurRadius: 10,
                                 spreadRadius: 2,
                               ),
@@ -294,39 +292,6 @@ class DoctorInfoWidget extends StatelessWidget {
     );
   }
 
-  void _showInfoDialog(BuildContext context, String title, String? value) {
-    if (value == null || value.isEmpty) return;
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[900],
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(
-            title,
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-          content: Text(
-            value,
-            style: TextStyle(color: Colors.grey[300], fontSize: 16),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                AppLocalizations.of(context)?.close ?? 'Close',
-                style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   Widget _buildActionButtons(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
 
@@ -403,7 +368,7 @@ class DoctorInfoWidget extends StatelessWidget {
         // Follow Button
         if (currentUser != null && currentUser.uid != doctorDetails['User ID'])
           _FollowButton(
-            currentUserId: currentUser!.uid,
+            currentUserId: currentUser.uid,
             targetUserId: doctorDetails['User ID'],
           ),
 
@@ -426,41 +391,17 @@ class DoctorInfoWidget extends StatelessWidget {
                       }
                     : () async {
                         final String otherUserId = doctorDetails['User ID'];
-                        final chatRef =
-                            FirebaseFirestore.instance.collection('Chats');
-
-                        // Find existing chat
-                        final existingChat = await chatRef
-                            .where('participants',
-                                arrayContains: currentUser!.uid)
-                            .get();
-
-                        DocumentSnapshot? foundChat;
-                        for (var doc in existingChat.docs) {
-                          if ((doc['participants'] as List)
-                              .contains(otherUserId)) {
-                            foundChat = doc;
-                            break;
-                          }
-                        }
-
-                        // If chat doesn't exist, create one
-                        if (foundChat == null) {
-                          final newChatRef = await chatRef.add({
-                            'participants': [currentUser.uid, otherUserId],
-                            'createdAt': FieldValue.serverTimestamp(),
-                          });
-
-                          // Fetch the created document as a snapshot
-                          foundChat = await newChatRef.get();
-                        }
+                        final uid = currentUser.uid;
+                        final chatId = uid.compareTo(otherUserId) < 0
+                            ? '${uid}_$otherUserId'
+                            : '${otherUserId}_$uid';
 
                         if (context.mounted) {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => ChatScreen(
-                                chatId: foundChat!.id,
+                                chatId: chatId,
                                 recipientId: otherUserId,
                                 recipientName:
                                     "${doctorDetails['Fname'] ?? ''} ${doctorDetails['Lname'] ?? ''}",
