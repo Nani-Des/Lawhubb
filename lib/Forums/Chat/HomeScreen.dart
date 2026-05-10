@@ -78,7 +78,10 @@ class HomeScreen extends StatelessWidget {
         appBar: AppBar(
           backgroundColor: Colors.black,
           elevation: 0,
-          automaticallyImplyLeading: false,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
           title: const TabBar(
             indicatorColor: Colors.white,
             tabs: [

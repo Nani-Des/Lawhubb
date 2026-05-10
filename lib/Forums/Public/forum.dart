@@ -66,6 +66,16 @@ class _ForumPageState extends State<Forum> {
       }).toList();
     }
 
+    // 3b. Filter out the current user's own reposts from their feed
+    // (They appear on their profile, but not in the main feed)
+    if (currentUserId != null) {
+      posts = posts.where((post) {
+        final isRepost = post['repostOf'] != null;
+        final isOwnRepost = post['User ID'] == currentUserId;
+        return !(isRepost && isOwnRepost);
+      }).toList();
+    }
+
     // 4. Sort posts: followed users first, then by timestamp (newest first)
     posts.sort((a, b) {
       final aUserId = a['User ID'] as String? ?? '';
@@ -201,7 +211,12 @@ class _ForumPageState extends State<Forum> {
                                       );
                                     }
 
-                                    final consults = snapshot.data!.docs;
+                                    // Deduplicate by initiatorId — one icon per host
+                                    final seen = <String>{};
+                                    final consults = snapshot.data!.docs.where((doc) {
+                                      final id = (doc.data() as Map<String, dynamic>)['initiatorId'] as String? ?? '';
+                                      return id.isNotEmpty && seen.add(id);
+                                    }).toList();
 
                                     if (consults.isEmpty) {
                                       return Center(

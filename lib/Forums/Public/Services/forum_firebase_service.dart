@@ -26,11 +26,11 @@ class ForumFirebaseService {
   }
 
   /// Fetches all posts, ordered by timestamp in descending order
-  Future<List<Map<String, dynamic>>> fetchPosts() async {
+  Future<List<Map<String, dynamic>>> fetchPosts({bool fromServer = false}) async {
     QuerySnapshot snapshot = await _firestore
         .collection('Posts')
         .orderBy('Timestamp', descending: true)
-        .get();
+        .get(fromServer ? const GetOptions(source: Source.server) : null);
 
     return snapshot.docs
         .map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>})

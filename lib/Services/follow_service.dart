@@ -45,6 +45,10 @@ class FollowService {
 
   // Unfollow a user
   Future<void> unfollowUser(String userId, String userToUnfollowId) async {
+    // Only decrement if actually following to prevent negative counts
+    final wasFollowing = await isFollowing(userId, userToUnfollowId);
+    if (!wasFollowing) return;
+
     // Remove from following list
     await _firestore
         .collection('Follows')
@@ -61,14 +65,23 @@ class FollowService {
         .doc(userId)
         .delete();
 
-    // Update follower count for unfollowed user
-    await _firestore.collection('Users').doc(userToUnfollowId).update({
-      'followersCount': FieldValue.increment(-1),
-    });
+    // Use transaction to safely decrement — never go below 0
+    await _firestore.runTransaction((txn) async {
+      final followedUserRef = _firestore.collection('Users').doc(userToUnfollowId);
+      final currentUserRef = _firestore.collection('Users').doc(userId);
 
-    // Update following count for current user
-    await _firestore.collection('Users').doc(userId).update({
-      'followingCount': FieldValue.increment(-1),
+      final followedSnap = await txn.get(followedUserRef);
+      final currentSnap = await txn.get(currentUserRef);
+
+      final currentFollowers = (followedSnap.data()?['followersCount'] as int?) ?? 0;
+      final currentFollowing = (currentSnap.data()?['followingCount'] as int?) ?? 0;
+
+      txn.update(followedUserRef, {
+        'followersCount': currentFollowers > 0 ? currentFollowers - 1 : 0,
+      });
+      txn.update(currentUserRef, {
+        'followingCount': currentFollowing > 0 ? currentFollowing - 1 : 0,
+      });
     });
   }
 
@@ -123,7 +136,8 @@ class FollowService {
     final userDoc = await _firestore.collection('Users').doc(userId).get();
     if (userDoc.exists) {
       final data = userDoc.data();
-      return (data?['followersCount'] as int?) ?? 0;
+      final count = (data?['followersCount'] as int?) ?? 0;
+      return count < 0 ? 0 : count;
     }
     return 0;
   }

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(head -3 grep -n \"_repostPost\\\\|repost\" lib/Forums/Public/Widgets/post_card.dart)",
+      "Bash(head -5 grep -n \"_showComments\\\\|_viewerTimeoutTimer\" lib/Forums/Chat/live_stream.dart)",
+      "Bash(head -6 grep -n \"seen\\\\.add\\\\|dedup\" lib/Forums/Public/forum.dart grep -n \"Register\\\\|Sign In\" lib/Auth/auth_screen.dart)",
+      "Bash(head -5 grep -n \"LawyerDirectoryPage\\\\|lawyer_directory\" lib/Home/Widgets/services_grid.dart)",
+      "Bash(flutter analyze:*)"
+    ]
+  }
+}

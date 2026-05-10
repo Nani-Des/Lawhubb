@@ -181,7 +181,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
             setup: widget.setup,
           ),
         ),
-        (route) => false, // Remove all previous routes
+        (route) => false,
       );
       return;
     }

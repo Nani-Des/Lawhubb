@@ -32,8 +32,7 @@ class FeatureCardsSection extends StatelessWidget {
               colors: [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)],
             ),
             onTap: () {
-              Navigator.push(
-                context,
+              Navigator.push(context,
                 MaterialPageRoute(
                   builder: (context) => const PostsContent(),
                 ),
@@ -49,8 +48,7 @@ class FeatureCardsSection extends StatelessWidget {
               colors: [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)],
             ),
             onTap: () {
-              Navigator.push(
-                context,
+              Navigator.push(context,
                 MaterialPageRoute(
                   builder: (context) => LibraryPage(),
                 ),
@@ -66,8 +64,7 @@ class FeatureCardsSection extends StatelessWidget {
               colors: [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)],
             ),
             onTap: () {
-              Navigator.push(
-                context,
+              Navigator.push(context,
                 MaterialPageRoute(
                   builder: (context) => GeneralHospitalPage(),
                 ),
