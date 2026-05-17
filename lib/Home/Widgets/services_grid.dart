@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:nhap/l10n/app_localizations.dart';
-import '../../Emergency/emergency_page.dart';
-import '../../Forums/Chat/HomeScreen.dart';
-import '../../wrappers/posts_content.dart';
 import '../../booking_page.dart';
 import '../../Library/library_page.dart';
-import '../../LawInsights/law_insights_page.dart';
-import '../../Hospital/general_hospital_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../lawyer_directory_page.dart';
 import '../../bot/chat_bot.dart';
+import '../../utils/app_navigation.dart';
 
 class ServicesGrid extends StatelessWidget {
   final Function(int)? onTabChange;
@@ -78,12 +74,7 @@ class ServicesGrid extends StatelessWidget {
                 subtitle: localizations?.immediateAssistance ??
                     'Immediate assistance',
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChatBotScreen(),
-                    ),
-                  );
+                  pushAppRoute(context, ChatBotScreen());
                 },
               ),
               _ServiceCard(
@@ -91,12 +82,7 @@ class ServicesGrid extends StatelessWidget {
                 title: localizations?.legalResources ?? 'Books Shop',
                 subtitle: localizations?.browseLibrary ?? 'Browse library',
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const LibraryPage(),
-                    ),
-                  );
+                  pushAppRoute(context, const LibraryPage());
                 },
               ),
               _ServiceCard(
@@ -107,12 +93,9 @@ class ServicesGrid extends StatelessWidget {
                 onTap: () {
                   final userId = FirebaseAuth.instance.currentUser?.uid;
                   if (userId != null) {
-                    Navigator.push(
+                    pushAppRoute(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            BookingPage(currentUserId: userId),
-                      ),
+                      BookingPage(currentUserId: userId),
                     );
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -134,12 +117,7 @@ class ServicesGrid extends StatelessWidget {
                 title: 'Find a Lawyer',
                 subtitle: 'Browse by specialty',
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const LawyerDirectoryPage(),
-                    ),
-                  );
+                  pushAppRoute(context, const LawyerDirectoryPage());
                 },
               ),
 

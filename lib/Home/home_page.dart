@@ -9,6 +9,7 @@ import '../Auth/lawyer_registration_screen.dart';
 import 'Widgets/profile_drawer.dart';
 import 'Widgets/redesigned_home_content.dart';
 import 'Widgets/app_bar.dart';
+import '../utils/app_navigation.dart';
 
 class HomePage extends StatefulWidget {
   final Function(int)? onTabChange;
@@ -145,12 +146,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _openLawyerRegistration() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const LawyerRegistrationScreen(),
-      ),
-    ).then((_) {
+    pushAppRoute(context, const LawyerRegistrationScreen()).then((_) {
       if (mounted) _fetchUserData();
     });
   }

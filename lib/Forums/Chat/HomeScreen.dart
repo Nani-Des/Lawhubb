@@ -5,6 +5,7 @@ import 'package:nhap/Forums/Chat/search_screen.dart';
 import '../Public/forum.dart';
 import '../Public/Widgets/user_profile_screen.dart';
 import 'chat_list.dart';
+import '../../widgets/profile_avatar.dart';
 import 'live_stream.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -115,12 +116,9 @@ class HomeScreen extends StatelessWidget {
                       snapshot.data!.data() as Map<String, dynamic>?;
                       userPic = data?['User Pic'];
                     }
-                    return CircleAvatar(
+                    return ProfileAvatar.circle(
+                      imageUrl: userPic,
                       radius: 18,
-                      backgroundImage: userPic != null && userPic.isNotEmpty
-                          ? NetworkImage(userPic)
-                          : const AssetImage("assets/Images/placeholder.png")
-                      as ImageProvider,
                     );
                   },
                 ),

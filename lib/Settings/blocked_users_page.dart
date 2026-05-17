@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nhap/widgets/profile_avatar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -201,12 +202,9 @@ class _BlockedUsersPageState extends State<BlockedUsersPage> {
                             horizontal: 16,
                             vertical: 8,
                           ),
-                          leading: CircleAvatar(
+                          leading: ProfileAvatar.circle(
+                            imageUrl: user['userPic']?.toString(),
                             backgroundColor: Colors.grey[850],
-                            child: Icon(
-                              Icons.person,
-                              color: Colors.grey[400],
-                            ),
                           ),
                           title: Text(
                             user['userName'],

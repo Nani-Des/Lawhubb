@@ -8,6 +8,7 @@ import '../utils/lawhubb_share.dart';
 import '../utils/share_remote_media.dart';
 import 'package:video_player/video_player.dart';
 import '../../Hospital/doctor_profile.dart';
+import '../widgets/profile_avatar.dart';
 import '../../ChatModule/chat_module.dart';
 import 'Services/law_insights_service.dart';
 import 'Widgets/insight_video_player.dart';
@@ -340,17 +341,10 @@ class _InsightCardState extends State<InsightCard>
                       );
                     }
                   },
-                  child: CircleAvatar(
+                  child: ProfileAvatar.circle(
+                    imageUrl: _userData?['User Pic']?.toString(),
                     radius: 20,
                     backgroundColor: Colors.grey[800],
-                    backgroundImage: _userData?['User Pic'] != null &&
-                            (_userData!['User Pic'] as String).isNotEmpty
-                        ? NetworkImage(_userData!['User Pic'] as String)
-                        : null,
-                    child: _userData?['User Pic'] == null ||
-                            (_userData!['User Pic'] as String).isEmpty
-                        ? const Icon(Icons.person, color: Colors.grey)
-                        : null,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -788,13 +782,10 @@ class _CommentItem extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
+          ProfileAvatar.circle(
+            imageUrl: userPic,
             radius: 16,
             backgroundColor: Colors.grey[800],
-            backgroundImage: userPic.isNotEmpty ? NetworkImage(userPic) : null,
-            child: userPic.isEmpty
-                ? const Icon(Icons.person, color: Colors.grey, size: 16)
-                : null,
           ),
           const SizedBox(width: 8),
           Expanded(

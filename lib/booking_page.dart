@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:nhap/widgets/profile_avatar.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,8 +12,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
-import 'main_layout.dart';
 import 'booking_details.dart';
+import 'utils/app_navigation.dart';
 
 // Background message handler (must be top-level or static)
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -454,15 +455,14 @@ class _BookingPageState extends State<BookingPage> with SingleTickerProviderStat
     });
 
     if (bookingDateSeconds != null && userId != null && doctorId != null) {
-      Navigator.push(
+      pushAppRoute(
         context,
-        MaterialPageRoute(
-          builder: (context) => BookingDetailsPage(
-            userId: userId,
-            doctorId: doctorId,
-            bookingDate: Timestamp.fromMillisecondsSinceEpoch(int.parse(bookingDateSeconds) * 1000),
-            currentUserId: widget.currentUserId,
-          ),
+        BookingDetailsPage(
+          userId: userId,
+          doctorId: doctorId,
+          bookingDate: Timestamp.fromMillisecondsSinceEpoch(
+              int.parse(bookingDateSeconds) * 1000),
+          currentUserId: widget.currentUserId,
         ),
       );
     }
@@ -604,15 +604,7 @@ class _BookingPageState extends State<BookingPage> with SingleTickerProviderStat
           elevation: 0,
           leading: IconButton(
             icon: Icon(Icons.arrow_back_ios_new, color: Colors.white),
-            onPressed: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const MainLayout(initialIndex: 0),
-                ),
-                (route) => false,
-              );
-            },
+            onPressed: () => popAppRoute(context),
           ),
           bottom: TabBar(
             onTap: (index) => setState(() => _selectedTabIndex = index),
@@ -836,25 +828,10 @@ class _BookingPageState extends State<BookingPage> with SingleTickerProviderStat
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
+                ProfileAvatar.circle(
+                  imageUrl: userInfo['User Pic']?.toString(),
                   radius: 25,
-                  backgroundColor: Colors.grey[800],  // Darker grey avatar background
-                  child: userInfo['User Pic']?.isNotEmpty == true
-                      ? ClipOval(
-                    child: CachedNetworkImage(
-                      imageUrl: userInfo['User Pic'],
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => CircularProgressIndicator(color: Colors.white),
-                      errorWidget: (context, url, error) => Image.asset(
-                        'assets/Images/placeholder.png',
-                        fit: BoxFit.cover,
-                      ),
-                      cacheKey: 'user-pic-${isRequest ? appointment['userId'] : appointment['doctorId']}',
-                      maxHeightDiskCache: 200,
-                      maxWidthDiskCache: 200,
-                    ),
-                  )
-                      : Image.asset('assets/Images/placeholder.png'),
+                  backgroundColor: Colors.grey[800],
                 ),
                 const SizedBox(width: 16),
                 Expanded(

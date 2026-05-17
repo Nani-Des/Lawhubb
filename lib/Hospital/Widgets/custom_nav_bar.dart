@@ -58,8 +58,7 @@ class _CustomBottomNavBarHospitalState extends State<CustomBottomNavBarHospital>
     }
 
     if (userId != null) {
-      Navigator.push(
-        context,
+      Navigator.of(context, rootNavigator: true).push(
         MaterialPageRoute(builder: (context) => targetScreen(userId!)),
       );
     }

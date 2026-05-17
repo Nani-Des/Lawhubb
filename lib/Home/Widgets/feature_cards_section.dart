@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../Forums/Chat/HomeScreen.dart';
 import '../../wrappers/posts_content.dart';
 import '../../Library/library_page.dart';
 import '../../Hospital/general_hospital_page.dart';
+import '../../utils/app_navigation.dart';
+import '../../widgets/lawhubb_brand_icon.dart';
 
 class FeatureCardsSection extends StatelessWidget {
   const FeatureCardsSection({super.key});
@@ -32,11 +33,7 @@ class FeatureCardsSection extends StatelessWidget {
               colors: [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)],
             ),
             onTap: () {
-              Navigator.push(context,
-                MaterialPageRoute(
-                  builder: (context) => const PostsContent(),
-                ),
-              );
+              pushAppRoute(context, const PostsContent());
             },
           ),
           const SizedBox(height: 12),
@@ -48,15 +45,12 @@ class FeatureCardsSection extends StatelessWidget {
               colors: [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)],
             ),
             onTap: () {
-              Navigator.push(context,
-                MaterialPageRoute(
-                  builder: (context) => LibraryPage(),
-                ),
-              );
+              pushAppRoute(context, LibraryPage());
             },
           ),
           const SizedBox(height: 12),
           _FeatureCard(
+            brandIcon: true,
             icon: Icons.balance_outlined,
             title: 'Legal Chambers',
             subtitle: 'Find and connect with law firms',
@@ -64,11 +58,7 @@ class FeatureCardsSection extends StatelessWidget {
               colors: [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)],
             ),
             onTap: () {
-              Navigator.push(context,
-                MaterialPageRoute(
-                  builder: (context) => GeneralHospitalPage(),
-                ),
-              );
+              pushAppRoute(context, GeneralHospitalPage());
             },
           ),
           const SizedBox(height: 32),
@@ -80,6 +70,7 @@ class FeatureCardsSection extends StatelessWidget {
 
 class _FeatureCard extends StatelessWidget {
   final IconData icon;
+  final bool brandIcon;
   final String title;
   final String subtitle;
   final Gradient gradient;
@@ -87,6 +78,7 @@ class _FeatureCard extends StatelessWidget {
 
   const _FeatureCard({
     required this.icon,
+    this.brandIcon = false,
     required this.title,
     required this.subtitle,
     required this.gradient,
@@ -118,11 +110,13 @@ class _FeatureCard extends StatelessWidget {
                 color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 24,
-              ),
+              child: brandIcon
+                  ? const LawHubbBrandIcon(size: 24, borderRadius: 6)
+                  : Icon(
+                      icon,
+                      color: Colors.white,
+                      size: 24,
+                    ),
             ),
             const SizedBox(width: 16),
             Expanded(

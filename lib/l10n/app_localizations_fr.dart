@@ -114,7 +114,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Que dois-je faire lorsque je veux poursuivre quelqu\'un en justice ?';
 
   @override
-  String get appTitle => 'LawHub';
+  String get appTitle => 'LawHubb';
 
   @override
   String get locationPermissionTitle =>

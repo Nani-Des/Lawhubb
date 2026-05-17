@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/profile_avatar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nhap/l10n/app_localizations.dart';
@@ -310,23 +311,11 @@ class _ForumPageState extends State<Forum> {
                                                       alignment: Alignment
                                                           .bottomCenter,
                                                       children: [
-                                                        CircleAvatar(
+                                                        ProfileAvatar.circle(
+                                                          imageUrl: userPic,
                                                           radius: 35,
-                                                          backgroundImage:
-                                                              userPic.isNotEmpty
-                                                                  ? NetworkImage(
-                                                                      userPic)
-                                                                  : null,
                                                           backgroundColor:
                                                               Colors.grey[300],
-                                                          child: userPic.isEmpty
-                                                              ? const Icon(
-                                                                  Icons.person,
-                                                                  size: 35,
-                                                                  color: Colors
-                                                                      .white,
-                                                                )
-                                                              : null,
                                                         ),
                                                         Container(
                                                           margin:

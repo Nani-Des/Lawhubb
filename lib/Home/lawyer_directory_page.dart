@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../Forums/Public/Widgets/user_profile_screen.dart';
+import '../utils/app_navigation.dart';
+import '../widgets/profile_avatar.dart';
 
 class LawyerDirectoryPage extends StatefulWidget {
   const LawyerDirectoryPage({super.key});
@@ -173,20 +175,10 @@ class _LawyerDirectoryPageState extends State<LawyerDirectoryPage> {
               return ListTile(
                 contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16, vertical: 8),
-                leading: CircleAvatar(
+                leading: ProfileAvatar.circle(
+                  imageUrl: pic,
                   radius: 26,
-                  backgroundImage:
-                      pic.isNotEmpty ? NetworkImage(pic) : null,
                   backgroundColor: Colors.grey[800],
-                  child: pic.isEmpty
-                      ? Text(
-                          fullName.isNotEmpty
-                              ? fullName[0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 20),
-                        )
-                      : null,
                 ),
                 title: Text(
                   fullName,
@@ -211,12 +203,9 @@ class _LawyerDirectoryPageState extends State<LawyerDirectoryPage> {
                   ),
                 ),
                 onTap: userId.isNotEmpty
-                    ? () => Navigator.push(
+                    ? () => pushAppRoute(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                UserProfileScreen(userId: userId),
-                          ),
+                          UserProfileScreen(userId: userId),
                         )
                     : null,
               );

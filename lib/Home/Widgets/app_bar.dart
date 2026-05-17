@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:nhap/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:nhap/Services/language_provider.dart';
+import 'package:nhap/widgets/lawhubb_brand_icon.dart';
+import 'package:nhap/widgets/profile_avatar.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? userImageUrl;
@@ -50,24 +52,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           backgroundColor: Colors.black,
           title: Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.grey[850],
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: Colors.grey[800]!,
-                  ),
-                ),
-                child: const Icon(
-                  Icons.balance,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
+              const LawHubbBrandIcon(size: 36, borderRadius: 10),
               const SizedBox(width: 12),
               const Text(
-                'LawHub',
+                'LawHubb',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 20,
@@ -227,20 +215,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                             width: 2,
                           ),
                         ),
-                        child: CircleAvatar(
+                        child: ProfileAvatar.circle(
+                          imageUrl: userImageUrl,
                           radius: 18,
                           backgroundColor: Colors.grey[850],
-                          backgroundImage: userImageUrl != null &&
-                                  userImageUrl!.isNotEmpty
-                              ? NetworkImage(userImageUrl!)
-                              : null,
-                          child: userImageUrl == null || userImageUrl!.isEmpty
-                              ? const Icon(
-                                  Icons.person_outline,
-                                  color: Colors.white,
-                                  size: 20,
-                                )
-                              : null,
                         ),
                       ),
                     )
@@ -254,20 +232,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                             width: 2,
                           ),
                         ),
-                        child: CircleAvatar(
+                        child: ProfileAvatar.circle(
+                          imageUrl: userImageUrl,
                           radius: 18,
                           backgroundColor: Colors.grey[850],
-                          backgroundImage: userImageUrl != null &&
-                                  userImageUrl!.isNotEmpty
-                              ? NetworkImage(userImageUrl!)
-                              : null,
-                          child: userImageUrl == null || userImageUrl!.isEmpty
-                              ? const Icon(
-                                  Icons.person_outline,
-                                  color: Colors.white,
-                                  size: 20,
-                                )
-                              : null,
                         ),
                       ),
                     ),

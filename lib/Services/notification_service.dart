@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../Forums/Chat/chat_screen.dart';
 import '../booking_page.dart';
+import '../utils/app_navigation.dart';
 import '../Forums/Public/Widgets/user_profile_screen.dart';
 
 class NotificationService {
@@ -283,10 +284,9 @@ class NotificationService {
   void _navigateToBookings(BuildContext context, Map<String, dynamic> data) {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId != null) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => BookingPage(currentUserId: userId),
-        ),
+      pushAppRoute(
+        context,
+        BookingPage(currentUserId: userId),
       );
     }
   }

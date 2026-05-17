@@ -6,6 +6,8 @@ import '../../Hospital/doctor_profile.dart';
 import '../../bot/widget/openai_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nhap/utils/country_utils.dart';
+import 'package:nhap/utils/app_navigation.dart';
+import 'package:nhap/widgets/profile_avatar.dart';
 
 class SearchBar1 extends StatefulWidget {
   const SearchBar1({Key? key}) : super(key: key);
@@ -127,6 +129,21 @@ class _SearchBar1State extends State<SearchBar1> {
         userQuery: query,
         practiceNames: practices,
       );
+      if (aiResponse == null) {
+        setState(() {
+          _isLoading = false;
+          _lawyerSuggestions = [];
+          _botResponse = null;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(OpenAIService.unavailableMessage),
+            ),
+          );
+        }
+        return;
+      }
       if (aiResponse.isEmpty) {
         setState(() {
           _isLoading = false;
@@ -137,7 +154,7 @@ class _SearchBar1State extends State<SearchBar1> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text(
-                'Could not match your issue to a practice. Try different words or check your connection.',
+                'Could not match your issue to a practice. Try describing it differently.',
               ),
             ),
           );
@@ -462,13 +479,11 @@ class _SearchBar1State extends State<SearchBar1> {
                       final lawyer = _lawyerSuggestions[index];
                       return GestureDetector(
                         onTap: () {
-                          Navigator.push(
+                          pushAppRoute(
                             context,
-                            MaterialPageRoute(
-                              builder: (context) => DoctorProfileScreen(
-                                userId: lawyer['userId'],
-                                isReferral: false,
-                              ),
+                            DoctorProfileScreen(
+                              userId: lawyer['userId'],
+                              isReferral: false,
                             ),
                           );
                         },
@@ -476,16 +491,9 @@ class _SearchBar1State extends State<SearchBar1> {
                           padding: const EdgeInsets.symmetric(horizontal: 8.0),
                           child: Column(
                             children: [
-                              CircleAvatar(
+                              ProfileAvatar.circle(
+                                imageUrl: lawyer['User Pic']?.toString(),
                                 radius: 30,
-                                backgroundImage: lawyer['User Pic'] != null
-                                    ? CachedNetworkImageProvider(
-                                        lawyer['User Pic'])
-                                    : null,
-                                child: lawyer['User Pic'] == null
-                                    ? const Icon(Icons.person,
-                                        size: 30, color: Colors.white)
-                                    : null,
                               ),
                               const SizedBox(height: 4),
                               Text(

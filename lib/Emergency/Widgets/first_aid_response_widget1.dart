@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:nhap/widgets/formatted_message_text.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -615,15 +616,11 @@ class _FirstAidResponseWidget1State extends State<FirstAidResponseWidget> with S
         borderRadius: BorderRadius.circular(12),
       ),
       child: SingleChildScrollView(
-        child: RichText(
-          text: TextSpan(
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.black87,
-              height: 1.5,
-            ),
-            children: _formatText(displayText),
-          ),
+        child: FormattedMessageBody(
+          text: displayText,
+          textColor: Colors.black87,
+          fontSize: 14,
+          enableMarkdown: true,
         ),
       ),
     );
@@ -653,56 +650,4 @@ class _FirstAidResponseWidget1State extends State<FirstAidResponseWidget> with S
     );
   }
 
-  List<TextSpan> _formatText(String text) {
-    List<TextSpan> spans = [];
-    List<String> lines = text.split("\n");
-
-    for (String line in lines) {
-      if (line.trim().isEmpty) {
-        spans.add(TextSpan(text: "\n"));
-        continue;
-      }
-
-      if (line.startsWith(RegExp(r'^\d+\.\s'))) {
-        spans.add(TextSpan(
-          text: "$line\n",
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-        ));
-      } else if (line.startsWith("- ") || line.startsWith("• ")) {
-        String content = line.substring(2).trim();
-        spans.add(TextSpan(
-          text: "• $content\n",
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.black54,
-          ),
-        ));
-      } else if (line.contains(RegExp(r'^#{1,3}\s'))) {
-        String content = line.replaceAll(RegExp(r'^#{1,3}\s+'), "").trim();
-        spans.add(TextSpan(
-          text: "$content\n",
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.redAccent,
-          ),
-        ));
-      } else {
-        spans.add(TextSpan(
-          text: "$line\n",
-          style: const TextStyle(
-            fontSize: 14,
-            color: Colors.black87,
-          ),
-        ));
-      }
-    }
-
-    return spans;
-  }
 }

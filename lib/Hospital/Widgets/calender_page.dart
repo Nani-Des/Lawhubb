@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../Services/firebase_service.dart';
 import '../shift_schedule_Table.dart';
-import 'custom_nav_bar.dart';
 
 class CalenderPage extends StatefulWidget {
   final String hospitalId;
@@ -337,8 +336,6 @@ class _CalenderPageState extends State<CalenderPage> with TickerProviderStateMix
         ],
       )
           : null,
-      bottomNavigationBar:
-      widget.isReferral ? null : CustomBottomNavBarHospital(hospitalId: widget.hospitalId),
     );
   }
 }

@@ -16,7 +16,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/librabbb y/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.12+17
+version: 1.0.13+18
 
 environment:
   sdk: ">=3.5.0 <4.0.0"
@@ -99,6 +99,7 @@ dependencies:
   syncfusion_flutter_pdfviewer: 31.1.19
   shimmer: ^2.0.0
   webview_flutter: ^4.13.1
+  flutter_markdown: ^0.7.7+1
 
 dev_dependencies:
   hive_generator: ^2.0.0
@@ -110,7 +111,7 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/Icons/Icon1.png"
+  image_path: "assets/Icons/Icon1.jpeg"
   min_sdk_android: 21
 
   # The "flutter_lints" package below contains a set of recommended lints to

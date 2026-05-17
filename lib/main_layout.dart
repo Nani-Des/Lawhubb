@@ -42,126 +42,54 @@ class _MainLayoutState extends State<MainLayout> {
 
   Widget _getPageForSetup(int setup, int index) {
     switch (setup) {
-      case 1: // Home setup (default)
+      case 1:
         switch (index) {
           case 0:
-            return Navigator(
-              onGenerateRoute: (settings) {
-                return MaterialPageRoute(
-                  builder: (_) => HomePage(
-                    onTabChange: _onItemTapped,
-                  ),
-                );
-              },
-            );
+            return HomePage(onTabChange: _onItemTapped);
           case 1:
-            return const LawInsightsPage(); // Law Insights
+            return const LawInsightsPage();
           case 2:
-            return const ChatsContent(); // Chats
+            return const ChatsContent();
           case 3:
-            return const PostsContent(); // SocialHubb - Posts only
+            return const PostsContent();
           default:
-            return Navigator(
-              onGenerateRoute: (settings) {
-                return MaterialPageRoute(
-                  builder: (_) => HomePage(
-                    onTabChange: _onItemTapped,
-                  ),
-                );
-              },
-            );
+            return HomePage(onTabChange: _onItemTapped);
         }
-      case 2: // Chambers setup
+      case 2:
         switch (index) {
           case 0:
-            return Navigator(
-              onGenerateRoute: (settings) {
-                return MaterialPageRoute(
-                  builder: (_) => HomePage(
-                    onTabChange: _onItemTapped,
-                  ),
-                );
-              },
-            );
+            return HomePage(onTabChange: _onItemTapped);
           case 1:
-            return const ChatsContent(); // Chats
+            return const ChatsContent();
           case 2:
-            return const PostsContent(); // SocialHubb - Posts only
+            return const PostsContent();
           default:
-            return Navigator(
-              onGenerateRoute: (settings) {
-                return MaterialPageRoute(
-                  builder: (_) => HomePage(
-                    onTabChange: _onItemTapped,
-                  ),
-                );
-              },
-            );
+            return HomePage(onTabChange: _onItemTapped);
         }
-      case 3: // Social setup
+      case 3:
         switch (index) {
           case 0:
-            return Navigator(
-              onGenerateRoute: (settings) {
-                return MaterialPageRoute(
-                  builder: (_) => HomePage(
-                    onTabChange: _onItemTapped,
-                  ),
-                );
-              },
-            );
+            return HomePage(onTabChange: _onItemTapped);
           case 1:
-            return const ChatsContent(); // Chats
+            return const ChatsContent();
           case 2:
-            return const LawInsightsPage(); // Law Insights
+            return const LawInsightsPage();
           default:
-            return Navigator(
-              onGenerateRoute: (settings) {
-                return MaterialPageRoute(
-                  builder: (_) => HomePage(
-                    onTabChange: _onItemTapped,
-                  ),
-                );
-              },
-            );
+            return HomePage(onTabChange: _onItemTapped);
         }
-      case 5: // Law insights setup
+      case 5:
         switch (index) {
           case 0:
-            return Navigator(
-              onGenerateRoute: (settings) {
-                return MaterialPageRoute(
-                  builder: (_) => HomePage(
-                    onTabChange: _onItemTapped,
-                  ),
-                );
-              },
-            );
+            return HomePage(onTabChange: _onItemTapped);
           case 1:
-            return const LawInsightsPage(); // Law Insights
+            return const LawInsightsPage();
           case 2:
-            return const PostsContent(); // SocialHubb - Posts only
+            return const PostsContent();
           default:
-            return Navigator(
-              onGenerateRoute: (settings) {
-                return MaterialPageRoute(
-                  builder: (_) => HomePage(
-                    onTabChange: _onItemTapped,
-                  ),
-                );
-              },
-            );
+            return HomePage(onTabChange: _onItemTapped);
         }
       default:
-        return Navigator(
-          onGenerateRoute: (settings) {
-            return MaterialPageRoute(
-              builder: (_) => HomePage(
-                onTabChange: _onItemTapped,
-              ),
-            );
-          },
-        );
+        return HomePage(onTabChange: _onItemTapped);
     }
   }
 
@@ -173,11 +101,9 @@ class _MainLayoutState extends State<MainLayout> {
       canPop: false,
       onPopInvoked: (didPop) {
         if (_selectedIndex != 0) {
-          // Navigate back to home tab first
           setState(() => _selectedIndex = 0);
           return;
         }
-        // Double-tap back to exit
         final now = DateTime.now();
         if (_lastBackPressTime == null ||
             now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
@@ -191,7 +117,6 @@ class _MainLayoutState extends State<MainLayout> {
           );
           return;
         }
-        // Actually exit
         Navigator.of(context).pop();
       },
       child: Scaffold(

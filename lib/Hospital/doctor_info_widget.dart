@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nhap/widgets/profile_avatar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nhap/Hospital/specialty_details.dart';
 import 'package:nhap/l10n/app_localizations.dart';
@@ -72,17 +73,10 @@ class DoctorInfoWidget extends StatelessWidget {
                               ),
                             ],
                           ),
-                          child: CircleAvatar(
+                          child: ProfileAvatar.circle(
+                            imageUrl: doctorDetails['User Pic']?.toString(),
                             radius: 40,
                             backgroundColor: Colors.grey[800],
-                            backgroundImage:
-                                doctorDetails['User Pic']?.isNotEmpty ?? false
-                                    ? NetworkImage(doctorDetails['User Pic'])
-                                    : null,
-                            child: doctorDetails['User Pic']?.isEmpty ?? true
-                                ? const Icon(Icons.person,
-                                    size: 40, color: Colors.grey)
-                                : null,
                           ),
                         ),
                         // Status Indicator

@@ -10,6 +10,7 @@ import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:just_audio/just_audio.dart';
 import 'consultation_screen.dart';
+import '../../widgets/profile_avatar.dart';
 
 class ChatScreen extends StatefulWidget {
   final String chatId;
@@ -714,12 +715,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         ),
         title: Row(
           children: [
-            CircleAvatar(
-              backgroundImage: widget.recipientPic.isNotEmpty ? NetworkImage(widget.recipientPic) : null,
+            ProfileAvatar.circle(
+              imageUrl: widget.recipientPic,
               backgroundColor: Colors.grey[700],
-              child: widget.recipientPic.isEmpty
-                  ? Text(widget.recipientName[0], style: TextStyle(color: Colors.white, fontSize: 15))
-                  : null,
             ),
             SizedBox(width: 10),
             Expanded(

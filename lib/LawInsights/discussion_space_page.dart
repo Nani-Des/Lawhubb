@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nhap/widgets/profile_avatar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
@@ -317,13 +318,10 @@ class _MessageBubble extends StatelessWidget {
         mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           if (!isMe) ...[
-            CircleAvatar(
+            ProfileAvatar.circle(
+              imageUrl: userPic,
               radius: 16,
               backgroundColor: Colors.grey[800],
-              backgroundImage: userPic.isNotEmpty ? NetworkImage(userPic) : null,
-              child: userPic.isEmpty
-                  ? const Icon(Icons.person, color: Colors.grey, size: 16)
-                  : null,
             ),
             const SizedBox(width: 8),
           ],
@@ -371,13 +369,10 @@ class _MessageBubble extends StatelessWidget {
           ),
           if (isMe) ...[
             const SizedBox(width: 8),
-            CircleAvatar(
+            ProfileAvatar.circle(
+              imageUrl: userPic,
               radius: 16,
               backgroundColor: Colors.grey[800],
-              backgroundImage: userPic.isNotEmpty ? NetworkImage(userPic) : null,
-              child: userPic.isEmpty
-                  ? const Icon(Icons.person, color: Colors.grey, size: 16)
-                  : null,
             ),
           ],
         ],

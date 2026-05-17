@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../Services/config_service.dart';
+import '../../widgets/profile_avatar.dart';
 
 class VoiceCallScreen extends StatefulWidget {
   final String channelName;
@@ -36,6 +37,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
   bool _isDisposing = false;
   Timer? _callTimer;
   int _callDuration = 0;
+  String? _recipientPic;
 
   final userId = FirebaseAuth.instance.currentUser?.uid;
 
@@ -54,6 +56,16 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
     }
 
     try {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(widget.recipientId)
+          .get();
+      if (mounted) {
+        setState(() {
+          _recipientPic = userDoc.data()?['User Pic'] as String?;
+        });
+      }
+
       // Request microphone permission
       final status = await Permission.microphone.request();
       if (status != PermissionStatus.granted) {
@@ -331,7 +343,6 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                     height: 150,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.grey[800],
                       border: Border.all(
                         color: _isJoined && _remoteUid != null
                             ? Colors.green
@@ -339,10 +350,10 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                         width: 3,
                       ),
                     ),
-                    child: const Icon(
-                      Icons.person,
-                      size: 80,
-                      color: Colors.white,
+                    child: ProfileAvatar.circle(
+                      imageUrl: _recipientPic,
+                      radius: 72,
+                      backgroundColor: Colors.grey[800],
                     ),
                   ),
                   const SizedBox(height: 24),

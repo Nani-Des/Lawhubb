@@ -6,6 +6,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../Hospital/doctor_profile.dart';
+import '../../utils/app_navigation.dart';
+import '../../widgets/profile_avatar.dart';
 
 class DoctorsRowItem extends StatefulWidget {
   @override
@@ -167,11 +169,9 @@ class _DoctorsRowItemState extends State<DoctorsRowItem> {
   void _onItemPressed(int index) {
     final userId = _users[index]['userId'];
     if (userId != null) {
-      Navigator.push(
+      pushAppRoute(
         context,
-        MaterialPageRoute(
-          builder: (context) => DoctorProfileScreen(userId: userId, isReferral: false),
-        ),
+        DoctorProfileScreen(userId: userId, isReferral: false),
       );
     }
   }
@@ -196,13 +196,10 @@ class _DoctorsRowItemState extends State<DoctorsRowItem> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10.0),
-                    child: CachedNetworkImage(
-                      imageUrl: user['User Pic']!,
-                      placeholder: (context, url) => SizedBox.shrink(), // Removed CircularProgressIndicator
-                      errorWidget: (context, url, error) => Icon(Icons.error),
-                      width: 65.0,
-                      height: 65.0,
-                      fit: BoxFit.cover,
+                    child: ProfileAvatar.clippedNetwork(
+                      imageUrl: user['User Pic']?.toString(),
+                      size: 65,
+                      circular: false,
                     ),
                   ),
                   SizedBox(height: 5),

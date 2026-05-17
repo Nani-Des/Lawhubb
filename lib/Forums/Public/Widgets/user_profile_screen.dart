@@ -9,6 +9,8 @@ import '../../../Auth/auth_service.dart';
 import '../../../Auth/auth_screen.dart';
 import '../../../Services/follow_service.dart';
 import '../../../booking_page.dart';
+import '../../../utils/app_navigation.dart';
+import '../../../widgets/profile_avatar.dart';
 import '../../../Appointments/referral_form.dart';
 import '../../../Appointments/Referral screens/referral_details_page.dart';
 import '../../../Settings/blocked_users_page.dart';
@@ -728,19 +730,10 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                           width: 2,
                         ),
                       ),
-                      child: CircleAvatar(
+                      child: ProfileAvatar.circle(
+                        imageUrl: userPic,
                         radius: 32,
                         backgroundColor: Colors.grey[900],
-                        backgroundImage: userPic.isNotEmpty
-                            ? NetworkImage(userPic)
-                            : null,
-                        child: userPic.isEmpty
-                            ? Icon(
-                                Icons.person,
-                                size: 28,
-                                color: Colors.grey[600],
-                              )
-                            : null,
                       ),
                     ),
                     const Spacer(),
@@ -928,11 +921,8 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                       final uid =
                           FirebaseAuth.instance.currentUser?.uid;
                       if (uid != null) {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) =>
-                                    BookingPage(currentUserId: uid)));
+                        pushAppRoute(
+                            context, BookingPage(currentUserId: uid));
                       }
                     },
                   ),
@@ -1110,17 +1100,10 @@ class _UserProfileScreenState extends State<UserProfileScreen>
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
+                  ProfileAvatar.circle(
+                    imageUrl: _userData!['User Pic']?.toString(),
                     radius: 16,
                     backgroundColor: Colors.grey[900],
-                    backgroundImage: _userData!['User Pic'] != null &&
-                            _userData!['User Pic'].toString().isNotEmpty
-                        ? NetworkImage(_userData!['User Pic'])
-                        : null,
-                    child: _userData!['User Pic'] == null ||
-                            _userData!['User Pic'].toString().isEmpty
-                        ? Icon(Icons.person, size: 16, color: Colors.grey[600])
-                        : null,
                   ),
                   const SizedBox(width: 12),
                   Expanded(

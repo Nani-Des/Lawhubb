@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nhap/l10n/app_localizations.dart';
 import 'search_bar1.dart';
+import 'package:nhap/widgets/lawhubb_brand_icon.dart';
 
 class HeroSection extends StatefulWidget {
   final String userName;
@@ -87,21 +88,18 @@ class _HeroSectionState extends State<HeroSection> {
                         ],
                       ),
                     ),
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.grey[850],
-                        border: Border.all(
-                          color: Colors.grey[800]!,
-                          width: 1,
+                    ClipOval(
+                      child: LawHubbBrandIcon(
+                        size: 64,
+                        borderRadius: 32,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[850],
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.grey[800]!,
+                            width: 1,
+                          ),
                         ),
-                      ),
-                      child: const Icon(
-                        Icons.balance,
-                        color: Colors.white,
-                        size: 28,
                       ),
                     ),
                   ],

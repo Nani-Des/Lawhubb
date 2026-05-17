@@ -18,8 +18,8 @@ class AuthService with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  static const String defaultProfilePic =
-      'https://firebasestorage.googleapis.com/v0/b/mhealth-6191e.appspot.com/o/assets%2Fplaceholder.png?alt=media&token=3350f551-d18e-44ed-939a-095b8a66a2a7';
+  /// Empty — UI uses [ProfileAvatar.placeholderAsset] for display.
+  static const String defaultProfilePic = '';
 
   AuthService() {
     _auth.authStateChanges().listen((User? user) {

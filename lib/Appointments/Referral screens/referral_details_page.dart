@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nhap/widgets/profile_avatar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../Hospital/doctor_profile.dart';
 import 'package:pdf/pdf.dart';
@@ -551,20 +552,10 @@ class _ReferralDetailsPageState extends State<ReferralDetailsPage> with SingleTi
   }
 
   Widget _buildDoctorAvatar(String? picUrl) {
-    return CircleAvatar(
+    return ProfileAvatar.circle(
+      imageUrl: picUrl,
       radius: 25,
       backgroundColor: Colors.teal.withOpacity(0.1),
-      child: picUrl != null && picUrl.isNotEmpty
-          ? ClipOval(
-        child: Image.network(
-          picUrl,
-          fit: BoxFit.cover,
-          width: 50,
-          height: 50,
-          errorBuilder: (context, error, stackTrace) => Icon(Icons.person, size: 30, color: Colors.teal),
-        ),
-      )
-          : Icon(Icons.person, size: 30, color: Colors.teal),
     );
   }
 

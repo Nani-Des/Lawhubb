@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'chat_screen.dart';
+import '../../utils/app_navigation.dart';
+import '../../widgets/profile_avatar.dart';
 
 class ChatList extends StatefulWidget {
   @override
@@ -213,21 +215,9 @@ class _ChatListState extends State<ChatList> {
                   child: ListTile(
                     leading: Stack(
                       children: [
-                        CircleAvatar(
-                          backgroundImage: userData['User Pic'] != null &&
-                              userData['User Pic'].toString().isNotEmpty
-                              ? NetworkImage(userData['User Pic'])
-                              : null,
+                        ProfileAvatar.circle(
+                          imageUrl: userData['User Pic']?.toString(),
                           backgroundColor: Colors.grey[800],
-                          child: userData['User Pic'] == null ||
-                              userData['User Pic'].toString().isEmpty
-                              ? Text(
-                                  userData['Fname'] != null && userData['Fname'].toString().isNotEmpty
-                                      ? userData['Fname'][0].toString().toUpperCase()
-                                      : 'U',
-                                  style: const TextStyle(color: Colors.white),
-                                )
-                              : null,
                         ),
                         // Online indicator
                         if (userData['isOnline'] == true)
@@ -288,16 +278,14 @@ class _ChatListState extends State<ChatList> {
                       ],
                     ),
                     onTap: () {
-                      Navigator.push(
+                      pushAppRoute(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => ChatScreen(
-                            chatId: chatId,
-                            recipientId: otherUserId,
-                            recipientName: '${userData['Fname'] ?? ''} ${userData['Lname'] ?? ''}'.trim(),
-                            recipientPic: userData['User Pic'] ?? '',
-                            recipientRole: userData['Role'] ?? false,
-                          ),
+                        ChatScreen(
+                          chatId: chatId,
+                          recipientId: otherUserId,
+                          recipientName: '${userData['Fname'] ?? ''} ${userData['Lname'] ?? ''}'.trim(),
+                          recipientPic: userData['User Pic'] ?? '',
+                          recipientRole: userData['Role'] ?? false,
                         ),
                       );
                     },

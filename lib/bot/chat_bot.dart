@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nhap/bot/widget/chat_service.dart';
 import 'package:nhap/bot/widget/openai_service.dart';
 import 'package:nhap/l10n/app_localizations.dart';
+import 'package:nhap/widgets/formatted_message_text.dart';
 
 class ChatBotScreen extends StatefulWidget {
   const ChatBotScreen({super.key});
@@ -61,8 +62,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
         _guestMessages.add({"role": "bot", "text": response});
       });
     } catch (e) {
-      const fallback =
-          'Something went wrong while contacting the assistant. Please try again.';
+      const fallback = OpenAIService.unavailableMessage;
       await ChatService.saveMessage("bot", fallback);
       if (!mounted) return;
       setState(() {
@@ -125,7 +125,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("LawHub Assistant"),
+        title: const Text("LawHubb Assistant"),
         foregroundColor: Colors.white,
         backgroundColor: Colors.black,
         elevation: 0,
@@ -139,7 +139,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                 builder: (ctx) => AlertDialog(
                   title: const Text('Clear all messages?'),
                   content: const Text(
-                    'This removes your LawHub Assistant conversation.',
+                    'This removes your LawHubb Assistant conversation.',
                   ),
                   actions: [
                     TextButton(
@@ -291,7 +291,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    'LawHub Assistant is typing…',
+                    'LawHubb Assistant is typing…',
                     style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
                   ),
                 ],
@@ -309,6 +309,9 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
           child: Align(
             alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
             child: Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.sizeOf(context).width * 0.85,
+              ),
               margin: const EdgeInsets.symmetric(vertical: 6),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
@@ -331,13 +334,11 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                   if (!isUser)
                     const Text("🤖 ", style: TextStyle(fontSize: 16)),
                   Flexible(
-                    child: Text(
-                      msg["text"] ?? "",
-                      style: TextStyle(
-                        color: isUser ? Colors.white : Colors.black87,
-                        fontSize: 14,
-                        height: 1.35,
-                      ),
+                    child: FormattedMessageBody(
+                      text: msg["text"]?.toString() ?? "",
+                      textColor: isUser ? Colors.white : Colors.black87,
+                      fontSize: 14,
+                      enableMarkdown: !isUser,
                     ),
                   ),
                 ],
@@ -372,7 +373,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
               controller: _messageController,
               maxLines: null,
               decoration: InputDecoration(
-                hintText: "Ask LawHub Assistant...",
+                hintText: "Ask LawHubb Assistant...",
                 hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
                 filled: true,
                 fillColor: Colors.grey.shade100,

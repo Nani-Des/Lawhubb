@@ -11,6 +11,7 @@ import 'delete_post_service.dart';
 import 'full_screen.dart';
 import 'add_comment.dart';
 import 'user_profile_screen.dart';
+import '../../../widgets/profile_avatar.dart';
 
 class PostCard extends StatefulWidget {
   final Map<String, dynamic> postData;
@@ -493,10 +494,9 @@ class _PostCardState extends State<PostCard> {
                       ),
                     );
                   },
-                  leading: CircleAvatar(
-                    backgroundImage:
-                        NetworkImage(userDetails['imageUrl'] ?? ''),
-                    radius: 18, // Slightly smaller for modern look
+                  leading: ProfileAvatar.circle(
+                    imageUrl: userDetails['imageUrl']?.toString(),
+                    radius: 18,
                     backgroundColor: Colors.grey[800],
                   ),
                   title: Text(

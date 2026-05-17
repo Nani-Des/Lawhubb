@@ -9,6 +9,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:nhap/l10n/app_localizations.dart';
 import '../../Auth/auth_screen.dart';
 import '../../Hospital/hospital_page.dart';
+import '../../utils/app_navigation.dart';
 import '../../Hospital/hospital_profile_screen.dart';
 
 class OrganizationListView extends StatefulWidget {
@@ -303,13 +304,11 @@ class _OrganizationListViewState extends State<OrganizationListView> {
   }
 
   void _navigateToHospitalPage(BuildContext context, String hospitalId) {
-    Navigator.push(
+    pushAppRoute(
       context,
-      MaterialPageRoute(
-        builder: (context) => HospitalPage(
-          hospitalId: hospitalId,
-          isReferral: widget.isReferral,
-        ),
+      HospitalPage(
+        hospitalId: hospitalId,
+        isReferral: widget.isReferral,
       ),
     );
   }
@@ -384,14 +383,14 @@ class HospitalCard extends StatelessWidget {
 
   void _navigateToReviews(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => user == null
-            ? AuthScreen()
-            : HospitalProfileScreen(hospitalId: hospitalId),
-      ),
-    );
+    if (user == null) {
+      pushAppRoute(context, const AuthScreen());
+    } else {
+      pushAppRoute(
+        context,
+        HospitalProfileScreen(hospitalId: hospitalId),
+      );
+    }
   }
 
   @override
@@ -440,11 +439,17 @@ class HospitalCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.15),
                         ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.balance,
-                            color: Colors.white,
-                            size: 40,
+                        child: Center(
+                          child: Image.asset(
+                            'assets/Icons/Icon1.jpeg',
+                            width: 48,
+                            height: 48,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const Icon(
+                              Icons.balance,
+                              color: Colors.white,
+                              size: 40,
+                            ),
                           ),
                         ),
                       ),

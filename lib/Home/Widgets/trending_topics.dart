@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nhap/l10n/app_localizations.dart';
 import '../../news_stand.dart';
+import '../../utils/app_navigation.dart';
 
 class TrendingTopics extends StatefulWidget {
   const TrendingTopics({super.key});
@@ -127,12 +128,7 @@ class _TrendingTopicsState extends State<TrendingTopics>
                   const SizedBox(width: 8),
                   TextButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const NewsStandPage(),
-                        ),
-                      );
+                      pushAppRoute(context, const NewsStandPage());
                     },
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -240,14 +236,12 @@ class _ArticleCardState extends State<_ArticleCard>
       onTapUp: (_) {
         setState(() => _isPressed = false);
         _hoverController.reverse();
-        Navigator.push(
+        pushAppRoute(
           context,
-          MaterialPageRoute(
-            builder: (context) => ArticleDetailPage(
-              title: widget.article["title"],
-              content: widget.article["content"],
-              image: widget.article["image"],
-            ),
+          ArticleDetailPage(
+            title: widget.article["title"],
+            content: widget.article["content"],
+            image: widget.article["image"],
           ),
         );
       },

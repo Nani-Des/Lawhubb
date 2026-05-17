@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:dio/dio.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:nhap/bot/widget/openai_service.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:string_similarity/string_similarity.dart';
@@ -161,28 +160,7 @@ class _EmergencyPageState extends State<EmergencyPage> with SingleTickerProvider
   }
 
   Future<String> _fetchFirstAidResponse(String query) async {
-    try {
-      final String apiKey = dotenv.env['OPENAI_API_KEY'] ?? '';
-      if (apiKey.isEmpty) {
-        return "API key is missing. Please check the environment variables.";
-      }
-
-      const String prefix =
-          "Provide clear, step-by-step first-aid instructions for the following situation in a gradual and simple manner. Use easy-to-understand language, avoid complex medical jargon: ";
-      final String modifiedQuery = prefix + query;
-
-      final response = await Dio().post(
-        'https://api.openai.com/v1/chat/completions',
-        options: Options(headers: {'Authorization': 'Bearer $apiKey'}),
-        data: {
-          'model': 'gpt-4o-mini',
-          'messages': [{'role': 'user', 'content': modifiedQuery}],
-        },
-      );
-      return response.data['choices'][0]['message']['content'];
-    } catch (e) {
-      return "Sorry, I couldn't fetch the response.";
-    }
+    return OpenAIService.sendEmergencyGuidance(query);
   }
 
   String _findClosestMatch(String query) {

@@ -7,6 +7,7 @@ import '../../main_layout.dart';
 import '../../wrappers/posts_content.dart';
 import '../../wrappers/chats_content.dart';
 import '../../LawInsights/law_insights_page.dart';
+import '../../utils/app_navigation.dart';
 
 class CustomBottomNavBar extends StatefulWidget {
   final int selectedIndex;
@@ -83,21 +84,15 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
     User? currentUser = _auth.currentUser;
 
     if (currentUser != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => targetScreen),
-      );
+      pushAppRoute(context, targetScreen);
     } else {
-      final userId = await Navigator.push<String>(
-        context,
+      final userId = await Navigator.of(context, rootNavigator: true)
+          .push<String>(
         MaterialPageRoute(builder: (context) => const AuthScreen()),
       );
 
-      if (userId != null) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => targetScreen),
-        );
+      if (userId != null && context.mounted) {
+        pushAppRoute(context, targetScreen);
       }
     }
   }

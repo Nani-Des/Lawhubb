@@ -7,6 +7,8 @@ import '../Appointments/referral_form.dart';
 import '../Emergency/knowledge_packs_page.dart';
 import '../Home/Widgets/organization_list_view.dart';
 import '../bot/chat_bot.dart';
+import 'package:nhap/widgets/lawhubb_brand_icon.dart';
+import 'package:nhap/utils/app_navigation.dart';
 
 class ChambersContent extends StatelessWidget {
   // Function to check if the user is an active doctor
@@ -48,18 +50,7 @@ class ChambersContent extends StatelessWidget {
             ),
             title: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1C1C1E),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.balance,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
+                const LawHubbBrandIcon(size: 36, borderRadius: 12),
                 const SizedBox(width: 12),
               ],
             ),
@@ -73,11 +64,9 @@ class ChambersContent extends StatelessWidget {
                     borderRadius: BorderRadius.circular(24),
                     onTap: () {
                       // Navigate to AI assistant/chatbot
-                      Navigator.push(
+                      pushAppRoute(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => const ChatBotScreen(),
-                        ),
+                        const ChatBotScreen(),
                       );
                     },
                     child: Container(

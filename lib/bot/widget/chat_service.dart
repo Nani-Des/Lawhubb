@@ -62,7 +62,7 @@ class ChatService {
     await prefs.remove("guest_messages");
   }
 
-  /// Deletes all assistant messages for the signed-in user (LawHub Assistant history).
+  /// Deletes all assistant messages for the signed-in user (LawHubb Assistant history).
   static Future<void> clearFirestoreMessages() async {
     final uid = _userId;
     if (uid == null) return;

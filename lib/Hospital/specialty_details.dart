@@ -6,8 +6,8 @@ import 'package:showcaseview/showcaseview.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../Services/firebase_service.dart';
-import 'Widgets/custom_nav_bar.dart';
 import 'doctor_profile.dart';
+import '../widgets/profile_avatar.dart';
 
 class SpecialtyDetails extends StatefulWidget {
   final String hospitalId;
@@ -471,8 +471,6 @@ class _SpecialtyDetailsState extends State<SpecialtyDetails> with TickerProvider
         ],
       )
           : null,
-      bottomNavigationBar:
-      widget.isReferral ? null : CustomBottomNavBarHospital(hospitalId: widget.hospitalId),
     );
   }
 
@@ -515,20 +513,13 @@ class _SpecialtyDetailsState extends State<SpecialtyDetails> with TickerProvider
         ),
         color: Colors.grey[900],  // Dark grey card
         child: ListTile(
-          leading: CircleAvatar(
-            backgroundColor: Colors.grey[800],
-            child: userPic.isNotEmpty
-                ? ClipOval(
-              child: CachedNetworkImage(
-                imageUrl: userPic,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-                errorWidget: (context, url, error) => Icon(Icons.person, color: Colors.white),
-              ),
-            )
-                : Icon(Icons.person, color: Colors.white),
+          leading: SizedBox(
+            width: 48,
+            height: 48,
+            child: ProfileAvatar.clippedNetwork(
+              imageUrl: userPic,
+              size: 48,
+            ),
           ),
           title: Text(
             name,

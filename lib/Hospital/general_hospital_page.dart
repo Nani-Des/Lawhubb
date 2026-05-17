@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nhap/news_stand.dart';
 import '../Home/Widgets/organization_list_view.dart';
 import '../Library/library_page.dart';
+import '../utils/app_navigation.dart';
 
 class GeneralHospitalPage extends StatelessWidget {
   // Function to check if the user is an active doctor
@@ -130,12 +131,7 @@ class GeneralHospitalPage extends StatelessWidget {
                               ),
                             ),
                             onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => LibraryPage(),
-                                ),
-                              );
+                              pushAppRoute(context, LibraryPage());
                             },
                           ),
                         ),
@@ -165,11 +161,9 @@ class GeneralHospitalPage extends StatelessWidget {
                               ),
                             ),
                             onPressed: () {
-                              Navigator.push(
+                              pushAppRoute(
                                 context,
-                                MaterialPageRoute(
-                                  builder: (context) => const NewsStandPage(),
-                                ),
+                                const NewsStandPage(),
                               );
                             },
                           ),

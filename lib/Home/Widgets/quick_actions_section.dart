@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../Emergency/emergency_page.dart';
 import '../../booking_page.dart';
+import '../../utils/app_navigation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class QuickActionsSection extends StatelessWidget {
@@ -32,12 +33,7 @@ class QuickActionsSection extends StatelessWidget {
                   subtitle: 'Legal help now',
                   color: Colors.red.withOpacity(0.8),
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EmergencyPage(),
-                      ),
-                    );
+                    pushAppRoute(context, EmergencyPage());
                   },
                 ),
               ),
@@ -51,11 +47,9 @@ class QuickActionsSection extends StatelessWidget {
                   onTap: () {
                     final userId = FirebaseAuth.instance.currentUser?.uid;
                     if (userId != null) {
-                      Navigator.push(
+                      pushAppRoute(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => BookingPage(currentUserId: userId),
-                        ),
+                        BookingPage(currentUserId: userId),
                       );
                     }
                   },

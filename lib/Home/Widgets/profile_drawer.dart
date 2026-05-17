@@ -13,12 +13,14 @@ import '../../Auth/lawyer_registration_screen.dart';
 import '../../Auth/auth_service.dart';
 import '../../main_layout.dart';
 import '../../booking_page.dart';
+import '../../utils/app_navigation.dart';
 import '../../main.dart';
 import '../../Settings/blocked_users_page.dart';
 import '../home_page.dart';
 import 'package:provider/provider.dart';
 import 'package:nhap/utils/country_utils.dart';
 import 'package:nhap/widgets/searchable_country_sheet.dart';
+import 'package:nhap/widgets/profile_avatar.dart';
 
 class ProfileDrawer extends StatefulWidget {
   final AnimationController controller;
@@ -317,8 +319,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
     final localizations = AppLocalizations.of(context);
     final User? user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => const AuthScreen()));
+      pushAppRoute(context, const AuthScreen());
       return;
     }
 
@@ -359,13 +360,11 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
       return;
     }
 
-    Navigator.push(
+    pushAppRoute(
       context,
-      MaterialPageRoute(
-        builder: (context) => isReferralForm
-            ? const ReferralForm()
-            : ReferralDetailsPage(userId: user.uid),
-      ),
+      isReferralForm
+          ? const ReferralForm()
+          : ReferralDetailsPage(userId: user.uid),
     );
   }
 
@@ -514,22 +513,11 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                             child: Stack(
                               alignment: Alignment.bottomRight,
                               children: [
-                                CircleAvatar(
+                                ProfileAvatar.circle(
                                   radius: 50,
-                                  backgroundColor: Colors.grey[
-                                      800], // Darker grey avatar background
-                                  backgroundImage: _imageFile != null
-                                      ? FileImage(_imageFile!)
-                                      : (userImageUrl != null &&
-                                              userImageUrl.isNotEmpty
-                                          ? NetworkImage(userImageUrl)
-                                          : null),
-                                  child: _imageFile == null &&
-                                          (userImageUrl == null ||
-                                              userImageUrl.isEmpty)
-                                      ? Icon(Icons.person,
-                                          size: 50, color: Colors.grey[400])
-                                      : null,
+                                  imageUrl: userImageUrl,
+                                  imageFile: _imageFile,
+                                  backgroundColor: Colors.grey[800],
                                 ),
                                 if (_isEditing)
                                   Container(
@@ -779,12 +767,10 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                       final User? currentUser =
                                           FirebaseAuth.instance.currentUser;
                                       if (currentUser != null) {
-                                        Navigator.push(
+                                        pushAppRoute(
                                           context,
-                                          MaterialPageRoute(
-                                            builder: (context) => BookingPage(
-                                                currentUserId: currentUser.uid),
-                                          ),
+                                          BookingPage(
+                                              currentUserId: currentUser.uid),
                                         );
                                       }
                                     },
@@ -859,12 +845,9 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                         'pending'
                                     ? null
                                     : () {
-                                        Navigator.push(
+                                        pushAppRoute(
                                           context,
-                                          MaterialPageRoute(
-                                            builder: (_) =>
-                                                const LawyerRegistrationScreen(),
-                                          ),
+                                          const LawyerRegistrationScreen(),
                                         );
                                       },
                               ),
@@ -904,11 +887,9 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                               trailing: Icon(Icons.arrow_forward_ios,
                                   color: Colors.grey[600], size: 16),
                               onTap: () {
-                                Navigator.push(
+                                pushAppRoute(
                                   context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          const BlockedUsersPage()),
+                                  const BlockedUsersPage(),
                                 );
                               },
                             ),

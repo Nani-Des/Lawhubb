@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nhap/widgets/profile_avatar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
@@ -169,12 +170,11 @@ class _DoctorAvailabilityCalendarState
                   fontSize: 20,
                 ),
               ),
-              if (doctorImage.isNotEmpty)
-                CircleAvatar(
-                  backgroundColor: Colors.grey[300],
-                  backgroundImage: NetworkImage(doctorImage),
-                  radius: 20,
-                ),
+              ProfileAvatar.circle(
+                imageUrl: doctorImage,
+                radius: 20,
+                backgroundColor: Colors.grey[300],
+              ),
             ],
           ),
           content: Column(

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import '../Auth/auth_screen.dart';
 import '../booking_page.dart';
+import '../utils/app_navigation.dart';
 
 Future<void> handleBookAppointment(
     BuildContext context, {
@@ -187,11 +188,9 @@ Future<void> _bookAppointment(
     });
 
     _showModernSnackBar(context, 'Appointment successfully booked!');
-    Navigator.push(
+    pushAppRoute(
       context,
-      MaterialPageRoute(
-        builder: (context) => BookingPage(currentUserId: patientId),
-      ),
+      BookingPage(currentUserId: patientId),
     );
   } catch (e) {
     print('Error occurred: $e');

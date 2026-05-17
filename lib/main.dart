@@ -283,8 +283,8 @@ class _CustomTransitionScreenState extends State<CustomTransitionScreen>
               angle: _rotationAnimation.value,
               child: Transform.scale(
                 scale: _scaleAnimation.value,
-                child: Image.asset('assets/Icons/Icon.png',
-                    width: 200, height: 200),
+                child: Image.asset('assets/Icons/Icon1.jpeg',
+                    width: 200, height: 200, fit: BoxFit.contain),
               ),
             );
           },

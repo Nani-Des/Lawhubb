@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../widgets/profile_avatar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../ChatModule/chat_module.dart';
@@ -148,13 +149,9 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CircleAvatar(
+                        ProfileAvatar.circle(
+                          imageUrl: snap.data?['imageUrl']?.toString(),
                           radius: 14,
-                          backgroundImage: snap.data?['imageUrl'] != null
-                              ? NetworkImage(snap.data!['imageUrl']!)
-                              : const AssetImage(
-                                      'assets/Images/placeholder.png')
-                                  as ImageProvider,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -245,12 +242,9 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
+              ProfileAvatar.circle(
+                imageUrl: snapshot.data?['imageUrl']?.toString(),
                 radius: 18,
-                backgroundImage: snapshot.data?['imageUrl'] != null
-                    ? NetworkImage(snapshot.data!['imageUrl']!)
-                    : const AssetImage('assets/Images/placeholder.png')
-                        as ImageProvider,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -373,12 +367,9 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   child: Row(
                     children: [
-                      CircleAvatar(
+                      ProfileAvatar.circle(
+                        imageUrl: currentUserPic,
                         radius: 16,
-                        backgroundImage: currentUserPic != null
-                            ? NetworkImage(currentUserPic!)
-                            : const AssetImage('assets/Images/placeholder.png')
-                                as ImageProvider,
                       ),
                       const SizedBox(width: 10),
                       Expanded(

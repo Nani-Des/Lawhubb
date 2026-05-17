@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:nhap/widgets/profile_avatar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../Services/firebase_service.dart';
-import 'Widgets/custom_nav_bar.dart';
 import 'doctor_profile.dart';
 
 class ShiftScheduleScreen extends StatefulWidget {
@@ -313,8 +313,6 @@ class _ShiftScheduleScreenState extends State<ShiftScheduleScreen>
         ],
       )
           : null,
-      bottomNavigationBar: widget.isReferral ? null : CustomBottomNavBarHospital(hospitalId: widget.hospitalId),
-
     );
   }
 
@@ -445,11 +443,9 @@ class _ShiftScheduleScreenState extends State<ShiftScheduleScreen>
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Row(
                     children: [
-                      CircleAvatar(
+                      ProfileAvatar.circle(
+                        imageUrl: userPic,
                         radius: 20,
-                        backgroundImage: userPic != null && userPic.isNotEmpty
-                            ? CachedNetworkImageProvider(userPic)
-                            : const AssetImage("assets/Images/placeholder.png") as ImageProvider,
                         backgroundColor: Colors.grey[200],
                       ),
                       const SizedBox(width: 12),

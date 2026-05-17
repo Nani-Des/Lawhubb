@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../Services/follow_service.dart';
 import 'user_profile_screen.dart';
+import '../../../widgets/profile_avatar.dart';
 
 class FollowersListScreen extends StatefulWidget {
   final String userId;
@@ -143,15 +144,10 @@ class _FollowersListScreenState extends State<FollowersListScreen> {
                                   ),
                                 );
                               },
-                              child: CircleAvatar(
+                              child: ProfileAvatar.circle(
+                                imageUrl: userPic,
                                 radius: 24,
                                 backgroundColor: Colors.grey[900],
-                                backgroundImage: userPic.isNotEmpty
-                                    ? NetworkImage(userPic)
-                                    : null,
-                                child: userPic.isEmpty
-                                    ? Icon(Icons.person, size: 24, color: Colors.grey[600])
-                                    : null,
                               ),
                             ),
                             const SizedBox(width: 12),

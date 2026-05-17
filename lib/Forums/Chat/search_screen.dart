@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'chat_screen.dart';
+import '../../widgets/profile_avatar.dart';
 
 class SearchScreen extends StatelessWidget {
   final TextEditingController searchController = TextEditingController();
@@ -37,14 +38,8 @@ class SearchScreen extends StatelessWidget {
               if (user['User ID'] == FirebaseAuth.instance.currentUser!.uid)
                 return SizedBox.shrink();
               return ListTile(
-                leading: CircleAvatar(
-                  backgroundImage:
-                  user['User Pic'] != null && user['User Pic'].isNotEmpty
-                      ? NetworkImage(user['User Pic'])
-                      : null,
-                  child: user['User Pic'] == null || user['User Pic'].isEmpty
-                      ? Text(user['Fname'][0])
-                      : null,
+                leading: ProfileAvatar.circle(
+                  imageUrl: user['User Pic']?.toString(),
                 ),
                 title: Text('${user['Fname']} ${user['Lname']}'),
                 subtitle: Text(user['Role'] ? 'Lawyer' : 'User'),

@@ -8,6 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:nhap/widgets/profile_avatar.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
@@ -290,10 +291,8 @@ void _showUserList(BuildContext context, String currentUserId) {
                     final isOnline = user['Status'] ?? false;
 
                     return ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage:
-                            userPic.isNotEmpty ? NetworkImage(userPic) : null,
-                        child: userPic.isEmpty ? Text(userFname[0]) : null,
+                      leading: ProfileAvatar.circle(
+                        imageUrl: userPic,
                       ),
                       title: Text(fullName),
                       //subtitle: Text(userPhone),
@@ -641,12 +640,8 @@ class _ChatPageState extends State<ChatPage>
                     : 0;
 
                 return ListTile(
-                  leading: CircleAvatar(
-                    backgroundImage:
-                        userPic != null ? NetworkImage(userPic) : null,
-                    child: userPic == null
-                        ? Text(firstName[0].toUpperCase())
-                        : null,
+                  leading: ProfileAvatar.circle(
+                    imageUrl: userPic,
                   ),
                   title: Text(fullName,
                       style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
@@ -3891,10 +3886,7 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
         title: _isLoadingUserData
             ? Row(
                 children: [
-                  const CircleAvatar(
-                    radius: 20,
-                    child: Icon(Icons.person, size: 24),
-                  ),
+                  ProfileAvatar.circle(radius: 20),
                   const SizedBox(width: 8),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -3919,14 +3911,9 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
               )
             : Row(
                 children: [
-                  CircleAvatar(
+                  ProfileAvatar.circle(
+                    imageUrl: _cachedUserPic,
                     radius: 20,
-                    backgroundImage: _cachedUserPic != null
-                        ? NetworkImage(_cachedUserPic!)
-                        : null,
-                    child: _cachedUserPic == null
-                        ? const Icon(Icons.person, size: 24)
-                        : null,
                   ),
                   const SizedBox(width: 8),
                   Column(
@@ -5400,17 +5387,10 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
                       backgroundColor: Colors.teal,
                       child: CircularProgressIndicator(color: Colors.white),
                     )
-                  : CircleAvatar(
+                  : ProfileAvatar.circle(
+                      imageUrl: profileImageUrl,
                       radius: 60,
                       backgroundColor: Colors.teal,
-                      backgroundImage:
-                          profileImageUrl != null && profileImageUrl!.isNotEmpty
-                              ? NetworkImage(profileImageUrl!)
-                              : null,
-                      child: profileImageUrl == null || profileImageUrl!.isEmpty
-                          ? const Icon(Icons.person,
-                              size: 80, color: Colors.white)
-                          : null,
                     ),
 
               const SizedBox(height: 24),

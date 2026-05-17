@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../Forums/Chat/search_screen.dart';
 import '../Forums/Public/forum.dart';
+import '../widgets/profile_avatar.dart';
 import '../Forums/Public/Widgets/create_post_dialog.dart';
 import '../Forums/Public/Widgets/user_profile_screen.dart';
 import '../Forums/Chat/live_stream.dart';
@@ -209,12 +210,9 @@ class _PostsContentState extends State<PostsContent> {
                     final data = snapshot.data!.data() as Map<String, dynamic>?;
                     userPic = data?['User Pic'];
                   }
-                  return CircleAvatar(
+                  return ProfileAvatar.circle(
+                    imageUrl: userPic,
                     radius: 18,
-                    backgroundImage: userPic != null && userPic.isNotEmpty
-                        ? NetworkImage(userPic)
-                        : const AssetImage("assets/Images/placeholder.png")
-                            as ImageProvider,
                   );
                 },
               ),

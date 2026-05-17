@@ -6,6 +6,7 @@ import '../Forums/Public/forum.dart';
 import '../Forums/Public/Widgets/create_post_dialog.dart';
 import '../Forums/Public/Widgets/user_profile_screen.dart';
 import '../LawInsights/law_insights_page.dart';
+import '../widgets/profile_avatar.dart';
 import '../Forums/Chat/live_stream.dart';
 import '../Auth/login_required_shell.dart';
 
@@ -165,12 +166,9 @@ class _SocialContentState extends State<SocialContent>
                     final data = snapshot.data!.data() as Map<String, dynamic>?;
                     userPic = data?['User Pic'];
                   }
-                  return CircleAvatar(
+                  return ProfileAvatar.circle(
+                    imageUrl: userPic,
                     radius: 18,
-                    backgroundImage: userPic != null && userPic.isNotEmpty
-                        ? NetworkImage(userPic)
-                        : const AssetImage("assets/Images/placeholder.png")
-                            as ImageProvider,
                   );
                 },
               ),

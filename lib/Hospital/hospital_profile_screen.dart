@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:nhap/widgets/profile_avatar.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -498,9 +499,9 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
             children: [
               Row(
                 children: [
-                  CircleAvatar(
+                  ProfileAvatar.circle(
+                    imageUrl: userData['User Pic']?.toString(),
                     radius: 24,
-                    backgroundImage: NetworkImage(userData['User Pic']),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -587,9 +588,9 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CircleAvatar(
+                        ProfileAvatar.circle(
+                          imageUrl: userData['User Pic']?.toString(),
                           radius: 18,
-                          backgroundImage: NetworkImage(userData['User Pic']),
                         ),
                         const SizedBox(width: 10),
                         Expanded(

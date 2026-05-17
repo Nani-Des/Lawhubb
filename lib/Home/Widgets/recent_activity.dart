@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nhap/l10n/app_localizations.dart';
 import '../../Services/recent_activity_service.dart';
 import '../../booking_page.dart';
+import '../../utils/app_navigation.dart';
 import '../../Library/library_book_gate.dart';
 import '../../Library/library_page.dart';
 import '../../Forums/Chat/chat_screen.dart';
@@ -101,11 +102,9 @@ class _RecentActivityState extends State<RecentActivity>
     switch (activity.type) {
       case ActivityType.booking:
         if (activity.id != null) {
-          Navigator.push(
+          pushAppRoute(
             context,
-            MaterialPageRoute(
-              builder: (context) => BookingPage(currentUserId: activity.id!),
-            ),
+            BookingPage(currentUserId: activity.id!),
           );
         }
         break;
@@ -117,16 +116,14 @@ class _RecentActivityState extends State<RecentActivity>
           final senderPic = activity.metadata!['senderPic'] ?? '';
           final senderRole = activity.metadata!['senderRole'] ?? false;
           if (chatId != null && senderId != null) {
-            Navigator.push(
+            pushAppRoute(
               context,
-              MaterialPageRoute(
-                builder: (context) => ChatScreen(
-                  chatId: chatId,
-                  recipientId: senderId,
-                  recipientName: senderName,
-                  recipientPic: senderPic,
-                  recipientRole: senderRole,
-                ),
+              ChatScreen(
+                chatId: chatId,
+                recipientId: senderId,
+                recipientName: senderName,
+                recipientPic: senderPic,
+                recipientRole: senderRole,
               ),
             );
           }
@@ -152,37 +149,16 @@ class _RecentActivityState extends State<RecentActivity>
                 );
               } else {
                 // Navigate to library to find the document
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const LibraryPage(),
-                  ),
-                );
+                pushAppRoute(context, const LibraryPage());
               }
             } catch (e) {
-              // Navigate to library on error
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const LibraryPage(),
-                ),
-              );
+              pushAppRoute(context, const LibraryPage());
             }
           } else {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const LibraryPage(),
-              ),
-            );
+            pushAppRoute(context, const LibraryPage());
           }
         } else {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const LibraryPage(),
-            ),
-          );
+          pushAppRoute(context, const LibraryPage());
         }
         break;
     }

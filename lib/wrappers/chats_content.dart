@@ -6,6 +6,8 @@ import '../Forums/Chat/search_screen.dart';
 import '../Forums/Chat/chat_list.dart';
 import '../Forums/Public/Widgets/user_profile_screen.dart';
 import '../Auth/login_required_shell.dart';
+import '../utils/app_navigation.dart';
+import '../widgets/profile_avatar.dart';
 
 class ChatsContent extends StatefulWidget {
   const ChatsContent({super.key});
@@ -45,10 +47,7 @@ class _ChatsContentState extends State<ChatsContent> {
         actions: [
           IconButton(
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SearchScreen()),
-              );
+              pushAppRoute(context, SearchScreen());
             },
             icon: const Icon(Icons.search, color: Colors.white),
           ),
@@ -56,12 +55,10 @@ class _ChatsContentState extends State<ChatsContent> {
             padding: const EdgeInsets.only(right: 12),
             child: GestureDetector(
               onTap: () {
-                Navigator.push(
+                pushAppRoute(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => UserProfileScreen(
-                      userId: loggedInUserId,
-                    ),
+                  UserProfileScreen(
+                    userId: loggedInUserId,
                   ),
                 );
               },
@@ -76,12 +73,9 @@ class _ChatsContentState extends State<ChatsContent> {
                     final data = snapshot.data!.data() as Map<String, dynamic>?;
                     userPic = data?['User Pic'];
                   }
-                  return CircleAvatar(
+                  return ProfileAvatar.circle(
+                    imageUrl: userPic,
                     radius: 18,
-                    backgroundImage: userPic != null && userPic.isNotEmpty
-                        ? NetworkImage(userPic)
-                        : const AssetImage("assets/Images/placeholder.png")
-                            as ImageProvider,
                   );
                 },
               ),

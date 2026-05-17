@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nhap/widgets/profile_avatar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AppointmentScreen extends StatefulWidget {
@@ -168,9 +169,8 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundImage: userInfo['userPic'] != null ? NetworkImage(userInfo['userPic']) : null,
-          child: userInfo['userPic'] == null ? Icon(Icons.person) : null,
+        leading: ProfileAvatar.circle(
+          imageUrl: userInfo['userPic']?.toString(),
         ),
         title: Text('${userInfo['fname']} ${userInfo['lname']}'),
         subtitle: Column(
@@ -197,9 +197,8 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
           elevation: 3,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           child: ListTile(
-            leading: CircleAvatar(
-              backgroundImage: doctorData['User Pic'] != null ? NetworkImage(doctorData['User Pic']) : null,
-              child: doctorData['User Pic'] == null ? Icon(Icons.person) : null,
+            leading: ProfileAvatar.circle(
+              imageUrl: doctorData['User Pic']?.toString(),
             ),
             title: Text('${doctorData['Fname']} ${doctorData['Lname']}'),
             subtitle: Column(

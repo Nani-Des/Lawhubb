@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:nhap/widgets/profile_avatar.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -900,15 +901,10 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
                     },
                   ),
                   const SizedBox(width: 8),
-                  CircleAvatar(
+                  ProfileAvatar.circle(
+                    imageUrl: initiatorPic,
                     radius: 20,
-                    backgroundImage: initiatorPic.isNotEmpty
-                        ? NetworkImage(initiatorPic)
-                        : null,
                     backgroundColor: Colors.grey[700],
-                    child: initiatorPic.isEmpty
-                        ? const Icon(Icons.person, color: Colors.white)
-                        : null,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
