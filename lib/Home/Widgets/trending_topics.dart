@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nhap/l10n/app_localizations.dart';
+import 'package:nhap/Services/news_feed_service.dart';
 import '../../news_stand.dart';
 import '../../utils/app_navigation.dart';
 
@@ -13,10 +14,9 @@ class TrendingTopics extends StatefulWidget {
 class _TrendingTopicsState extends State<TrendingTopics>
     with TickerProviderStateMixin {
   late AnimationController _controller;
-  late List<Animation<Offset>> _slideAnimations;
-
-  // Get all articles from NewsStandApp lawData
-  late List<Map<String, dynamic>> _articles;
+  List<Map<String, dynamic>> _articles = [];
+  List<Animation<Offset>> _slideAnimations = [];
+  bool _loadingArticles = true;
 
   @override
   void initState() {
@@ -25,24 +25,37 @@ class _TrendingTopicsState extends State<TrendingTopics>
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    
-    // Flatten all articles from all categories
-    _articles = lawData.expand((category) {
-      return (category["articles"] as List).map<Map<String, dynamic>>((article) {
-        final articleMap = Map<String, dynamic>.from(article as Map);
-        return {
-          ...articleMap,
-          'category': category["category"] as String,
-          'categoryIcon': category["icon"] as IconData,
-        };
-      });
-    }).toList();
+    _loadArticles();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  Future<void> _loadArticles() async {
+    try {
+      final categories = await NewsFeedService.instance.fetchCategories();
+      final flattened = categories.expand((category) {
+        final lawMap = category.toLawDataMap();
+        return (lawMap['articles'] as List).map<Map<String, dynamic>>((article) {
+          final articleMap = Map<String, dynamic>.from(article as Map);
+          return {
+            ...articleMap,
+            'category': lawMap['category'] as String,
+            'categoryIcon': lawMap['icon'] as IconData,
+          };
+        });
+      }).toList();
 
+      if (!mounted) return;
+      setState(() {
+        _articles = flattened.take(12).toList();
+        _loadingArticles = false;
+      });
+      _setupSlideAnimations();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingArticles = false);
+    }
+  }
+
+  void _setupSlideAnimations() {
     _slideAnimations = List.generate(_articles.length, (index) {
       final start = (index * 0.15).clamp(0.0, 1.0);
       final end = (0.6 + (index * 0.15)).clamp(0.0, 1.0);
@@ -59,9 +72,7 @@ class _TrendingTopicsState extends State<TrendingTopics>
       ));
     });
 
-    if (!_controller.isAnimating) {
-      _controller.forward();
-    }
+    _controller.forward(from: 0);
   }
 
   @override
@@ -162,27 +173,44 @@ class _TrendingTopicsState extends State<TrendingTopics>
           const SizedBox(height: 16),
           SizedBox(
             height: 180,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              itemCount: _articles.length,
-              itemBuilder: (context, index) {
-                return SlideTransition(
-                  position: _slideAnimations[index],
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      right: index == _articles.length - 1 ? 0 : 16,
-                    ),
+            child: _loadingArticles
+                ? const Center(
                     child: SizedBox(
-                      height: 180,
-                      child: _ArticleCard(
-                        article: _articles[index],
-                      ),
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     ),
-                  ),
-                );
-              },
-            ),
+                  )
+                : _articles.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No articles yet',
+                          style: TextStyle(color: Colors.grey[500]),
+                        ),
+                      )
+                    : ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: _articles.length,
+                        itemBuilder: (context, index) {
+                          return SlideTransition(
+                            position: index < _slideAnimations.length
+                                ? _slideAnimations[index]
+                                : const AlwaysStoppedAnimation(Offset.zero),
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                right: index == _articles.length - 1 ? 0 : 16,
+                              ),
+                              child: SizedBox(
+                                height: 180,
+                                child: _ArticleCard(
+                                  article: _articles[index],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
           ),
           const SizedBox(height: 8),
         ],
@@ -239,9 +267,10 @@ class _ArticleCardState extends State<_ArticleCard>
         pushAppRoute(
           context,
           ArticleDetailPage(
-            title: widget.article["title"],
-            content: widget.article["content"],
-            image: widget.article["image"],
+            title: widget.article["title"] as String? ?? '',
+            content: widget.article["content"] as String? ?? '',
+            image: widget.article["image"] as String? ?? '',
+            articleUrl: widget.article["url"] as String?,
           ),
         );
       },

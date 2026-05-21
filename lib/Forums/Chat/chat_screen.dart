@@ -35,7 +35,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final TextEditingController messageController = TextEditingController();
 
   // Recording
-  final Record _recorder = Record();
+  final AudioRecorder _recorder = AudioRecorder();
   bool _isRecording = false;
   Timer? _recordTimer;
   int _recordSeconds = 0;
@@ -205,10 +205,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           '${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
       _localFilePath = path;
       await _recorder.start(
+        RecordConfig(
+          encoder: AudioEncoder.aacLc,
+          bitRate: 128000,
+          sampleRate: 44100,
+        ),
         path: path,
-        encoder: AudioEncoder.aacLc,
-        bitRate: 128000,
-        samplingRate: 44100,
       );
       setState(() {
         _isRecording = true;

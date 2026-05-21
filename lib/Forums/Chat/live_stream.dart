@@ -52,6 +52,9 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
 
   /// Prevents double cleanup (back + dispose, or Firestore + user action).
   bool _exitInProgress = false;
+  /// Host ended the stream locally — ignore our own Firestore status listener.
+  bool _hostInitiatedEnd = false;
+  bool _isLeaving = false;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _consultationSub;
   bool _viewerPresenceRegistered = false;
 
@@ -74,6 +77,7 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
       if (data == null) return;
       final status = data['status'] as String?;
       if (status != null && status != 'active') {
+        if (widget.isInitiator && _hostInitiatedEnd) return;
         unawaited(_leaveLiveStream(reason: 'remote_ended'));
       }
     });
@@ -391,7 +395,31 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
     }
   }
 
-  /// Ends RTC session and updates Firestore. Call [popNavigator] false from [dispose].
+  void _popLiveScreen() {
+    if (!mounted) return;
+    final root = Navigator.of(context, rootNavigator: true);
+    if (root.canPop()) {
+      root.pop();
+      return;
+    }
+    Navigator.of(context).pop();
+  }
+
+  Future<void> _withTimeout(
+    Future<void> future,
+    Duration duration, {
+    String label = 'operation',
+  }) async {
+    try {
+      await future.timeout(duration);
+    } on TimeoutException {
+      debugPrint('Live stream timeout: $label');
+    } catch (e) {
+      debugPrint('Live stream error ($label): $e');
+    }
+  }
+
+  /// Ends RTC session and updates Firestore. Pops the route first so UI never freezes on Agora/Firestore.
   Future<void> _leaveLiveStream({
     String reason = 'user_left',
     bool popNavigator = true,
@@ -400,48 +428,94 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
     _exitInProgress = true;
     _isDisposing = true;
 
+    if (widget.isInitiator &&
+        (reason == 'host_end_button' ||
+            reason == 'back_button' ||
+            reason == 'system_back')) {
+      _hostInitiatedEnd = true;
+    }
+
     await _consultationSub?.cancel();
     _consultationSub = null;
 
+    if (mounted) {
+      setState(() => _isLeaving = true);
+    }
+
+    if (popNavigator) {
+      _popLiveScreen();
+    }
+
+    await _runStreamCleanup(reason);
+  }
+
+  Future<void> _runStreamCleanup(String reason) async {
     try {
       if (widget.isInitiator) {
-        await _deleteAllViewerPresenceDocs();
-        await FirebaseFirestore.instance
-            .collection('Consultations')
-            .doc(widget.chatId)
-            .update({
-          'status': 'ended',
-          'viewerCount': 0,
-          'endTimestamp': FieldValue.serverTimestamp(),
-          'endReason': reason,
-        });
+        await _withTimeout(
+          _deleteAllViewerPresenceDocs(),
+          const Duration(seconds: 8),
+          label: 'clear_viewers',
+        );
+        await _withTimeout(
+          FirebaseFirestore.instance
+              .collection('Consultations')
+              .doc(widget.chatId)
+              .update({
+            'status': 'ended',
+            'viewerCount': 0,
+            'endTimestamp': FieldValue.serverTimestamp(),
+            'endReason': reason,
+          }),
+          const Duration(seconds: 8),
+          label: 'end_consultation',
+        );
       } else {
-        await _unregisterViewerPresence();
+        await _withTimeout(
+          _unregisterViewerPresence(),
+          const Duration(seconds: 5),
+          label: 'unregister_viewer',
+        );
       }
     } catch (e) {
       debugPrint('Firestore live exit error: $e');
     }
 
-    try {
-      if (_engine != null) {
-        if (widget.isInitiator) {
-          await _engine!.stopPreview();
-        }
-        await _engine!.leaveChannel();
-        await _engine!.release();
-        _engine = null;
-      }
-    } catch (e) {
-      debugPrint('Agora cleanup error: $e');
-    }
+    final engine = _engine;
+    _engine = null;
+    _isEngineInitialized = false;
 
-    if (popNavigator && mounted) {
-      Navigator.of(context).maybePop();
+    if (engine != null) {
+      try {
+        if (widget.isInitiator) {
+          await _withTimeout(
+            engine.stopPreview(),
+            const Duration(seconds: 3),
+            label: 'stop_preview',
+          );
+        }
+        await _withTimeout(
+          engine.leaveChannel(),
+          const Duration(seconds: 5),
+          label: 'leave_channel',
+        );
+        await _withTimeout(
+          engine.release(),
+          const Duration(seconds: 3),
+          label: 'release_engine',
+        );
+      } catch (e) {
+        debugPrint('Agora cleanup error: $e');
+      }
     }
   }
 
-  /// Cleanup without navigation — used when the widget is torn down (dispose / app background edge cases).
+  /// Cleanup without navigation — used when the widget is torn down.
   Future<void> _silentDisposeCleanup() async {
+    if (_exitInProgress) {
+      await _runStreamCleanup('screen_disposed');
+      return;
+    }
     await _leaveLiveStream(
       reason: 'screen_disposed',
       popNavigator: false,
@@ -451,9 +525,12 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
   @override
   void dispose() {
     _commentController.dispose();
+    _consultationSub?.cancel();
     if (!_exitInProgress) {
       _isDisposing = true;
       unawaited(_silentDisposeCleanup());
+    } else {
+      unawaited(_runStreamCleanup('screen_disposed'));
     }
     super.dispose();
   }
@@ -842,6 +919,27 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
     );
   }
 
+  Widget _buildLeavingOverlay() {
+    return Positioned.fill(
+      child: ColoredBox(
+        color: Colors.black.withValues(alpha: 0.85),
+        child: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: Colors.white),
+              SizedBox(height: 16),
+              Text(
+                'Leaving live stream…',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -877,7 +975,8 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
           _buildCommentsOverlay(),
           _buildOverlayButtons(),
           _buildCommentInput(),
-          
+          if (_isLeaving) _buildLeavingOverlay(),
+
           // Top bar
           SafeArea(
             child: Container(

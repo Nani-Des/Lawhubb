@@ -15,12 +15,12 @@ if (localPropertiesFile.exists()) {
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
-    flutterVersionCode = '18'
+    flutterVersionCode = '20'
 }
 
 def flutterVersionName = localProperties.getProperty('flutter.versionName')
 if (flutterVersionName == null) {
-    flutterVersionName = '1.0.13'
+    flutterVersionName = '1.0.15'
 }
 
 def keystoreProperties = new Properties()
@@ -33,9 +33,9 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace "com.lawapp.lawhubb"
-    compileSdk flutter.compileSdkVersion
+    compileSdk Math.max(flutter.compileSdkVersion as int, 35)
     // NDK r28+ builds 16 KB ELF–aligned .so by default (required on 16 KB page devices).
-    // Install via SDK Manager if Gradle reports this revision is missing.
+    // Install via SDK Manager: sdkmanager "ndk;28.1.13356709"
     ndkVersion "28.1.13356709"
 
     compileOptions {
@@ -58,8 +58,9 @@ android {
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        // 64-bit only: 16 KB page-size compliance applies to arm64/x86_64; drop armeabi-v7a (4 KB–aligned Agora/WebRTC .so).
         ndk {
-            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64'
+            abiFilters 'arm64-v8a', 'x86_64'
         }
     }
 
@@ -77,6 +78,12 @@ android {
     packaging {
         jniLibs {
             useLegacyPackaging false
+        }
+    }
+
+    bundle {
+        abi {
+            enableSplit true
         }
     }
 

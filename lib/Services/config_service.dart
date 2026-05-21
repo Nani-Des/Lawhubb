@@ -33,6 +33,7 @@ class ConfigService {
         'google_maps_api_key': '',
         'OPENAI_API_KEY1': '',
         'agora_app_id': '',
+        'news_api_key': '',
       });
       print('ConfigService: Default values set');
 
@@ -69,4 +70,5 @@ class ConfigService {
   String get nlpApiUrl => _remoteConfig.getString('nlp_api_url');
   String get googleTranslateApiKey => _remoteConfig.getString('google_translate_api_key');
   String get agoraAppId => _remoteConfig.getString('agora_app_id');
+  String get newsApiKey => _remoteConfig.getString('news_api_key');
 }
