@@ -11,6 +11,7 @@ import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../utils/lawhubb_share.dart';
+import '../../utils/user_facing_errors.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ReferralSummaryScreen extends StatefulWidget {
@@ -414,7 +415,7 @@ class _ReferralSummaryScreenState extends State<ReferralSummaryScreen> {
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text("Failed to share PDF: $e"),
+                        content: Text(UserFacingErrors.share()),
                         backgroundColor: Colors.red,
                       ),
                     );

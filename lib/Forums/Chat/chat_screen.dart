@@ -10,6 +10,7 @@ import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:just_audio/just_audio.dart';
 import 'consultation_screen.dart';
+import '../../utils/user_facing_errors.dart';
 import '../../widgets/profile_avatar.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -288,7 +289,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Recording failed: $e')),
+          SnackBar(content: Text(UserFacingErrors.recording())),
         );
       }
       setState(() {
@@ -335,7 +336,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Playback error: $e')),
+          SnackBar(content: Text(UserFacingErrors.playback())),
         );
       }
     }
@@ -364,7 +365,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not send voice message: $e')),
+          SnackBar(content: Text(UserFacingErrors.actionFailed(action: 'send voice message'))),
         );
       }
     }
@@ -429,7 +430,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
     } catch (e) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Playback error: $e')));
+          .showSnackBar(SnackBar(content: Text(UserFacingErrors.playback())));
     }
   }
 

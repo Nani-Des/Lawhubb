@@ -10,6 +10,7 @@ import 'dart:math';
 import 'chat_module.dart';
 import '../Services/config_service.dart';
 import 'package:nhap/utils/country_utils.dart';
+import 'package:nhap/utils/user_facing_errors.dart';
 
 
 class TranslationService {
@@ -250,7 +251,7 @@ class _ExpertPostDetailsPageState extends State<ExpertPostDetailsPage> with Sing
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
+                  return Center(child: Text(UserFacingErrors.streamLoad(context: 'expert_post', error: snapshot.error)));
                 }
                 if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
@@ -357,7 +358,7 @@ class _ExpertPostDetailsPageState extends State<ExpertPostDetailsPage> with Sing
                                               _showCommentMenu(context, scaffoldMessengerKey, commentDoc);
                                             } catch (e) {
                                               ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text('Error loading comment: ${e.toString()}')),
+                                                SnackBar(content: Text(UserFacingErrors.loadFailed(item: 'comment'))),
                                               );
                                             }
                                           },
@@ -896,7 +897,7 @@ class _ExpertPostDetailsPageState extends State<ExpertPostDetailsPage> with Sing
       Navigator.pop(context); // Close loading indicator if open
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to submit report: ${e.toString()}'),
+          content: Text(UserFacingErrors.reportSubmit()),
           duration: const Duration(seconds: 3),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -1020,7 +1021,7 @@ class _ExpertPostDetailsPageState extends State<ExpertPostDetailsPage> with Sing
     } catch (e) {
       print('Translation failed: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Translation failed: ${e.toString()}')),
+        SnackBar(content: Text(UserFacingErrors.translation())),
       );
     }
   }

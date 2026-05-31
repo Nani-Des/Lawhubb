@@ -5,6 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/services.dart';
 import '../Services/notification_service.dart';
 import '../utils/country_utils.dart';
+import '../utils/user_facing_errors.dart';
 
 class AuthService with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -35,39 +36,7 @@ class AuthService with ChangeNotifier {
     return emailRegex.hasMatch(email);
   }
 
-  // --- General error handler for user-friendly messages ---
-  String _handleAuthError(dynamic e) {
-    if (e is FirebaseAuthException) {
-      debugPrint('FirebaseAuthException: ${e.code} - ${e.message}');
-      switch (e.code) {
-        case 'invalid-email':
-          return 'The email address is not valid.';
-        case 'user-disabled':
-          return 'This account has been disabled. Contact support for help.';
-        case 'user-not-found':
-          return 'No account found with this email.';
-        case 'wrong-password':
-          return 'Incorrect password. Please try again.';
-        case 'email-already-in-use':
-          return 'This email is already registered. Try logging in instead.';
-        case 'weak-password':
-          return 'The password is too weak. Please choose a stronger one.';
-        case 'account-exists-with-different-credential':
-          return 'This account exists with another sign-in method.';
-        default:
-          return 'Something went wrong. Please try again later.';
-      }
-    } else if (e is PlatformException) {
-      debugPrint('PlatformException: ${e.code} - ${e.message}');
-      if (e.code == 'sign_in_failed') {
-        return 'Google sign-in failed. Please try again later.';
-      }
-      return 'An unexpected error occurred. Please try again.';
-    } else {
-      debugPrint('Unknown error: $e');
-      return 'An unknown error occurred. Please try again.';
-    }
-  }
+  String _handleAuthError(dynamic e) => UserFacingErrors.auth(e);
 
   // --- Register user with email and password ---
   Future<bool> registerUser({

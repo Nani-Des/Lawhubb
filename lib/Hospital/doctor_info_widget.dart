@@ -9,6 +9,7 @@ import 'doctor_availability_calendar.dart';
 import 'hospital_page.dart';
 import 'package:uuid/uuid.dart';
 import '../Services/follow_service.dart';
+import '../utils/user_facing_errors.dart';
 
 class DoctorInfoWidget extends StatelessWidget {
   final Map<String, dynamic> doctorDetails;
@@ -575,7 +576,7 @@ class _FollowButtonState extends State<_FollowButton> {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Error: $e'),
+                      content: Text(UserFacingErrors.actionFailed(action: 'follow user')),
                       backgroundColor: Colors.red,
                     ),
                   );

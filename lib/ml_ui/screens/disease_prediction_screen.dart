@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
 import 'dart:async';
 import '../../core/services/disease_predictor_service.dart';
+import '../../utils/user_facing_errors.dart';
 
 class DiseasePredictionScreen extends StatefulWidget {
   const DiseasePredictionScreen({Key? key}) : super(key: key);
@@ -126,7 +127,7 @@ class _DiseasePredictionScreenState extends State<DiseasePredictionScreen> {
       if (mounted && !_isCancelling) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Prediction failed: ${e.toString()}'),
+            content: Text(UserFacingErrors.generic(context: 'prediction', error: e)),
             backgroundColor: Colors.red,
           ),
         );

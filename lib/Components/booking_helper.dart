@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../Auth/auth_screen.dart';
 import '../booking_page.dart';
 import '../utils/app_navigation.dart';
+import '../utils/user_facing_errors.dart';
 
 Future<void> handleBookAppointment(
     BuildContext context, {
@@ -194,7 +195,7 @@ Future<void> _bookAppointment(
     );
   } catch (e) {
     print('Error occurred: $e');
-    _showModernSnackBar(context, 'Failed to book appointment: $e', isError: true);
+    _showModernSnackBar(context, UserFacingErrors.actionFailed(action: 'book appointment'), isError: true);
   }
 }
 

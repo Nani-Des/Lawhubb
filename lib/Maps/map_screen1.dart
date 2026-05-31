@@ -8,6 +8,7 @@ import 'package:showcaseview/showcaseview.dart';
 import 'directions_model.dart';
 import 'directions_repository.dart';
 import 'place_search_service.dart';
+import '../utils/user_facing_errors.dart';
 
 class MapScreen1 extends StatefulWidget {
   final String? initialPlace;
@@ -178,7 +179,7 @@ class _MapScreen1State extends State<MapScreen1> {
       );
     } catch (e) {
       setState(() {
-        _selectedPlaceName = 'Error finding place: $e';
+        _selectedPlaceName = UserFacingErrors.loadFailed(item: 'place');
       });
     }
   }
@@ -240,7 +241,7 @@ class _MapScreen1State extends State<MapScreen1> {
       }
     } catch (e) {
       setState(() {
-        _selectedPlaceName = 'Error finding nearest health center: $e';
+        _selectedPlaceName = UserFacingErrors.loadFailed(item: 'nearest health center');
       });
     }
   }
@@ -302,7 +303,7 @@ class _MapScreen1State extends State<MapScreen1> {
       }
     } catch (e) {
       setState(() {
-        _selectedPlaceName = 'Error finding nearest Chamber: $e';
+        _selectedPlaceName = UserFacingErrors.loadFailed(item: 'nearest chamber');
       });
     }
   }
@@ -462,7 +463,7 @@ class _MapScreen1State extends State<MapScreen1> {
       );
     } catch (e) {
       setState(() {
-        _selectedPlaceName = 'Error: $e';
+        _selectedPlaceName = UserFacingErrors.generic(context: 'map_search', error: e);
       });
     }
   }

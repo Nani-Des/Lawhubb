@@ -27,6 +27,7 @@ import 'experts_community_page.dart';
 import 'HealthInsightsPage.dart';
 import '../Services/config_service.dart';
 import 'package:nhap/utils/country_utils.dart';
+import 'package:nhap/utils/user_facing_errors.dart';
 
 // ====================== Translation Service ======================
 class TranslationService {
@@ -569,7 +570,7 @@ class _ChatPageState extends State<ChatPage>
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.white)));
+          return Center(child: Text(UserFacingErrors.streamLoad(context: 'chat', error: snapshot.error), style: const TextStyle(color: Colors.white)));
         }
 
         if (!snapshot.hasData || _isLoadingUsers) {
@@ -935,7 +936,7 @@ class _ForumPageState extends State<ForumPage>
               .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
+              return Center(child: Text(UserFacingErrors.streamLoad(context: 'chat', error: snapshot.error)));
             }
             if (!snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
@@ -1269,7 +1270,7 @@ class _ForumPageState extends State<ForumPage>
     } catch (e) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to submit report: ${e.toString()}')),
+        SnackBar(content: Text(UserFacingErrors.reportSubmit())),
       );
     }
   }
@@ -1377,7 +1378,7 @@ class _ForumPageState extends State<ForumPage>
     } catch (e) {
       print('Translation failed: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Translation failed: ${e.toString()}')),
+        SnackBar(content: Text(UserFacingErrors.translation())),
       );
     }
   }
@@ -1784,7 +1785,7 @@ class _PostDetailsPageState extends State<PostDetailsPage>
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
+                  return Center(child: Text(UserFacingErrors.streamLoad(context: 'chat', error: snapshot.error)));
                 }
                 if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
@@ -1916,7 +1917,7 @@ class _PostDetailsPageState extends State<PostDetailsPage>
                                                   .showSnackBar(
                                                 SnackBar(
                                                     content: Text(
-                                                        'Error loading comment: ${e.toString()}')),
+                                                        UserFacingErrors.loadFailed(item: 'comment'))),
                                               );
                                             }
                                           },
@@ -2487,7 +2488,7 @@ class _PostDetailsPageState extends State<PostDetailsPage>
       Navigator.pop(context); // Close loading indicator if open
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to submit report: ${e.toString()}'),
+          content: Text(UserFacingErrors.reportSubmit()),
           duration: const Duration(seconds: 3),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -2631,7 +2632,7 @@ class _PostDetailsPageState extends State<PostDetailsPage>
     } catch (e) {
       print('Translation failed: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Translation failed: ${e.toString()}')),
+        SnackBar(content: Text(UserFacingErrors.translation())),
       );
     }
   }
@@ -3233,7 +3234,7 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
     } catch (e) {
       print('Translation failed: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Translation failed: ${e.toString()}')),
+        SnackBar(content: Text(UserFacingErrors.translation())),
       );
     }
   }
@@ -3296,7 +3297,7 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
     } catch (e) {
       print('Error playing audio: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to play audio: ${e.toString()}')),
+        SnackBar(content: Text(UserFacingErrors.playback())),
       );
     }
   }
@@ -3443,7 +3444,7 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
         } catch (e) {
           print('Error uploading audio: $e');
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to upload audio: ${e.toString()}')),
+            SnackBar(content: Text(UserFacingErrors.upload())),
           );
         }
       }
@@ -3974,7 +3975,7 @@ class _ChatThreadDetailsPageState extends State<ChatThreadDetailsPage> {
                         .snapshots(),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
-                        return Center(child: Text('Error: ${snapshot.error}'));
+                        return Center(child: Text(UserFacingErrors.streamLoad(context: 'chat', error: snapshot.error)));
                       }
                       if (!snapshot.hasData) {
                         return const Center(child: CircularProgressIndicator());
@@ -4472,7 +4473,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     } catch (e) {
       print('Error setting up call: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to access camera/microphone: $e')),
+        SnackBar(content: Text(UserFacingErrors.permissions())),
       );
       Navigator.pop(context);
     }

@@ -4,6 +4,7 @@ import 'package:nhap/widgets/profile_avatar.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../utils/user_facing_errors.dart';
 
 class HospitalProfileScreen extends StatefulWidget {
   final String hospitalId;
@@ -658,7 +659,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error submitting review: $e')),
+        SnackBar(content: Text(UserFacingErrors.actionFailed(action: 'submit review'))),
       );
     }
   }
@@ -684,7 +685,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating like: $e')),
+        SnackBar(content: Text(UserFacingErrors.actionFailed(action: 'update like'))),
       );
     }
   }
@@ -750,7 +751,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                           );
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error submitting reply: $e')),
+                            SnackBar(content: Text(UserFacingErrors.actionFailed(action: 'submit reply'))),
                           );
                         }
                       }

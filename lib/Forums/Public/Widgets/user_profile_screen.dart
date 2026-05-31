@@ -13,6 +13,7 @@ import '../../../utils/app_navigation.dart';
 import '../../../widgets/profile_avatar.dart';
 import '../../../Appointments/referral_form.dart';
 import '../../../Appointments/Referral screens/referral_details_page.dart';
+import '../../../utils/user_facing_errors.dart';
 import '../../../Settings/blocked_users_page.dart';
 import 'post_card.dart';
 import 'full_screen.dart';
@@ -500,7 +501,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: $e'),
+          content: Text(UserFacingErrors.actionFailed(action: 'load profile')),
           backgroundColor: Colors.red,
         ),
       );

@@ -7,6 +7,7 @@ import '../Public/Widgets/user_profile_screen.dart';
 import 'chat_list.dart';
 import '../../widgets/profile_avatar.dart';
 import 'live_stream.dart';
+import '../../utils/user_facing_errors.dart';
 
 class HomeScreen extends StatelessWidget {
   final int initialTabIndex; // 👈 New parameter (0 = Chats, 1 = Social Hubb)
@@ -60,7 +61,7 @@ class HomeScreen extends StatelessWidget {
       print('Error starting public consultation: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to start consultation: $e')),
+          SnackBar(content: Text(UserFacingErrors.actionFailed(action: 'start consultation'))),
         );
       }
     }

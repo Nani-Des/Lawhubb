@@ -5,6 +5,7 @@ import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'utils/user_facing_errors.dart';
 
 class BookingDetailsPage extends StatefulWidget {
   final String userId;
@@ -51,7 +52,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         });
       }
     } catch (e) {
-      _showSnackBar('Error checking user role: $e', isError: true);
+      _showSnackBar(UserFacingErrors.generic(context: 'check_user_role', error: e), isError: true);
     }
   }
 
@@ -104,7 +105,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       });
     } catch (e) {
       setState(() {
-        error = 'Error loading booking details: $e';
+        error = UserFacingErrors.loadFailed(item: 'booking details');
         isLoading = false;
       });
     }
@@ -238,7 +239,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       });
       _showSnackBar('Booking accepted successfully');
     } catch (e) {
-      _showSnackBar('Failed to accept booking: $e', isError: true);
+      _showSnackBar(UserFacingErrors.actionFailed(action: 'accept booking'), isError: true);
     }
   }
 
@@ -306,7 +307,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       _showSnackBar('Booking ${isReject ? 'rejected' : 'canceled'} successfully');
       Navigator.pop(context);
     } catch (e) {
-      _showSnackBar('Failed to ${isReject ? 'reject' : 'cancel'} booking: $e', isError: true);
+      _showSnackBar(UserFacingErrors.actionFailed(action: isReject ? 'reject booking' : 'cancel booking'), isError: true);
     }
   }
 

@@ -10,6 +10,7 @@ import 'chat_module.dart';
 import 'expert_post_details_page.dart'; // Import the ExpertPostDetailsPage
 import '../Services/config_service.dart';
 import 'package:nhap/utils/country_utils.dart';
+import 'package:nhap/utils/user_facing_errors.dart';
 
 
 class TranslationService {
@@ -186,7 +187,7 @@ class _ExpertsCommunityPageState extends State<ExpertsCommunityPage> {
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
+                    return Center(child: Text(UserFacingErrors.streamLoad(context: 'experts', error: snapshot.error)));
                   }
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
@@ -551,7 +552,7 @@ class _ExpertsCommunityPageState extends State<ExpertsCommunityPage> {
       Navigator.pop(context); // Close loading indicator if open
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to submit report: ${e.toString()}'),
+          content: Text(UserFacingErrors.reportSubmit()),
           duration: const Duration(seconds: 3),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -672,7 +673,7 @@ class _ExpertsCommunityPageState extends State<ExpertsCommunityPage> {
     } catch (e) {
       print('Translation failed: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Translation failed: ${e.toString()}')),
+        SnackBar(content: Text(UserFacingErrors.translation())),
       );
     }
   }

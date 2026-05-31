@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:video_player/video_player.dart';
 import 'Services/law_insights_service.dart';
+import '../utils/user_facing_errors.dart';
 
 class EditInsightDialog extends StatefulWidget {
   final String insightId;
@@ -94,7 +95,7 @@ class _EditInsightDialogState extends State<EditInsightDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error picking video: $e')),
+          SnackBar(content: Text(UserFacingErrors.actionFailed(action: 'select video'))),
         );
       }
     }
@@ -147,7 +148,7 @@ class _EditInsightDialogState extends State<EditInsightDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating insight: $e')),
+          SnackBar(content: Text(UserFacingErrors.actionFailed(action: 'update insight'))),
         );
       }
     }

@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../Services/config_service.dart';
+import '../../utils/user_facing_errors.dart';
 import '../../widgets/profile_avatar.dart';
 
 class VoiceCallScreen extends StatefulWidget {
@@ -126,7 +127,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
             debugPrint("⚠️ Agora error: $err - $msg");
             if (mounted && !_isDisposing) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("Error: $msg"), backgroundColor: Colors.red),
+                SnackBar(content: Text(UserFacingErrors.generic(context: 'voice_call')), backgroundColor: Colors.red),
               );
             }
           },
@@ -167,7 +168,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
       if (mounted && !_isDisposing) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Failed to start call: $e"),
+            content: Text(UserFacingErrors.callStart()),
             backgroundColor: Colors.red,
           ),
         );
@@ -207,7 +208,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
       debugPrint("⚠️ Toggle mute error: $e");
       if (mounted && !_isDisposing) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to toggle microphone: $e"), backgroundColor: Colors.red),
+          SnackBar(content: Text(UserFacingErrors.callMic()), backgroundColor: Colors.red),
         );
       }
     }

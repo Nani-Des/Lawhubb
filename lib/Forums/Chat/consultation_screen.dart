@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../Services/config_service.dart';
+import '../../utils/user_facing_errors.dart';
 
 class ConsultationScreen extends StatefulWidget {
   final String channelName;
@@ -121,7 +122,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
       print("⚠️ Agora init error: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to start consultation: $e")),
+          SnackBar(content: Text(UserFacingErrors.actionFailed(action: 'start consultation'))),
         );
       }
     } finally {

@@ -6,6 +6,7 @@ import 'package:video_player/video_player.dart';
 
 import '../Services/forum_firebase_service.dart';
 import '../../../ChatModule/chat_module.dart';
+import '../../../utils/user_facing_errors.dart';
 
 class CreatePostDialog extends StatefulWidget {
   final String userId;
@@ -146,7 +147,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to create post: $e'),
+            content: Text(UserFacingErrors.actionFailed(action: 'create post')),
             backgroundColor: Colors.red,
           ),
         );

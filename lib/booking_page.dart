@@ -14,6 +14,7 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'booking_details.dart';
 import 'utils/app_navigation.dart';
+import 'utils/user_facing_errors.dart';
 
 // Background message handler (must be top-level or static)
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -645,7 +646,7 @@ class _BookingPageState extends State<BookingPage> with SingleTickerProviderStat
           if (kDebugMode) {
             print('Error loading requests: ${snapshot.error}');
           }
-          return _buildEmptyState('Error loading requests: ${snapshot.error}');
+          return _buildEmptyState(UserFacingErrors.loadFailed(item: 'requests'));
         }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           if (kDebugMode) {
@@ -699,7 +700,7 @@ class _BookingPageState extends State<BookingPage> with SingleTickerProviderStat
           if (kDebugMode) {
             print('Error loading appointments: ${snapshot.error}');
           }
-          return _buildEmptyState('Error loading appointments: ${snapshot.error}');
+          return _buildEmptyState(UserFacingErrors.loadFailed(item: 'appointments'));
         }
         if (!snapshot.hasData || !snapshot.data!.exists) {
           if (kDebugMode) {
@@ -1038,7 +1039,7 @@ class _BookingPageState extends State<BookingPage> with SingleTickerProviderStat
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('processed_appointments_${widget.currentUserId}');
     } catch (e) {
-      _showModernSnackBar(context, 'Failed to update status: $e', isError: true);
+      _showModernSnackBar(context, UserFacingErrors.actionFailed(action: 'update booking status'), isError: true);
     }
   }
 
@@ -1250,7 +1251,7 @@ class _BookingPageState extends State<BookingPage> with SingleTickerProviderStat
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('processed_appointments_${widget.currentUserId}');
     } catch (e) {
-      _showModernSnackBar(context, 'Failed to delete booking: $e', isError: true);
+      _showModernSnackBar(context, UserFacingErrors.actionFailed(action: 'delete booking'), isError: true);
     }
   }
 

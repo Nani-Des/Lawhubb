@@ -14,6 +14,7 @@ import '../../Auth/auth_service.dart';
 import '../../main_layout.dart';
 import '../../booking_page.dart';
 import '../../utils/app_navigation.dart';
+import '../../utils/user_facing_errors.dart';
 import '../../main.dart';
 import '../../Settings/blocked_users_page.dart';
 import '../home_page.dart';
@@ -297,9 +298,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
         );
       }
     } catch (e) {
-      final String errorMessage = e is FirebaseAuthException
-          ? e.message ?? 'Failed to disable account'
-          : e.toString();
+      final String errorMessage = UserFacingErrors.auth(e, context: 'disable_account');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -440,7 +439,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                   color: Colors.red, size: 40),
                               SizedBox(height: 8),
                               Text(
-                                'Error: ${snapshot.error}',
+                                UserFacingErrors.streamLoad(context: 'profile', error: snapshot.error),
                                 style: TextStyle(color: Colors.redAccent),
                                 textAlign: TextAlign.center,
                               ),
@@ -950,7 +949,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                             .showSnackBar(
                                           SnackBar(
                                             content: Text(
-                                                '${localizations?.logoutFailed.toString().replaceFirst('{error}', e.toString()) ?? "Logout failed: $e"}'),
+                                                localizations?.logoutFailed.toString().replaceFirst('{error}', UserFacingErrors.auth(e, context: 'logout')) ?? UserFacingErrors.generic(context: 'logout', error: e)),
                                             backgroundColor: Colors.grey[800],
                                             behavior: SnackBarBehavior.floating,
                                             shape: RoundedRectangleBorder(

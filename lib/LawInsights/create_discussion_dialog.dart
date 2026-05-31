@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'Services/law_insights_service.dart';
+import '../utils/user_facing_errors.dart';
 
 class CreateDiscussionDialog extends StatefulWidget {
   final String? relatedInsightId;
@@ -75,7 +76,7 @@ class _CreateDiscussionDialogState extends State<CreateDiscussionDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error creating discussion: $e')),
+          SnackBar(content: Text(UserFacingErrors.actionFailed(action: 'create discussion'))),
         );
       }
     } finally {

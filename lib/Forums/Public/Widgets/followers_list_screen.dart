@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../Services/follow_service.dart';
 import 'user_profile_screen.dart';
 import '../../../widgets/profile_avatar.dart';
+import '../../../utils/user_facing_errors.dart';
 
 class FollowersListScreen extends StatefulWidget {
   final String userId;
@@ -197,7 +198,7 @@ class _FollowersListScreenState extends State<FollowersListScreen> {
                                         if (context.mounted) {
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             SnackBar(
-                                              content: Text('Error: $e'),
+                                              content: Text(UserFacingErrors.actionFailed(action: 'follow user')),
                                               backgroundColor: Colors.red,
                                             ),
                                           );

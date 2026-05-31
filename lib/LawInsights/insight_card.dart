@@ -14,6 +14,7 @@ import 'Services/law_insights_service.dart';
 import 'Widgets/insight_video_player.dart';
 import 'insight_detail_page.dart';
 import 'edit_insight_dialog.dart';
+import '../utils/user_facing_errors.dart';
 
 class InsightCard extends StatefulWidget {
   final String insightId;
@@ -274,7 +275,7 @@ class _InsightCardState extends State<InsightCard>
           setState(() => _isDeleting = false);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error deleting insight: $e'),
+              content: Text(UserFacingErrors.actionFailed(action: 'delete insight')),
               backgroundColor: Colors.red,
             ),
           );

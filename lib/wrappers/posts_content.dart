@@ -8,6 +8,7 @@ import '../Forums/Public/Widgets/create_post_dialog.dart';
 import '../Forums/Public/Widgets/user_profile_screen.dart';
 import '../Forums/Chat/live_stream.dart';
 import '../Auth/login_required_shell.dart';
+import '../utils/user_facing_errors.dart';
 
 class PostsContent extends StatefulWidget {
   const PostsContent({super.key});
@@ -73,7 +74,7 @@ class _PostsContentState extends State<PostsContent> {
       print('Error starting public consultation: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to start consultation: $e')),
+          SnackBar(content: Text(UserFacingErrors.actionFailed(action: 'start consultation'))),
         );
       }
     }

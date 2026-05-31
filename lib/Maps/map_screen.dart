@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';  // Import dotenv
 import 'directions_model.dart';
 import 'directions_repository.dart';
 import 'place_search_service.dart';
+import '../utils/user_facing_errors.dart';
 
 class MapScreen extends StatefulWidget {
   @override
@@ -125,7 +126,7 @@ class _MapScreenState extends State<MapScreen> {
       }
     } catch (e) {
       setState(() {
-        _selectedPlaceName = 'Error finding nearest hospital: $e';
+        _selectedPlaceName = UserFacingErrors.loadFailed(item: 'nearest hospital');
       });
     }
   }
@@ -317,7 +318,7 @@ class _MapScreenState extends State<MapScreen> {
       );
     } catch (e) {
       setState(() {
-        _selectedPlaceName = 'Error: $e';
+        _selectedPlaceName = UserFacingErrors.generic(context: 'map_search', error: e);
       });
     }
   }

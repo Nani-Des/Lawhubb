@@ -12,6 +12,7 @@ import 'full_screen.dart';
 import 'add_comment.dart';
 import 'user_profile_screen.dart';
 import '../../../widgets/profile_avatar.dart';
+import '../../../utils/user_facing_errors.dart';
 
 class PostCard extends StatefulWidget {
   final Map<String, dynamic> postData;
@@ -424,7 +425,7 @@ class _PostCardState extends State<PostCard> {
           _isTranslating = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Translation failed: $e')),
+          SnackBar(content: Text(UserFacingErrors.translation())),
         );
       }
     }

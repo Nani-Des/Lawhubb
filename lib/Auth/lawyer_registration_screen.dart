@@ -7,7 +7,10 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:nhap/Auth/auth_service.dart';
 import 'package:nhap/utils/country_utils.dart';
+import 'package:nhap/utils/user_facing_errors.dart';
+import 'package:nhap/Services/firebase_service.dart';
 import 'package:nhap/widgets/searchable_country_sheet.dart';
+import 'package:nhap/widgets/searchable_option_sheet.dart';
 
 /// Same pipeline as [LawhubbAdminPanel] lawyer signup: `Users` + `LawyerVerificationRequests`.
 class LawyerRegistrationScreen extends StatefulWidget {
@@ -30,8 +33,15 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
 
   bool _isNewAccount = true;
   String _countryCode = kDefaultCountryCode;
+  String _selectedChamberId = '';
+  String _selectedChamberName = '';
+  String _selectedPracticeId = '';
+  String _selectedPracticeName = '';
+  bool _loadingPractices = false;
   bool _submitting = false;
   String _submitStatus = '';
+
+  final _firebaseService = FirebaseService();
 
   PlatformFile? _licence;
   PlatformFile? _bar;
@@ -69,6 +79,127 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
     return {'url': url, 'path': storagePath, 'name': file.name};
   }
 
+  Future<void> _pickChamber() async {
+    final snap = await FirebaseFirestore.instance.collection('Chamber').get();
+    final options = snap.docs
+        .map((d) {
+          final data = d.data();
+          final name = data['Chamber Name']?.toString().trim();
+          return SearchableOption(
+            id: d.id,
+            label: (name != null && name.isNotEmpty) ? name : d.id,
+          );
+        })
+        .toList()
+      ..sort((a, b) => a.label.compareTo(b.label));
+
+    if (!mounted) return;
+    final id = await showSearchableOptionPicker(
+      context,
+      title: 'Select chamber',
+      options: options,
+      searchHint: 'Search chambers…',
+    );
+    if (id == null || !mounted) return;
+
+    final selected = options.firstWhere((o) => o.id == id);
+    setState(() {
+      _selectedChamberId = id;
+      _selectedChamberName = selected.label;
+      _selectedPracticeId = '';
+      _selectedPracticeName = '';
+      _loadingPractices = true;
+    });
+
+    try {
+      final practices =
+          await _firebaseService.getDepartmentsForHospital(id);
+      if (!mounted) return;
+      if (practices.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'This chamber has no practices yet. Choose another chamber or contact support.',
+            ),
+            backgroundColor: Colors.orangeAccent,
+          ),
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not load practices for this chamber.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _loadingPractices = false);
+    }
+  }
+
+  Future<void> _pickPractice() async {
+    if (_selectedChamberId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a chamber first.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _loadingPractices = true);
+    try {
+      final practices =
+          await _firebaseService.getDepartmentsForHospital(_selectedChamberId);
+      if (!mounted) return;
+      if (practices.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No practices available for this chamber.'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+        return;
+      }
+
+      final options = practices
+          .map(
+            (p) => SearchableOption(
+              id: p['Practice ID'] as String,
+              label: p['Practice Name'] as String,
+            ),
+          )
+          .toList()
+        ..sort((a, b) => a.label.compareTo(b.label));
+
+      final id = await showSearchableOptionPicker(
+        context,
+        title: 'Select practice',
+        options: options,
+        searchHint: 'Search practices…',
+      );
+      if (id == null || !mounted) return;
+
+      final selected = options.firstWhere((o) => o.id == id);
+      setState(() {
+        _selectedPracticeId = id;
+        _selectedPracticeName = selected.label;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not load practices.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _loadingPractices = false);
+    }
+  }
+
   Future<void> _pickFile(void Function(PlatformFile?) setFile) async {
     final r = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -86,6 +217,15 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Practising licence and Bar enrolment documents are required.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+    if (_selectedChamberId.isEmpty || _selectedPracticeId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select your chamber and practice.'),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -163,8 +303,8 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
           'Mobile Number': mobile,
           'Title': '',
           'Designation': 'Applicant',
-          'Practice ID': '',
-          'Chamber ID': '',
+          'Practice ID': _selectedPracticeId,
+          'Chamber ID': _selectedChamberId,
           'Region': '',
           'Country': cc,
           'CountryRequired': false,
@@ -186,6 +326,10 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
         'fullName': fullName.isEmpty ? 'Lawyer Applicant' : fullName,
         'mobile': mobile,
         'countryCode': cc,
+        'chamberId': _selectedChamberId,
+        'chamberName': _selectedChamberName,
+        'practiceId': _selectedPracticeId,
+        'practiceName': _selectedPracticeName,
         'status': 'pending',
         'requestedRole': 'lawyer',
         'documents': {
@@ -211,17 +355,14 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.message ?? 'Authentication failed.'),
+          content: Text(UserFacingErrors.auth(e, context: 'lawyer_registration')),
           backgroundColor: Colors.redAccent,
         ),
       );
     } on StateError catch (e) {
       if (!mounted) return;
-      final msg = e.message == 'pending'
-          ? 'You already have a lawyer verification application pending.'
-          : e.message == 'already_lawyer'
-              ? 'This account is already verified as a lawyer.'
-              : (e.message.isNotEmpty ? e.message : 'Could not submit.');
+      final msg = UserFacingErrors.lawyerRegistrationState(e.message) ??
+          UserFacingErrors.actionFailed(action: 'submit your application');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(msg), backgroundColor: Colors.redAccent),
       );
@@ -229,7 +370,10 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not submit application: $e'),
+          content: Text(UserFacingErrors.generic(
+            context: 'lawyer_registration',
+            error: e,
+          )),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -318,6 +462,48 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
                 keyboardType: TextInputType.phone,
                 validator: (v) =>
                     v == null || v.trim().isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: _submitting ? null : _pickChamber,
+                child: InputDecorator(
+                  decoration: _decoration('Chamber *'),
+                  child: Text(
+                    _selectedChamberId.isEmpty
+                        ? 'Tap to select a chamber'
+                        : _selectedChamberName,
+                    style: TextStyle(
+                      color: _selectedChamberId.isEmpty
+                          ? Colors.grey[500]
+                          : Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: (_submitting || _loadingPractices) ? null : _pickPractice,
+                child: InputDecorator(
+                  decoration: _decoration('Practice *'),
+                  child: _loadingPractices
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(
+                          _selectedPracticeId.isEmpty
+                              ? _selectedChamberId.isEmpty
+                                  ? 'Select a chamber first'
+                                  : 'Tap to select a practice'
+                              : _selectedPracticeName,
+                          style: TextStyle(
+                            color: _selectedPracticeId.isEmpty
+                                ? Colors.grey[500]
+                                : Colors.white,
+                          ),
+                        ),
+                ),
               ),
               const SizedBox(height: 12),
               InkWell(

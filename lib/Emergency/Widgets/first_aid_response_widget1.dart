@@ -7,6 +7,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:dio/dio.dart';
+import '../../utils/user_facing_errors.dart';
 
 class FirstAidResponseWidget extends StatefulWidget {
   final String responseText;
@@ -126,7 +127,7 @@ class _FirstAidResponseWidget1State extends State<FirstAidResponseWidget> with S
     if (widget.responseText.trim().isEmpty) {
       if (mounted) {
         setState(() {
-          displayText = "Error: No text to translate.";
+          displayText = UserFacingErrors.translation();
           isTranslated = false;
         });
       }
@@ -137,7 +138,7 @@ class _FirstAidResponseWidget1State extends State<FirstAidResponseWidget> with S
     if (apiKey == null || apiKey.isEmpty) {
       if (mounted) {
         setState(() {
-          displayText = "Error: Missing API key.";
+          displayText = UserFacingErrors.serviceUnavailable();
           isTranslated = false;
         });
       }
@@ -188,7 +189,7 @@ class _FirstAidResponseWidget1State extends State<FirstAidResponseWidget> with S
       } else {
         if (mounted) {
           setState(() {
-            displayText = "Translation failed: ${response.statusCode}";
+            displayText = UserFacingErrors.translation();
             isTranslated = false;
           });
         }
@@ -196,7 +197,7 @@ class _FirstAidResponseWidget1State extends State<FirstAidResponseWidget> with S
     } catch (e) {
       if (mounted) {
         setState(() {
-          displayText = "Error: ${e.toString()}";
+          displayText = UserFacingErrors.translation();
           isTranslated = false;
         });
       }
@@ -274,7 +275,7 @@ class _FirstAidResponseWidget1State extends State<FirstAidResponseWidget> with S
             if (mounted) {
               setState(() => isSpeaking = false); // Revert icon
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("Failed to start English speech")),
+                SnackBar(content: Text(UserFacingErrors.playback())),
               );
             }
           } else {
@@ -285,7 +286,7 @@ class _FirstAidResponseWidget1State extends State<FirstAidResponseWidget> with S
           if (mounted) {
             setState(() => isSpeaking = false); // Revert icon
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("English speech error: $e")),
+              SnackBar(content: Text(UserFacingErrors.playback())),
             );
           }
         } finally {
@@ -301,7 +302,7 @@ class _FirstAidResponseWidget1State extends State<FirstAidResponseWidget> with S
             setState(() => isSpeaking = false); // Revert icon
             setState(() => isLoading = false);
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Missing Ghana NLP API key")),
+              SnackBar(content: Text(UserFacingErrors.serviceUnavailable())),
             );
           }
           return;
@@ -354,7 +355,7 @@ class _FirstAidResponseWidget1State extends State<FirstAidResponseWidget> with S
                 if (attempt == maxRetries && mounted) {
                   setState(() => isSpeaking = false); // Revert icon
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("TTS error: $error")),
+                    SnackBar(content: Text(UserFacingErrors.playback())),
                   );
                 }
               } else if (contentType.contains('audio/wav')) {
@@ -374,7 +375,7 @@ class _FirstAidResponseWidget1State extends State<FirstAidResponseWidget> with S
                   if (attempt == maxRetries && mounted) {
                     setState(() => isSpeaking = false); // Revert icon
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Audio playback error: $e")),
+                      SnackBar(content: Text(UserFacingErrors.playback())),
                     );
                   }
                 }
@@ -384,7 +385,7 @@ class _FirstAidResponseWidget1State extends State<FirstAidResponseWidget> with S
                 if (attempt == maxRetries && mounted) {
                   setState(() => isSpeaking = false); // Revert icon
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Unexpected response format")),
+                    SnackBar(content: Text(UserFacingErrors.serviceUnavailable())),
                   );
                 }
               }
@@ -394,7 +395,7 @@ class _FirstAidResponseWidget1State extends State<FirstAidResponseWidget> with S
               if (attempt == maxRetries && mounted) {
                 setState(() => isSpeaking = false); // Revert icon
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("TTS failed: ${response.statusCode}")),
+                  SnackBar(content: Text(UserFacingErrors.translation())),
                 );
               }
             }
@@ -404,7 +405,7 @@ class _FirstAidResponseWidget1State extends State<FirstAidResponseWidget> with S
             if (attempt == maxRetries && mounted) {
               setState(() => isSpeaking = false); // Revert icon
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("TTS error: $e")),
+                SnackBar(content: Text(UserFacingErrors.playback())),
               );
             }
           }

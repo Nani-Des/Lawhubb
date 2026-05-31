@@ -8,6 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../Services/config_service.dart';
+import '../../utils/user_facing_errors.dart';
 
 class LiveConsultationScreen extends StatefulWidget {
   final String channelName;
@@ -389,7 +390,7 @@ class _LiveConsultationScreenState extends State<LiveConsultationScreen> {
       debugPrint("Error sending comment: $e");
       if (mounted && !_isDisposing) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to send comment: $e"), backgroundColor: Colors.red),
+          SnackBar(content: Text(UserFacingErrors.actionFailed(action: 'send comment')), backgroundColor: Colors.red),
         );
       }
     }
