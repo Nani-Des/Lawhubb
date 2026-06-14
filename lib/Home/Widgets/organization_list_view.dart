@@ -58,11 +58,6 @@ class _OrganizationListViewState extends State<OrganizationListView> {
       setState(() {
         _isOffline = results.contains(ConnectivityResult.none);
       });
-      if (!_isOffline) {
-        final localizations = AppLocalizations.of(context);
-        _showModernSnackBar(context,
-            localizations?.backOnlineSyncing ?? "Back online, syncing data...");
-      }
     });
   }
 

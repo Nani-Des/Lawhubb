@@ -480,7 +480,6 @@ class _BookingPageState extends State<BookingPage> with SingleTickerProviderStat
         _isOffline = results.contains(ConnectivityResult.none);
       });
       if (!_isOffline) {
-        _showModernSnackBar(context, 'Back online, syncing data...');
         await _checkPendingNotifications();
         await _loadCachedData();
         await _checkNewAppointmentsOnLogin();

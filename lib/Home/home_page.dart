@@ -146,6 +146,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _openLawyerRegistration() {
+    if (_lawyerVerificationStatus == 'pending') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Your lawyer application is already pending review.',
+          ),
+          backgroundColor: Colors.orangeAccent,
+        ),
+      );
+      return;
+    }
     pushAppRoute(context, const LawyerRegistrationScreen()).then((_) {
       if (mounted) _fetchUserData();
     });
@@ -181,9 +192,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         isLoggedIn: currentUser != null,
         onGuestAvatarTap: _onGuestAvatarTap,
         onOpenProfile: _toggleProfileDrawer,
-        onRegisterAsLawyer: currentUser != null &&
-                !_userIsLawyer &&
-                _lawyerVerificationStatus != 'pending'
+        onRegisterAsLawyer: currentUser != null && !_userIsLawyer
             ? _openLawyerRegistration
             : null,
       ),

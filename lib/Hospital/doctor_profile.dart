@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../Services/firebase_service.dart';
 import 'doctor_info_widget.dart';
+import 'package:nhap/utils/chamber_constants.dart';
 
 class DoctorProfileScreen extends StatefulWidget {
   final String userId;
@@ -28,12 +29,47 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
 
   Future<void> _loadDoctorDetails() async {
     try {
-      Map<String, dynamic> doctorDetails = await _firebaseService.getDoctorDetails(widget.userId);
-      String departmentName = await _firebaseService.getDepartmentName(doctorDetails['departmentId']);
-      String hospitalName = await _firebaseService.getHospitalName(doctorDetails['hospitalId']);
+      Map<String, dynamic> doctorDetails =
+          await _firebaseService.getDoctorDetails(widget.userId);
+      final altChamber =
+          (doctorDetails['Alt Chamber'] as String?)?.trim() ?? '';
+      final altPractice = (doctorDetails['Alt Practice'] as List?)
+              ?.map((e) => e.toString())
+              .where((s) => s.trim().isNotEmpty)
+              .toList() ??
+          <String>[];
+
+      String departmentName = '';
+      final departmentId = doctorDetails['departmentId'] as String? ?? '';
+      if (departmentId.isNotEmpty) {
+        try {
+          departmentName =
+              await _firebaseService.getDepartmentName(departmentId);
+        } catch (_) {
+          departmentName = altPractice.isNotEmpty ? altPractice.first : 'N/A';
+        }
+      } else if (altPractice.isNotEmpty) {
+        departmentName = altPractice.first;
+      }
+
+      String hospitalName = altChamber;
+      final hospitalId = doctorDetails['hospitalId'] as String? ?? '';
+      if (hospitalName.isEmpty && hospitalId.isNotEmpty) {
+        try {
+          hospitalName = await _firebaseService.getHospitalName(hospitalId);
+        } catch (_) {
+          hospitalName = kNaChamberName;
+        }
+      } else if (hospitalName.isEmpty) {
+        hospitalName = 'N/A';
+      }
 
       setState(() {
-        _doctorDetails = doctorDetails;
+        _doctorDetails = {
+          ...doctorDetails,
+          'Alt Practice': altPractice,
+          'Alt Chamber': altChamber,
+        };
         _departmentName = departmentName;
         _hospitalName = hospitalName;
         _isLoading = false;

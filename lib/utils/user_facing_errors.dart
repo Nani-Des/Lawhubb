@@ -106,6 +106,8 @@ class UserFacingErrors {
         return 'You already have a lawyer verification application pending.';
       case 'already_lawyer':
         return 'This account is already verified as a lawyer.';
+      case 'na_chamber_missing':
+        return 'Chamber [N/A] is not set up yet. Please contact support.';
       default:
         return null;
     }

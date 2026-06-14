@@ -7,6 +7,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:nhap/Auth/auth_service.dart';
 import 'package:nhap/utils/country_utils.dart';
+import 'package:nhap/utils/country_regions.dart';
+import 'package:nhap/utils/chamber_constants.dart';
 import 'package:nhap/utils/user_facing_errors.dart';
 import 'package:nhap/Services/firebase_service.dart';
 import 'package:nhap/widgets/searchable_country_sheet.dart';
@@ -30,13 +32,21 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
   final _password = TextEditingController();
   final _confirmPassword = TextEditingController();
   final _existingPassword = TextEditingController();
+  final _altChamberController = TextEditingController();
+  final _altPracticeInputController = TextEditingController();
+  final _regionController = TextEditingController();
 
   bool _isNewAccount = true;
   String _countryCode = kDefaultCountryCode;
+  String _nationalityCode = kDefaultCountryCode;
+  String _ghanaRegion = 'Select a region';
   String _selectedChamberId = '';
   String _selectedChamberName = '';
   String _selectedPracticeId = '';
   String _selectedPracticeName = '';
+  List<String> _selectedPracticeIds = [];
+  List<String> _selectionAltPractice = [];
+  List<String> _typedAltPractice = [];
   bool _loadingPractices = false;
   bool _submitting = false;
   String _submitStatus = '';
@@ -56,6 +66,9 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
     _password.dispose();
     _confirmPassword.dispose();
     _existingPassword.dispose();
+    _altChamberController.dispose();
+    _altPracticeInputController.dispose();
+    _regionController.dispose();
     super.dispose();
   }
 
@@ -106,8 +119,11 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
     setState(() {
       _selectedChamberId = id;
       _selectedChamberName = selected.label;
+      _altChamberController.clear();
       _selectedPracticeId = '';
       _selectedPracticeName = '';
+      _selectedPracticeIds = [];
+      _selectionAltPractice = [];
       _loadingPractices = true;
     });
 
@@ -138,11 +154,38 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
     }
   }
 
+  void _applySelectedPractices(List<SearchableOption> options, List<String> ids) {
+    if (ids.isEmpty) {
+      setState(() {
+        _selectedPracticeIds = [];
+        _selectedPracticeId = '';
+        _selectedPracticeName = '';
+        _selectionAltPractice = [];
+      });
+      return;
+    }
+
+    final idToLabel = {for (final o in options) o.id: o.label};
+    final primaryId = ids.first;
+    final altFromSelection = ids
+        .skip(1)
+        .map((id) => idToLabel[id] ?? id)
+        .where((name) => name.trim().isNotEmpty)
+        .toList();
+
+    setState(() {
+      _selectedPracticeIds = List.from(ids);
+      _selectedPracticeId = primaryId;
+      _selectedPracticeName = idToLabel[primaryId] ?? primaryId;
+      _selectionAltPractice = altFromSelection;
+    });
+  }
+
   Future<void> _pickPractice() async {
     if (_selectedChamberId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please select a chamber first.'),
+          content: Text('Please select a chamber first or type your chamber name below.'),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -157,8 +200,10 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
       if (practices.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('No practices available for this chamber.'),
-            backgroundColor: Colors.redAccent,
+            content: Text(
+              'No practices available for this chamber. Add custom practice names below.',
+            ),
+            backgroundColor: Colors.orangeAccent,
           ),
         );
         return;
@@ -174,19 +219,15 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
           .toList()
         ..sort((a, b) => a.label.compareTo(b.label));
 
-      final id = await showSearchableOptionPicker(
+      final ids = await showSearchableMultiOptionPicker(
         context,
-        title: 'Select practice',
+        title: 'Select practice(s)',
         options: options,
         searchHint: 'Search practices…',
+        initialSelectedIds: _selectedPracticeIds,
       );
-      if (id == null || !mounted) return;
-
-      final selected = options.firstWhere((o) => o.id == id);
-      setState(() {
-        _selectedPracticeId = id;
-        _selectedPracticeName = selected.label;
-      });
+      if (!mounted) return;
+      _applySelectedPractices(options, ids);
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -198,6 +239,65 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
     } finally {
       if (mounted) setState(() => _loadingPractices = false);
     }
+  }
+
+  void _addAltPractice() {
+    final name = _altPracticeInputController.text.trim();
+    if (name.isEmpty) return;
+    if (_allAltPractice.any((p) => p.toLowerCase() == name.toLowerCase())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('This practice is already listed.'),
+          backgroundColor: Colors.orangeAccent,
+        ),
+      );
+      return;
+    }
+    setState(() {
+      _typedAltPractice = [..._typedAltPractice, name];
+      _altPracticeInputController.clear();
+    });
+  }
+
+  void _removeAltPractice(String name) {
+    setState(() {
+      _typedAltPractice =
+          _typedAltPractice.where((p) => p != name).toList();
+    });
+  }
+
+  List<String> get _allAltPractice => [
+        ..._selectionAltPractice,
+        ..._typedAltPractice,
+      ];
+
+  String get _altChamber => _altChamberController.text.trim();
+
+  bool get _hasChamber =>
+      _selectedChamberId.isNotEmpty || _altChamber.isNotEmpty;
+
+  bool get _hasPractice =>
+      _selectedPracticeId.isNotEmpty || _allAltPractice.isNotEmpty;
+
+  String _practiceSummary() {
+    final parts = <String>[];
+    if (_selectedPracticeName.isNotEmpty) {
+      parts.add('Primary: $_selectedPracticeName');
+    }
+    if (_selectionAltPractice.isNotEmpty) {
+      parts.add('From list: ${_selectionAltPractice.join(', ')}');
+    }
+    if (_typedAltPractice.isNotEmpty) {
+      parts.add('Custom: ${_typedAltPractice.join(', ')}');
+    }
+    if (parts.isEmpty) {
+      return _selectedChamberId.isEmpty && _altChamber.isNotEmpty
+          ? 'Add practice name(s) below'
+          : _selectedChamberId.isEmpty
+              ? 'Select a chamber first'
+              : 'Tap to select practice(s)';
+    }
+    return parts.join('\n');
   }
 
   Future<void> _pickFile(void Function(PlatformFile?) setFile) async {
@@ -222,10 +322,28 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
       );
       return;
     }
-    if (_selectedChamberId.isEmpty || _selectedPracticeId.isEmpty) {
+    if (!_hasChamber || !_hasPractice) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please select your chamber and practice.'),
+          content: Text(
+            'Please provide your chamber and at least one practice (select from the list or type custom names).',
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+    final regionValue = isGhanaCountry(_countryCode)
+        ? _ghanaRegion
+        : _regionController.text.trim();
+    if (!isValidRegionForCountry(_countryCode, regionValue)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isGhanaCountry(_countryCode)
+                ? 'Please select your Ghana region.'
+                : 'Please enter your state, province, or region.',
+          ),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -294,6 +412,18 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
       if (mounted) {
         setState(() => _submitStatus = 'Submitting application…');
       }
+
+      var chamberIdToSave = _selectedChamberId;
+      var chamberNameToSave = _selectedChamberName;
+      if (_altChamber.isNotEmpty) {
+        final naId = await resolveNaChamberId(db);
+        if (naId == null) {
+          throw StateError('na_chamber_missing');
+        }
+        chamberIdToSave = naId;
+        chamberNameToSave = kNaChamberName;
+      }
+
       await db.collection('Users').doc(uid).set(
         {
           'User ID': uid,
@@ -304,9 +434,12 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
           'Title': '',
           'Designation': 'Applicant',
           'Practice ID': _selectedPracticeId,
-          'Chamber ID': _selectedChamberId,
-          'Region': '',
+          'Chamber ID': chamberIdToSave,
+          'Alt Chamber': _altChamber,
+          'Alt Practice': _allAltPractice,
+          'Region': regionValue,
           'Country': cc,
+          'Nationality': _nationalityCode.trim().toUpperCase(),
           'CountryRequired': false,
           'User Pic': '',
           'Role': false,
@@ -326,10 +459,14 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
         'fullName': fullName.isEmpty ? 'Lawyer Applicant' : fullName,
         'mobile': mobile,
         'countryCode': cc,
-        'chamberId': _selectedChamberId,
-        'chamberName': _selectedChamberName,
+        'nationality': _nationalityCode.trim().toUpperCase(),
+        'region': regionValue,
+        'chamberId': chamberIdToSave,
+        'chamberName': chamberNameToSave,
         'practiceId': _selectedPracticeId,
         'practiceName': _selectedPracticeName,
+        'altChamber': _altChamber,
+        'altPractice': _allAltPractice,
         'status': 'pending',
         'requestedRole': 'lawyer',
         'documents': {
@@ -465,12 +602,14 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
               ),
               const SizedBox(height: 12),
               InkWell(
-                onTap: _submitting ? null : _pickChamber,
+                onTap: _submitting || _altChamber.isNotEmpty ? null : _pickChamber,
                 child: InputDecorator(
-                  decoration: _decoration('Chamber *'),
+                  decoration: _decoration('Chamber (select from list)'),
                   child: Text(
                     _selectedChamberId.isEmpty
-                        ? 'Tap to select a chamber'
+                        ? _altChamber.isNotEmpty
+                            ? 'Using custom chamber name below'
+                            : 'Tap to select a chamber'
                         : _selectedChamberName,
                     style: TextStyle(
                       color: _selectedChamberId.isEmpty
@@ -481,10 +620,35 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
                 ),
               ),
               const SizedBox(height: 12),
+              TextFormField(
+                controller: _altChamberController,
+                enabled: !_submitting,
+                style: const TextStyle(color: Colors.white),
+                decoration: _decoration('Or type your chamber name *'),
+                onChanged: (value) {
+                  if (value.trim().isNotEmpty) {
+                    setState(() {
+                      _selectedChamberId = '';
+                      _selectedChamberName = '';
+                      _selectedPracticeId = '';
+                      _selectedPracticeName = '';
+                      _selectedPracticeIds = [];
+                      _selectionAltPractice = [];
+                    });
+                  } else {
+                    setState(() {});
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
               InkWell(
-                onTap: (_submitting || _loadingPractices) ? null : _pickPractice,
+                onTap: (_submitting ||
+                        _loadingPractices ||
+                        _altChamber.isNotEmpty)
+                    ? null
+                    : _pickPractice,
                 child: InputDecorator(
-                  decoration: _decoration('Practice *'),
+                  decoration: _decoration('Practice (select from list)'),
                   child: _loadingPractices
                       ? const SizedBox(
                           height: 20,
@@ -492,17 +656,78 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : Text(
-                          _selectedPracticeId.isEmpty
-                              ? _selectedChamberId.isEmpty
-                                  ? 'Select a chamber first'
-                                  : 'Tap to select a practice'
-                              : _selectedPracticeName,
+                          _practiceSummary(),
                           style: TextStyle(
-                            color: _selectedPracticeId.isEmpty
-                                ? Colors.grey[500]
-                                : Colors.white,
+                            color: _hasPractice ? Colors.white : Colors.grey[500],
                           ),
                         ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _altPracticeInputController,
+                      enabled: !_submitting,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: _decoration('Or type practice name(s) *'),
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _addAltPractice(),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: IconButton.filled(
+                      onPressed: _submitting ? null : _addAltPractice,
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.teal,
+                      ),
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      tooltip: 'Add practice',
+                    ),
+                  ),
+                ],
+              ),
+              if (_typedAltPractice.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _typedAltPractice
+                      .map(
+                        (name) => Chip(
+                          label: Text(name),
+                          deleteIcon: const Icon(Icons.close, size: 18),
+                          onDeleted: _submitting ? null : () => _removeAltPractice(name),
+                          backgroundColor: Colors.grey[850],
+                          labelStyle: const TextStyle(color: Colors.white),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: _submitting
+                    ? null
+                    : () async {
+                        final c = await showSearchableCountryPicker(
+                          context,
+                          title: 'Nationality',
+                        );
+                        if (c != null && mounted) {
+                          setState(() => _nationalityCode = c);
+                        }
+                      },
+                child: InputDecorator(
+                  decoration: _decoration('Nationality *'),
+                  child: Text(
+                    '${countryNameFromCode(_nationalityCode)} ($_nationalityCode)',
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -515,19 +740,56 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
                           title: 'Country of practice',
                         );
                         if (c != null && mounted) {
-                          setState(() => _countryCode = c);
+                          setState(() {
+                            _countryCode = c;
+                            if (!isGhanaCountry(c)) {
+                              _ghanaRegion = 'Select a region';
+                            } else {
+                              _regionController.clear();
+                            }
+                          });
                         }
                       },
                 child: InputDecorator(
-                  decoration: _decoration('Country'),
+                  decoration: _decoration('Country of practice *'),
                   child: Text(
                     '${countryNameFromCode(_countryCode)} ($_countryCode)',
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),
               ),
+              const SizedBox(height: 12),
+              if (isGhanaCountry(_countryCode))
+                DropdownButtonFormField<String>(
+                  value: kGhanaRegionOptions.contains(_ghanaRegion)
+                      ? _ghanaRegion
+                      : 'Select a region',
+                  decoration: _decoration('Region (Ghana) *'),
+                  dropdownColor: Colors.grey[900],
+                  style: const TextStyle(color: Colors.white),
+                  items: [
+                    const DropdownMenuItem(
+                      value: 'Select a region',
+                      child: Text('Select a region'),
+                    ),
+                    ...kGhanaRegionOptions.map(
+                      (r) => DropdownMenuItem(value: r, child: Text(r)),
+                    ),
+                  ],
+                  onChanged: _submitting
+                      ? null
+                      : (v) => setState(() => _ghanaRegion = v ?? 'Select a region'),
+                )
+              else
+                TextFormField(
+                  controller: _regionController,
+                  enabled: !_submitting,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: _decoration('State / province / region *'),
+                  textCapitalization: TextCapitalization.words,
+                ),
+              const SizedBox(height: 12),
               if (_isNewAccount) ...[
-                const SizedBox(height: 12),
                 TextFormField(
                   controller: _password,
                   obscureText: true,
@@ -554,7 +816,6 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
                           : null,
                 ),
               ] else ...[
-                const SizedBox(height: 12),
                 TextFormField(
                   controller: _existingPassword,
                   obscureText: true,

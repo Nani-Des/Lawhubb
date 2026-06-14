@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart'; // For debugPrint
+import 'package:nhap/utils/country_utils.dart';
 
 class FirebaseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -226,10 +227,19 @@ class FirebaseService {
           debugPrint('UserDoc Data for $userId: $data');
         }
 
+        final altPracticeRaw = data['Alt Practice'];
+        final altPractice = altPracticeRaw is List
+            ? altPracticeRaw.map((e) => e.toString()).toList()
+            : <String>[];
+
         final result = {
           'Fname': _safeString(data['Fname'], 'Unknown'),
           'Lname': _safeString(data['Lname'], 'Unknown'),
           'Region': _safeString(data['Region'], 'Unknown'),
+          'Country': _safeString(data['Country'], kDefaultCountryCode),
+          'Nationality': _safeString(data['Nationality'], ''),
+          'Alt Chamber': _safeString(data['Alt Chamber'], ''),
+          'Alt Practice': altPractice,
           'Title': _safeString(data['Title'], 'Dr.'),
           'Email': _safeString(data['Email'], 'N/A'),
           'Mobile Number': _safeString(data['Mobile Number'], 'N/A'),

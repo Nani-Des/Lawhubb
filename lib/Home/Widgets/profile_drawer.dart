@@ -20,6 +20,7 @@ import '../../Settings/blocked_users_page.dart';
 import '../home_page.dart';
 import 'package:provider/provider.dart';
 import 'package:nhap/utils/country_utils.dart';
+import 'package:nhap/utils/country_regions.dart';
 import 'package:nhap/widgets/searchable_country_sheet.dart';
 import 'package:nhap/widgets/profile_avatar.dart';
 
@@ -50,6 +51,8 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   String _editCountryCode = kDefaultCountryCode;
+  String _editNationalityCode = kDefaultCountryCode;
+  String _ghanaRegion = 'Select a region';
 
   DocumentSnapshot? _cachedUserData;
   bool _isCacheValid = false;
@@ -152,9 +155,12 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
         'Fname': _firstNameController.text,
         'Lname': _lastNameController.text,
         'Mobile Number': _mobileController.text,
-        'Region': _regionController.text,
+        'Region': isGhanaCountry(_editCountryCode)
+            ? _ghanaRegion
+            : _regionController.text.trim(),
         'Email': _emailController.text,
         'Country': _editCountryCode.trim().toUpperCase(),
+        'Nationality': _editNationalityCode.trim().toUpperCase(),
         'CountryRequired': false,
       };
       await FirebaseFirestore.instance
@@ -469,9 +475,32 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                       final String? email = userData['Email'] as String?;
                       final String countryLine =
                           effectiveCountryCode(userData);
+                      final String nationalityLine =
+                          (userData['Nationality'] as String?)?.trim().isNotEmpty ==
+                                  true
+                              ? (userData['Nationality'] as String).trim().toUpperCase()
+                              : countryLine;
+                      final List<String> altPractice =
+                          (userData['Alt Practice'] is List)
+                              ? (userData['Alt Practice'] as List)
+                                  .map((e) => e.toString())
+                                  .where((s) => s.trim().isNotEmpty)
+                                  .toList()
+                              : <String>[];
+                      final String? altChamber =
+                          (userData['Alt Chamber'] as String?)?.trim();
 
                       if (_isEditing) {
-                        _regionController.text = region ?? '';
+                        _editCountryCode = effectiveCountryCode(userData);
+                        _editNationalityCode = nationalityLine;
+                        if (isGhanaCountry(_editCountryCode)) {
+                          _ghanaRegion = (region != null &&
+                                  kGhanaRegionOptions.contains(region))
+                              ? region
+                              : 'Select a region';
+                        } else {
+                          _regionController.text = region ?? '';
+                        }
                         _mobileController.text = mobileNumber ?? '';
                         _emailController.text = email ?? '';
                         _firstNameController.text = firstName ?? '';
@@ -493,6 +522,16 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                       _isEditing = true;
                                       _editCountryCode =
                                           effectiveCountryCode(userData);
+                                      _editNationalityCode = nationalityLine;
+                                      if (isGhanaCountry(_editCountryCode)) {
+                                        _ghanaRegion = (region != null &&
+                                                kGhanaRegionOptions
+                                                    .contains(region))
+                                            ? region
+                                            : 'Select a region';
+                                      } else {
+                                        _regionController.text = region ?? '';
+                                      }
                                     });
                                   }
                                 },
@@ -607,16 +646,73 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                               final code =
                                                   await showSearchableCountryPicker(
                                                 context,
-                                                title: 'Country',
+                                                title: 'Nationality',
                                               );
                                               if (code != null && mounted) {
                                                 setState(() =>
-                                                    _editCountryCode = code);
+                                                    _editNationalityCode = code);
                                               }
                                             },
                                             child: InputDecorator(
                                               decoration: InputDecoration(
-                                                labelText: 'Country',
+                                                labelText: 'Nationality',
+                                                labelStyle: TextStyle(
+                                                    color: Colors.grey[400]),
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                enabledBorder:
+                                                    OutlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                      color: Colors.grey[700]!),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                focusedBorder:
+                                                    OutlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                      color: Colors.white),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                filled: true,
+                                                fillColor: Colors.grey[850],
+                                                suffixIcon: const Icon(
+                                                  Icons.arrow_drop_down,
+                                                  color: Colors.white70,
+                                                ),
+                                              ),
+                                              child: Text(
+                                                '${countryNameFromCode(_editNationalityCode)} ($_editNationalityCode)',
+                                                style: const TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(height: 12),
+                                          InkWell(
+                                            onTap: () async {
+                                              final code =
+                                                  await showSearchableCountryPicker(
+                                                context,
+                                                title: 'Country of practice',
+                                              );
+                                              if (code != null && mounted) {
+                                                setState(() {
+                                                  _editCountryCode = code;
+                                                  if (!isGhanaCountry(code)) {
+                                                    _ghanaRegion =
+                                                        'Select a region';
+                                                  } else {
+                                                    _regionController.clear();
+                                                  }
+                                                });
+                                              }
+                                            },
+                                            child: InputDecorator(
+                                              decoration: InputDecoration(
+                                                labelText: 'Country of practice',
                                                 labelStyle: TextStyle(
                                                     color: Colors.grey[400]),
                                                 border: OutlineInputBorder(
@@ -652,32 +748,86 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                             ),
                                           ),
                                           SizedBox(height: 12),
-                                          TextFormField(
-                                            controller: _regionController,
-                                            decoration: InputDecoration(
-                                              labelText:
-                                                  'State / region (local)',
-                                              labelStyle: TextStyle(
-                                                  color: Colors.grey[400]),
-                                              border: OutlineInputBorder(
+                                          if (isGhanaCountry(_editCountryCode))
+                                            DropdownButtonFormField<String>(
+                                              value: kGhanaRegionOptions
+                                                      .contains(_ghanaRegion)
+                                                  ? _ghanaRegion
+                                                  : 'Select a region',
+                                              decoration: InputDecoration(
+                                                labelText: 'Region (Ghana)',
+                                                labelStyle: TextStyle(
+                                                    color: Colors.grey[400]),
+                                                border: OutlineInputBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8)),
+                                                enabledBorder:
+                                                    OutlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                      color: Colors.grey[700]!),
                                                   borderRadius:
-                                                      BorderRadius.circular(8)),
-                                              enabledBorder: OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                    color: Colors.grey[700]!),
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                focusedBorder:
+                                                    OutlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                      color: Colors.white),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                filled: true,
+                                                fillColor: Colors.grey[850],
                                               ),
-                                              focusedBorder: OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                    color: Colors.white),
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
+                                              dropdownColor: Colors.grey[900],
+                                              style: const TextStyle(
+                                                  color: Colors.white),
+                                              items: [
+                                                const DropdownMenuItem(
+                                                  value: 'Select a region',
+                                                  child: Text('Select a region'),
+                                                ),
+                                                ...kGhanaRegionOptions.map(
+                                                  (r) => DropdownMenuItem(
+                                                    value: r,
+                                                    child: Text(r),
+                                                  ),
+                                                ),
+                                              ],
+                                              onChanged: (v) => setState(() =>
+                                                  _ghanaRegion =
+                                                      v ?? 'Select a region'),
+                                            )
+                                          else
+                                            TextFormField(
+                                              controller: _regionController,
+                                              decoration: InputDecoration(
+                                                labelText:
+                                                    'State / province / region',
+                                                labelStyle: TextStyle(
+                                                    color: Colors.grey[400]),
+                                                border: OutlineInputBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8)),
+                                                enabledBorder:
+                                                    OutlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                      color: Colors.grey[700]!),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                focusedBorder:
+                                                    OutlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                      color: Colors.white),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
                                               ),
+                                              style: TextStyle(
+                                                  color: Colors.white),
                                             ),
-                                            style:
-                                                TextStyle(color: Colors.white),
-                                          ),
                                           SizedBox(height: 12),
                                           TextFormField(
                                             controller: _mobileController,
@@ -741,7 +891,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                                 color: Colors.grey[600]),
                                           ),
                                           Text(
-                                            '$countryLine  •  ${region ?? (localizations?.noRegion ?? 'No region')}',
+                                            '${countryNameFromCode(nationalityLine)}  •  ${countryNameFromCode(countryLine)}  •  ${region ?? (localizations?.noRegion ?? 'No region')}',
                                             style: TextStyle(
                                                 fontSize: 8,
                                                 color: Colors.grey[400]),
@@ -795,6 +945,72 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                 ],
                               ),
                             ),
+                          if (!_isEditing &&
+                              (altPractice.isNotEmpty ||
+                                  (altChamber != null &&
+                                      altChamber.isNotEmpty))) ...[
+                            SizedBox(height: 12),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[850],
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.grey[800]!),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (altChamber != null &&
+                                        altChamber.isNotEmpty)
+                                      Text(
+                                        'Chamber: $altChamber',
+                                        style: const TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    if (altPractice.isNotEmpty) ...[
+                                      if (altChamber != null &&
+                                          altChamber.isNotEmpty)
+                                        const SizedBox(height: 6),
+                                      Text(
+                                        'Additional practices:',
+                                        style: TextStyle(
+                                          color: Colors.grey[400],
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Wrap(
+                                        spacing: 6,
+                                        runSpacing: 6,
+                                        children: altPractice
+                                            .map(
+                                              (p) => Chip(
+                                                label: Text(
+                                                  p,
+                                                  style: const TextStyle(
+                                                    fontSize: 11,
+                                                  ),
+                                                ),
+                                                backgroundColor:
+                                                    Colors.grey[800],
+                                                labelStyle: const TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                            )
+                                            .toList(),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                           if (userData['Role'] != true) ...[
                             SizedBox(height: 16),
                             Container(
@@ -840,15 +1056,24 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                 ),
                                 trailing: Icon(Icons.arrow_forward_ios,
                                     color: Colors.grey[600], size: 16),
-                                onTap: userData['lawyerVerificationStatus'] ==
-                                        'pending'
-                                    ? null
-                                    : () {
-                                        pushAppRoute(
-                                          context,
-                                          const LawyerRegistrationScreen(),
-                                        );
-                                      },
+                                onTap: () {
+                                  if (userData['lawyerVerificationStatus'] ==
+                                      'pending') {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Your lawyer application is already pending review.',
+                                        ),
+                                        backgroundColor: Colors.orangeAccent,
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  pushAppRoute(
+                                    context,
+                                    const LawyerRegistrationScreen(),
+                                  );
+                                },
                               ),
                             ),
                           ],

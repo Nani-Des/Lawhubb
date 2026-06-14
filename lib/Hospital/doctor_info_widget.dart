@@ -31,6 +31,15 @@ class DoctorInfoWidget extends StatelessWidget {
     required this.isReferral,
   }) : super(key: key);
 
+  List<String> get _altPracticeNames {
+    final raw = doctorDetails['Alt Practice'];
+    if (raw is! List) return const [];
+    return raw
+        .map((e) => e.toString().trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -198,6 +207,7 @@ class DoctorInfoWidget extends StatelessWidget {
                           title: 'Practice Area',
                           value: departmentName,
                           onTap: () {
+                            if (departmentId.isEmpty) return;
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -210,6 +220,13 @@ class DoctorInfoWidget extends StatelessWidget {
                             );
                           },
                         ),
+                        if (_altPracticeNames.isNotEmpty)
+                          _buildModernInfoCard(
+                            context,
+                            icon: Icons.layers_outlined,
+                            title: 'Additional Practices',
+                            value: _altPracticeNames.join(', '),
+                          ),
                       ],
                     ),
 
