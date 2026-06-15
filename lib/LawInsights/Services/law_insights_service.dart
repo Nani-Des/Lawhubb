@@ -5,42 +5,114 @@ class LawInsightsService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String _collection = 'law_insights';
 
+  /// How long insights remain visible in feeds and saved libraries.
+  static const int retentionDays = 60;
+
+  DateTime get _retentionCutoff =>
+      DateTime.now().subtract(const Duration(days: retentionDays));
+
+  CollectionReference<Map<String, dynamic>> _savedInsightsRef(String userId) =>
+      _firestore
+          .collection('Users')
+          .doc(userId)
+          .collection('saved_law_insights');
+
   // Get all insights stream (non-expired only)
   Stream<QuerySnapshot> getInsightsStream() {
-    final now = DateTime.now();
-    final oneMonthAgo = now.subtract(const Duration(days: 30));
-
     return _firestore
         .collection(_collection)
-        .where('createdAt', isGreaterThan: Timestamp.fromDate(oneMonthAgo))
+        .where('createdAt', isGreaterThan: Timestamp.fromDate(_retentionCutoff))
         .orderBy('createdAt', descending: true)
         .snapshots();
   }
 
   // Get insights by category
   Stream<QuerySnapshot> getInsightsByCategoryStream(String category) {
-    final now = DateTime.now();
-    final oneMonthAgo = now.subtract(const Duration(days: 30));
-
     return _firestore
         .collection(_collection)
         .where('category', isEqualTo: category)
-        .where('createdAt', isGreaterThan: Timestamp.fromDate(oneMonthAgo))
+        .where('createdAt', isGreaterThan: Timestamp.fromDate(_retentionCutoff))
         .orderBy('createdAt', descending: true)
         .snapshots();
   }
 
   // Get trending insights (by views + comments)
   Stream<QuerySnapshot> getTrendingInsightsStream() {
-    final now = DateTime.now();
-    final oneMonthAgo = now.subtract(const Duration(days: 30));
-
     return _firestore
         .collection(_collection)
-        .where('createdAt', isGreaterThan: Timestamp.fromDate(oneMonthAgo))
+        .where('createdAt', isGreaterThan: Timestamp.fromDate(_retentionCutoff))
         .orderBy('engagementScore', descending: true)
         .limit(50)
         .snapshots();
+  }
+
+  /// Saved insights for the current user (snapshot stored locally per user).
+  Stream<QuerySnapshot> getSavedInsightsStream(String userId) {
+    return _savedInsightsRef(userId)
+        .where('savedAt', isGreaterThan: Timestamp.fromDate(_retentionCutoff))
+        .orderBy('savedAt', descending: true)
+        .snapshots();
+  }
+
+  Future<bool> isInsightSaved(String userId, String insightId) async {
+    final doc = await _savedInsightsRef(userId).doc(insightId).get();
+    return doc.exists;
+  }
+
+  Stream<bool> watchInsightSaved(String userId, String insightId) {
+    return _savedInsightsRef(userId)
+        .doc(insightId)
+        .snapshots()
+        .map((snap) => snap.exists);
+  }
+
+  Future<void> saveInsight(
+    String userId,
+    String insightId,
+    Map<String, dynamic> insightData,
+  ) async {
+    final expiresAt = insightData['expiresAt'] as Timestamp?;
+    final createdAt = insightData['createdAt'] as Timestamp?;
+    final retentionExpires = Timestamp.fromDate(
+      DateTime.now().add(const Duration(days: retentionDays)),
+    );
+
+    await _savedInsightsRef(userId).doc(insightId).set({
+      'insightId': insightId,
+      'savedAt': FieldValue.serverTimestamp(),
+      'expiresAt': expiresAt ?? retentionExpires,
+      'title': insightData['title'] ?? '',
+      'description': insightData['description'] ?? '',
+      'category': insightData['category'] ?? '',
+      'videoUrl': insightData['videoUrl'] ?? '',
+      'thumbnailUrl': insightData['thumbnailUrl'] ?? '',
+      'userId': insightData['userId'] ?? '',
+      'createdAt': createdAt ?? FieldValue.serverTimestamp(),
+      'views': insightData['views'] ?? 0,
+      'commentsCount': insightData['commentsCount'] ?? 0,
+      'likes': insightData['likes'] ?? 0,
+      'likedBy': insightData['likedBy'] ?? [],
+      'viewedBy': insightData['viewedBy'] ?? [],
+      'externalPlatforms': insightData['externalPlatforms'] ?? {},
+    });
+  }
+
+  Future<void> unsaveInsight(String userId, String insightId) async {
+    await _savedInsightsRef(userId).doc(insightId).delete();
+  }
+
+  Future<void> cleanExpiredSavedInsights(String userId) async {
+    final expired = await _savedInsightsRef(userId)
+        .where('savedAt', isLessThan: Timestamp.fromDate(_retentionCutoff))
+        .get();
+
+    if (expired.docs.isEmpty) return;
+
+    final batch = _firestore.batch();
+    for (final doc in expired.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
   }
 
   // Create a new insight
@@ -72,7 +144,7 @@ class LawInsightsService {
       'externalPlatforms': externalPlatforms ?? {},
       'createdAt': FieldValue.serverTimestamp(),
       'expiresAt': Timestamp.fromDate(
-        DateTime.now().add(const Duration(days: 30)),
+        DateTime.now().add(const Duration(days: LawInsightsService.retentionDays)),
       ),
       'isActive': true,
     };

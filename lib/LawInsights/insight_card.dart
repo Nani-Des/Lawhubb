@@ -89,9 +89,38 @@ class _InsightCardState extends State<InsightCard>
       return;
     }
 
-    // Optimistic update
     setState(() {});
     await _service.toggleLike(widget.insightId, userId);
+  }
+
+  Future<void> _toggleSave() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please log in to save insights')),
+      );
+      return;
+    }
+
+    final saved = await _service.isInsightSaved(userId, widget.insightId);
+    if (saved) {
+      await _service.unsaveInsight(userId, widget.insightId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Removed from saved insights')),
+      );
+    } else {
+      await _service.saveInsight(userId, widget.insightId, widget.insightData);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Saved for ${LawInsightsService.retentionDays} days',
+          ),
+        ),
+      );
+    }
+    if (mounted) setState(() {});
   }
 
   Future<void> _addComment() async {
@@ -106,7 +135,6 @@ class _InsightCardState extends State<InsightCard>
     final comment = _commentController.text.trim();
     if (comment.isEmpty) return;
 
-    // Word filter check
     final canPost = await WordFilterService().canSendMessage(comment, context);
     if (!canPost) return;
 
@@ -414,6 +442,27 @@ class _InsightCardState extends State<InsightCard>
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    if (userId != null)
+                      StreamBuilder<bool>(
+                        stream: _service.watchInsightSaved(
+                          userId,
+                          widget.insightId,
+                        ),
+                        builder: (context, savedSnap) {
+                          final isSaved = savedSnap.data ?? false;
+                          return IconButton(
+                            icon: Icon(
+                              isSaved ? Icons.bookmark : Icons.bookmark_border,
+                              color: isSaved ? Colors.tealAccent : Colors.white,
+                              size: 20,
+                            ),
+                            tooltip: isSaved
+                                ? 'Remove from saved'
+                                : 'Save insight',
+                            onPressed: _toggleSave,
+                          );
+                        },
+                      ),
                     IconButton(
                       icon: const Icon(Icons.share_outlined,
                           color: Colors.white, size: 20),

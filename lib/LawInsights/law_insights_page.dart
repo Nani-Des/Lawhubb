@@ -25,8 +25,11 @@ class _LawInsightsPageState extends State<LawInsightsPage> {
   @override
   void initState() {
     super.initState();
-    // Clean up expired insights on load
     _service.cleanExpiredInsights();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      _service.cleanExpiredSavedInsights(uid);
+    }
     _loadFollowingList();
   }
 
@@ -213,17 +216,26 @@ class _LawInsightsPageState extends State<LawInsightsPage> {
                     isSelected: _selectedFilter == 'Trending',
                     onTap: () => setState(() => _selectedFilter = 'Trending'),
                   ),
+                  const SizedBox(width: 8),
+                  _FilterChip(
+                    label: 'Saved',
+                    isSelected: _selectedFilter == 'Saved',
+                    onTap: () => setState(() => _selectedFilter = 'Saved'),
+                  ),
                 ],
               ),
             ),
             // Insights feed
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
-                stream: _selectedFilter == 'All'
-                    ? _service.getInsightsStream()
-                    : _selectedFilter == 'Trending'
-                        ? _service.getTrendingInsightsStream()
-                        : _service.getInsightsByCategoryStream(_selectedFilter),
+                stream: _selectedFilter == 'Saved'
+                    ? _service.getSavedInsightsStream(currentUser.uid)
+                    : _selectedFilter == 'All'
+                        ? _service.getInsightsStream()
+                        : _selectedFilter == 'Trending'
+                            ? _service.getTrendingInsightsStream()
+                            : _service
+                                .getInsightsByCategoryStream(_selectedFilter),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(
@@ -237,14 +249,18 @@ class _LawInsightsPageState extends State<LawInsightsPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            Icons.lightbulb_outline,
+                            _selectedFilter == 'Saved'
+                                ? Icons.bookmark_border
+                                : Icons.lightbulb_outline,
                             size: 64,
                             color: Colors.grey[600],
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            AppLocalizations.of(context)?.noInsightsYet ??
-                                'No insights yet',
+                            _selectedFilter == 'Saved'
+                                ? 'No saved insights yet'
+                                : AppLocalizations.of(context)?.noInsightsYet ??
+                                    'No insights yet',
                             style: TextStyle(
                               color: Colors.grey[500],
                               fontSize: 18,
@@ -253,12 +269,15 @@ class _LawInsightsPageState extends State<LawInsightsPage> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            AppLocalizations.of(context)?.beFirstToShare ??
-                                'Be the first to share your legal insights!',
+                            _selectedFilter == 'Saved'
+                                ? 'Tap the bookmark on an insight to save it for ${LawInsightsService.retentionDays} days.'
+                                : AppLocalizations.of(context)?.beFirstToShare ??
+                                    'Be the first to share your legal insights!',
                             style: TextStyle(
                               color: Colors.grey[600],
                               fontSize: 14,
                             ),
+                            textAlign: TextAlign.center,
                           ),
                         ],
                       ),
@@ -266,6 +285,28 @@ class _LawInsightsPageState extends State<LawInsightsPage> {
                   }
 
                   final insights = snapshot.data!.docs;
+
+                  if (_selectedFilter == 'Saved') {
+                    return ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      itemCount: insights.length,
+                      itemBuilder: (context, index) {
+                        final savedDoc = insights[index];
+                        final data =
+                            savedDoc.data() as Map<String, dynamic>;
+                        final insightId =
+                            (data['insightId'] as String?) ?? savedDoc.id;
+                        return InsightCard(
+                          insightId: insightId,
+                          insightData: data,
+                        );
+                      },
+                    );
+                  }
 
                   // Sort insights: followed users first, then by date (newest first)
                   final sortedInsights =
