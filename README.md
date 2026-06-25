@@ -1,69 +1,147 @@
 # Lawhubb
 
-Mobile Flutter app for law chambers to manage members, referrals, documents, schedules, and communications.
+Mobile Flutter app for law chambers to manage members, referrals, documents, schedules and communications. Built for multi-platform deployment with Firebase backend and optional on-device ML.
 
 Overview
-- Lawhubb is a cross-platform Flutter application that connects chamber members, manages referrals, stores documents, and supports voice/video and notifications.
-- The app uses Firebase for authentication, database, storage, functions, and push messaging.
-- It includes native platform projects (Android, iOS, macOS, Windows, Linux) and a web build target.
-- The codebase contains client UI in `lib/` and optional Cloud Functions in `functions/`.
+- Lawhubb is a cross-platform Flutter client that combines Firebase services (Auth, Firestore, Realtime Database, Storage, Functions, FCM) with local persistence (Hive), maps/geolocation, real‑time audio/video (WebRTC/Agora), and an optional on‑device TFLite model for local inference.
+- The app provides booking/referral flows, chat, document upload/storage, push notifications, and location‑based provider search. Native projects for Android, iOS, macOS, Windows and Linux are included.
+- Key runtime pieces live under `lib/` (UI, Auth, ChatModule, Appointments, Maps, Services) and server helpers (if used) live in `functions/`.
+- The codebase is prepared for Remote Config-driven runtime keys and local development flags so you can run UI-only builds without Firebase while you iterate.
 
-Tech Stack
-- Dart / Flutter
-- Ollama--
-- Rag pipeline
-- Firebase (Auth, Firestore, Storage, Database, Functions, Messaging)
-- Google Maps, Agora RTC, audio/video packages
-- Hive (local storage), Dio (HTTP), Provider (state)
+Tech stack
+- Dart / Flutter (multi-platform)
+- Firebase: Auth, Firestore, Realtime DB, Storage, Cloud Functions, Messaging, Remote Config
+- Local persistence: Hive + hive_flutter
+- On-device ML: tflite_flutter, firebase_ml_model_downloader (TFLite model in assets)
+- RTC / media: flutter_webrtc, agora_rtc_engine, just_audio, flutter_sound
+- Maps & geolocation: google_maps_flutter, geolocator
+- Networking and utilities: dio, http, provider, flutter_dotenv
 
-Getting Started
+Quick start — run locally
 Prerequisites
-- Flutter SDK (compatible with Dart >=3.5)
-- Android SDK / Xcode for mobile builds (or use `flutter run` for a connected device)
-- Firebase project and config
-- Git
+- Flutter SDK (Dart >= 3.5)
+- Android SDK or Xcode for mobile builds
+- A Firebase project configured for the target platforms
+- Google Maps API key (if you use maps)
+- Optional: Agora credentials, Apple Sign-In .p8 key (keep private)
 
 Steps
-1. Clone the repo
+1. Clone and fetch packages
 ```
 git clone https://github.com/Nani-Des/Lawhubb.git
 cd Lawhubb
-```
-2. Install Flutter dependencies
-```
 flutter pub get
 ```
-3. Configure Firebase
-- Place your Firebase config and any environment variables referenced by the app (the repo references a `.env`) into the project per your platform (edit `lib` firebase initializer or use `flutter_dotenv`).
-4. Run on a device or emulator
+
+2. Configure Firebase (choose one)
+- Generate configuration using FlutterFire CLI:
+```
+flutterfire configure
+```
+- Or drop platform config files manually:
+```
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+```
+Ensure `firebase_options.dart` is present or generated.
+
+3. Provide runtime keys/secrets
+- Preferred: store runtime API keys in Firebase Remote Config and let the app fetch them at startup.
+- Alternatively use environment variables or `.env` (project references `flutter_dotenv`):
+```
+GOOGLE_MAPS_API_KEY=...
+AGORA_APP_ID=...
+AGORA_TOKEN=...
+APPLE_P8_PATH=/path/to/AuthKey_XXXX.p8   # do NOT commit
+```
+Do not commit private keys. If a private key (.p8) appears in the repo, remove it and rotate the key.
+
+4. (Optional) Start local emulators for backend testing
+```
+cd functions
+npm install
+firebase emulators:start --only firestore,auth,functions,database
+```
+
+5. Run the app
+- Run on default device:
 ```
 flutter run
 ```
-5. Build APK (Android) or IPA/Xcode as needed
+- Run on Android emulator:
+```
+flutter run -d emulator-5554
+```
+- Run on web:
+```
+flutter run -d chrome
+```
+
+6. Build release artifacts
 ```
 flutter build apk
 flutter build ios
+flutter build web
 ```
 
-Usage
-- Run the app on a connected device:
-```
-flutter run
-```
-- Open the app and sign in with an account from your configured Firebase project to access member and admin features.
+Important runtime notes (what to look at in the code)
+- Entry point: `lib/main.dart` — initializes Firebase, Hive boxes, remote config, and push notification handlers.
+- Remote Config: used to provide runtime keys (e.g., Google Maps API) so keys can be rotated without recompiling.
+- Local cache: Hive is used for offline persistence; common box names and initialization appear in app start code.
+- On-device ML: model file referenced under `assets/models/` (e.g., `disease_model.tflite`) with wiring to `tflite_flutter` and optional `firebase_ml_model_downloader` for remote model delivery.
+- Push notifications: FCM is used for foreground/background messages and token lifecycle; background handlers will persist pending messages for later UI handling.
+- RTC and calls: Agora or WebRTC modules provide real‑time audio/video; credentials are required and controlled by runtime config.
+- Platform integration points: native projects contain code for platform-specific behavior (APNs for iOS, platform channels if needed for maps/push integration).
 
-Project Structure
+Project layout (most relevant)
 ```
 pubspec.yaml
 firebase.json
-lib/               # Flutter application source (UI, pages, providers)
-android/           # Android native project
-ios/               # iOS native project
-web/               # Web build target
-functions/         # Firebase Cloud Functions (optional)
-assets/            # Images, audio, knowledge packs, JSON data
-test/              # Unit and widget tests
+firebase_options.dart?        # generated by flutterfire (may be absent)
+lib/
+  main.dart                   # entrypoint + initialization
+  Auth/                       # authentication UI & services
+  ChatModule/                 # chat UI and logic
+  Appointments/               # booking / referral screens
+  Home/                       # dashboard and main navigation
+  Maps/                       # map screens and geolocation helpers
+  Services/                   # ConfigService, CallService, etc.
+assets/
+  Icons/
+  models/
+    disease_model.tflite      # optional on-device model
+functions/                     # Firebase Cloud Functions for privileged tasks
+android/ ios/ macos/ windows/ linux/  # native platform projects
+test/                          # unit and widget tests
 ```
+
+Configuration checklist
+- `firebase_options.dart` exists (or run `flutterfire configure`)
+- Platform Firebase config files present for Android/iOS when building native
+- Google Maps API key available (Remote Config or `.env`)
+- Remove any committed private keys (.p8) and rotate them if found
+- If using Agora/Sign in with Apple, ensure their credentials are provided securely
+
+Testing and debugging
+- Unit and widget tests:
+```
+flutter test
+```
+- Use Firebase emulators when testing Firestore/Functions-heavy flows:
+```
+firebase emulators:start --only firestore,auth,functions,database
+```
+- For UI-only iteration, disable Firebase and services via debug flags (if present at top of `lib/main.dart`):
+```dart
+const bool debugDisableFirebase = true;
+const bool debugDisableServices = true;
+```
+
+Developer tips
+- Remote Config values are usually fetched at startup; to test changes fetch/refresh or use the emulator suite.
+- Background FCM handlers run in a separate isolate — look for `@pragma('vm:entry-point')` annotations and SharedPreferences usage for handoff.
+- Keep native credentials out of the repo; prefer Remote Config for runtime keys and secrets.
+- Inspect `functions/` for any server-side helpers the app relies on (e.g., privileged operations, notifications, user management).
 
 Status
 working
@@ -71,5 +149,9 @@ working
 Author
 - Nani-Des — https://github.com/Nani-Des
 
+If you want, I can:
+- produce a `.env.example` listing the environment variables the app expects,
+- add a short checklist/script to start the Firebase emulators + app together, or
+- scan the repo for any accidentally committed secrets and list their paths.
 
 ![App Screenshot](assets/Lawhubb.drawio.png)
