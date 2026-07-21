@@ -183,8 +183,8 @@ class OpenAIService {
 
     final list = practiceNames.join(', ');
     final prompt =
-        'You must choose exactly ONE practice name from this list that best matches the user issue. '
-        'Reply with ONLY that practice name, nothing else — no quotes, no punctuation, no explanation.\n'
+        'You must choose exactly ONE practice area from this list that best matches the user issue. '
+        'Reply with ONLY that practice area, nothing else — no quotes, no punctuation, no explanation.\n'
         'List: $list\n'
         'User issue: $userQuery';
 

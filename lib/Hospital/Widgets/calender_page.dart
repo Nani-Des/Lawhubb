@@ -234,7 +234,7 @@ class _CalenderPageState extends State<CalenderPage> with TickerProviderStateMix
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'View Practice Roster',
+                'View Practice Area Roster',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.black,

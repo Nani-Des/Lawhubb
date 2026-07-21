@@ -166,7 +166,7 @@ class _HospitalPageState extends State<HospitalPage>
                           child: CardButton(
                             title: AppLocalizations.of(context)
                                     ?.chamberPractices ??
-                                'Chamber Practices',
+                                'Chamber Practice Areas',
                             icon: Icons.calendar_today,
                             gradient: LinearGradient(
                               colors: [

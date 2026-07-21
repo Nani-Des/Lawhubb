@@ -431,7 +431,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chamberEvents => 'Chamber Events';
 
   @override
-  String get chamberPractices => 'Chamber Practices';
+  String get chamberPractices => 'Chamber Practice Areas';
 
   @override
   String get tap => 'Tap';
@@ -542,7 +542,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bar => 'Bar';
 
   @override
-  String get practice => 'Practice';
+  String get practice => 'Practice Area';
 
   @override
   String get yearOfCall => 'Year of Call';

@@ -135,7 +135,7 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              'This chamber has no practices yet. Choose another chamber or contact support.',
+              'This chamber has no practice areas yet. Choose another chamber or contact support.',
             ),
             backgroundColor: Colors.orangeAccent,
           ),
@@ -145,7 +145,7 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Could not load practices for this chamber.'),
+          content: Text('Could not load practice areas for this chamber.'),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -201,7 +201,7 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              'No practices available for this chamber. Add custom practice names below.',
+              'No practice areas available for this chamber. Add custom practice areas below.',
             ),
             backgroundColor: Colors.orangeAccent,
           ),
@@ -221,9 +221,9 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
 
       final ids = await showSearchableMultiOptionPicker(
         context,
-        title: 'Select practice(s)',
+        title: 'Select practice area(s)',
         options: options,
-        searchHint: 'Search practices…',
+        searchHint: 'Search practice areas…',
         initialSelectedIds: _selectedPracticeIds,
       );
       if (!mounted) return;
@@ -232,7 +232,7 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Could not load practices.'),
+          content: Text('Could not load practice areas.'),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -247,7 +247,7 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
     if (_allAltPractice.any((p) => p.toLowerCase() == name.toLowerCase())) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('This practice is already listed.'),
+          content: Text('This practice area is already listed.'),
           backgroundColor: Colors.orangeAccent,
         ),
       );
@@ -292,10 +292,10 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
     }
     if (parts.isEmpty) {
       return _selectedChamberId.isEmpty && _altChamber.isNotEmpty
-          ? 'Add practice name(s) below'
+          ? 'Add practice area(s) below'
           : _selectedChamberId.isEmpty
               ? 'Select a chamber first'
-              : 'Tap to select practice(s)';
+              : 'Tap to select practice area(s)';
     }
     return parts.join('\n');
   }
@@ -326,7 +326,7 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Please provide your chamber and at least one practice (select from the list or type custom names).',
+            'Please provide your chamber and at least one practice area (select from the list or type custom names).',
           ),
           backgroundColor: Colors.redAccent,
         ),
@@ -648,7 +648,7 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
                     ? null
                     : _pickPractice,
                 child: InputDecorator(
-                  decoration: _decoration('Practice (select from list)'),
+                  decoration: _decoration('Practice Area'),
                   child: _loadingPractices
                       ? const SizedBox(
                           height: 20,
@@ -672,7 +672,7 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
                       controller: _altPracticeInputController,
                       enabled: !_submitting,
                       style: const TextStyle(color: Colors.white),
-                      decoration: _decoration('Or type practice name(s) *'),
+                      decoration: _decoration('Or type practice area(s) *'),
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _addAltPractice(),
                     ),
@@ -686,7 +686,7 @@ class _LawyerRegistrationScreenState extends State<LawyerRegistrationScreen> {
                         backgroundColor: Colors.teal,
                       ),
                       icon: const Icon(Icons.add, color: Colors.white),
-                      tooltip: 'Add practice',
+                      tooltip: 'Add practice area',
                     ),
                   ),
                 ],

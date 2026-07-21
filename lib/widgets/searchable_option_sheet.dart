@@ -242,7 +242,7 @@ class _SearchableMultiOptionBodyState extends State<_SearchableMultiOptionBody> 
                                   )
                                 : order != null
                                     ? Text(
-                                        'Additional practice $order',
+                                        'Additional practice area $order',
                                         style: TextStyle(
                                           color: Colors.grey[500],
                                           fontSize: 12,

@@ -919,7 +919,7 @@ abstract class AppLocalizations {
   /// No description provided for @chamberPractices.
   ///
   /// In en, this message translates to:
-  /// **'Chamber Practices'**
+  /// **'Chamber Practice Areas'**
   String get chamberPractices;
 
   /// No description provided for @tap.
@@ -1117,7 +1117,7 @@ abstract class AppLocalizations {
   /// No description provided for @practice.
   ///
   /// In en, this message translates to:
-  /// **'Practice'**
+  /// **'Practice Area'**
   String get practice;
 
   /// No description provided for @yearOfCall.

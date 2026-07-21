@@ -441,7 +441,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chamberEvents => 'Événements du Cabinet';
 
   @override
-  String get chamberPractices => 'Pratiques du Cabinet';
+  String get chamberPractices => 'Domaines de pratique du cabinet';
 
   @override
   String get tap => 'Appuyez';
@@ -553,7 +553,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bar => 'Barreau';
 
   @override
-  String get practice => 'Cabinet';
+  String get practice => 'Domaine de pratique';
 
   @override
   String get yearOfCall => 'Année d\'Inscription';

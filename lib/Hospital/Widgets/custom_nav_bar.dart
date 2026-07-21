@@ -132,8 +132,13 @@ class _CustomBottomNavBarHospitalState extends State<CustomBottomNavBarHospital>
             context,
                 (userId) => ReferralDetailsPage(hospitalId: widget.hospitalId),
           );
-        } else {
+        } else if (isDoctor && isActive) {
           _showAccessDeniedDialogDoctors(context, "Only active Lawyers of this hospital can view referrals made here.");
+        } else {
+          _navigateBasedOnAuthStatus(
+            context,
+            (userId) => BookingPage(currentUserId: userId),
+          );
         }
         break;
     }

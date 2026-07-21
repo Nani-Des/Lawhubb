@@ -142,7 +142,7 @@ class FirebaseService {
         var departmentName = departmentDoc.get('Practice Name');
         departments.add({
           'Practice ID': departmentId,
-          'Practice Name': departmentName is String ? departmentName : 'Unknown Practice',
+          'Practice Name': departmentName is String ? departmentName : 'Unknown Practice Area',
         });
       }
 
@@ -290,10 +290,10 @@ class FirebaseService {
     try {
       DocumentSnapshot departmentDoc = await _db.collection('Practice').doc(departmentId).get();
       if (!departmentDoc.exists) {
-        throw Exception('Practice not found');
+        throw Exception('Practice Area not found');
       }
       var name = departmentDoc.get('Practice Name');
-      String departmentName = name is String ? name : 'Unknown Practice';
+      String departmentName = name is String ? name : 'Unknown Practice Area';
 
       // Cache the result
       await _cacheData(cacheKey, departmentName);

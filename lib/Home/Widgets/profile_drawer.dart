@@ -924,24 +924,26 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                       }
                                     },
                                   ),
-                                  SizedBox(width: 20),
-                                  _buildInfoBox(
-                                    icon: Icons.person_add,
-                                    label: localizations?.referAClient ??
-                                        'Refer A Client',
-                                    value: region,
-                                    onTap: () => _checkAndNavigate(context,
-                                        isReferralForm: true),
-                                  ),
-                                  SizedBox(width: 20),
-                                  _buildInfoBox(
-                                    icon: Icons.description,
-                                    label:
-                                        localizations?.referrals ?? 'Referrals',
-                                    value: region,
-                                    onTap: () => _checkAndNavigate(context,
-                                        isReferralForm: false),
-                                  ),
+                                  if (userData['Role'] == true) ...[
+                                    SizedBox(width: 20),
+                                    _buildInfoBox(
+                                      icon: Icons.person_add,
+                                      label: localizations?.referAClient ??
+                                          'Refer A Client',
+                                      value: region,
+                                      onTap: () => _checkAndNavigate(context,
+                                          isReferralForm: true),
+                                    ),
+                                    SizedBox(width: 20),
+                                    _buildInfoBox(
+                                      icon: Icons.description,
+                                      label: localizations?.referrals ??
+                                          'Referrals',
+                                      value: region,
+                                      onTap: () => _checkAndNavigate(context,
+                                          isReferralForm: false),
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),
@@ -978,7 +980,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                                           altChamber.isNotEmpty)
                                         const SizedBox(height: 6),
                                       Text(
-                                        'Additional practices:',
+                                        'Additional practice areas:',
                                         style: TextStyle(
                                           color: Colors.grey[400],
                                           fontSize: 11,

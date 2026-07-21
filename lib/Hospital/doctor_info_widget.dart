@@ -224,7 +224,7 @@ class DoctorInfoWidget extends StatelessWidget {
                           _buildModernInfoCard(
                             context,
                             icon: Icons.layers_outlined,
-                            title: 'Additional Practices',
+                            title: 'Additional Practice Areas',
                             value: _altPracticeNames.join(', '),
                           ),
                       ],

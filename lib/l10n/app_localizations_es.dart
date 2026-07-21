@@ -434,7 +434,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get chamberEvents => 'Eventos del Despacho';
 
   @override
-  String get chamberPractices => 'Prácticas del Despacho';
+  String get chamberPractices => 'Áreas de práctica del despacho';
 
   @override
   String get tap => 'Toca';
@@ -546,7 +546,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get bar => 'Colegio';
 
   @override
-  String get practice => 'Práctica';
+  String get practice => 'Área de práctica';
 
   @override
   String get yearOfCall => 'Año de Admisión';
