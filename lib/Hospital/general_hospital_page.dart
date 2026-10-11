@@ -121,17 +121,17 @@ class GeneralHospitalPage extends StatelessWidget {
                                 color: Colors.black, size: 18),
                             label: Flexible(
                               child: Text(
-                                "Library",
+                                "Bookshop",
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   color: Colors.black,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                                  fontSize: 10,
                                 ),
                               ),
                             ),
                             onPressed: () {
-                              pushAppRoute(context, LibraryPage());
+                              pushAppRoute(context, const LibraryPage());
                             },
                           ),
                         ),

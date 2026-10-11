@@ -25,6 +25,47 @@ class ForumFirebaseService {
     });
   }
 
+  /// Reposts an existing post to the current user's feed.
+  Future<void> repostPost({
+    required String userId,
+    required Map<String, dynamic> originalPost,
+  }) async {
+    final originalId =
+        (originalPost['id'] ?? originalPost['Post ID'] ?? '').toString();
+    if (originalId.isEmpty) {
+      throw StateError('missing_post_id');
+    }
+
+    // Avoid duplicate reposts of the same post by the same user.
+    final existing = await _firestore
+        .collection('Posts')
+        .where('User ID', isEqualTo: userId)
+        .where('repostOf', isEqualTo: originalId)
+        .limit(1)
+        .get();
+    if (existing.docs.isNotEmpty) {
+      throw StateError('already_reposted');
+    }
+
+    final postRef = _firestore.collection('Posts').doc();
+    await postRef.set({
+      'Post ID': postRef.id,
+      'User ID': userId,
+      'Content': originalPost['Content'] ?? '',
+      'ImageURL': originalPost['ImageURL'],
+      'VideoURL': originalPost['VideoURL'],
+      'Timestamp': FieldValue.serverTimestamp(),
+      'Likes': 0,
+      'repostOf': originalId,
+      'originalUserId': originalPost['User ID'] ?? '',
+      'isRepost': true,
+    });
+
+    await _firestore.collection('Posts').doc(originalId).set({
+      'Reposts': FieldValue.increment(1),
+    }, SetOptions(merge: true));
+  }
+
   /// Fetches all posts, ordered by timestamp in descending order
   Future<List<Map<String, dynamic>>> fetchPosts({bool fromServer = false}) async {
     QuerySnapshot snapshot = await _firestore

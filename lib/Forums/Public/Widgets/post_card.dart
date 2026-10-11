@@ -7,6 +7,7 @@ import 'package:nhap/Forums/Public/Widgets/postcard_media.dart';
 import '../../../Services/translation_service.dart';
 import '../../../utils/lawhubb_share.dart';
 import '../../../utils/share_remote_media.dart';
+import '../Services/forum_firebase_service.dart';
 import 'delete_post_service.dart';
 import 'full_screen.dart';
 import 'add_comment.dart';
@@ -205,6 +206,54 @@ class _PostCardState extends State<PostCard> {
           widget.postData['Likes'] = (widget.postData['Likes'] as int) + 1;
         });
       }
+    }
+  }
+
+  Future<void> _repostPost() async {
+    final userId = currentUserId;
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sign in to repost.')),
+      );
+      return;
+    }
+
+    final originalOwner = widget.postData['User ID']?.toString();
+    if (originalOwner == userId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You cannot repost your own post.')),
+      );
+      return;
+    }
+
+    try {
+      await ForumFirebaseService().repostPost(
+        userId: userId,
+        originalPost: widget.postData,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Reposted to your feed.'),
+          backgroundColor: Colors.teal,
+        ),
+      );
+      await widget.refreshCallback();
+    } on StateError catch (e) {
+      if (!mounted) return;
+      final msg = e.message == 'already_reposted'
+          ? 'You already reposted this.'
+          : 'Could not repost. Try again.';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            UserFacingErrors.actionFailed(action: 'repost'),
+          ),
+        ),
+      );
     }
   }
 
@@ -725,6 +774,14 @@ class _PostCardState extends State<PostCard> {
                   ),
 
                   const Spacer(),
+
+                  // Repost
+                  InkWell(
+                    onTap: _repostPost,
+                    child: const Icon(Icons.repeat,
+                        color: Colors.white, size: 22),
+                  ),
+                  const SizedBox(width: 16),
 
                   // Share Button
                   InkWell(

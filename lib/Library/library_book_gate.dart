@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/material.dart';
 
+import 'library_catalog.dart';
 import 'paystack_inline_checkout_page.dart';
 import 'pdf_reader_page.dart';
 
@@ -72,21 +73,42 @@ Future<void> recordLibraryPurchase(
   User user, {
   void Function(String bookId)? onBookPurchased,
 }) async {
+  final sellerId = (pdf['uploadedBy'] ?? pdf['sellerId'] ?? '').toString();
+  final platformFee =
+      double.parse((amount * kLibraryPlatformFeeRate).toStringAsFixed(2));
+  final sellerAmount =
+      double.parse((amount - platformFee).toStringAsFixed(2));
+
   await FirebaseFirestore.instance.collection('libraryPurchases').add({
     'bookId': pdf['id'],
     'bookTitle': pdf['title'] ?? '',
     'amount': amount,
+    'platformFee': platformFee,
+    'platformFeeRate': kLibraryPlatformFeeRate,
+    'sellerAmount': sellerAmount,
+    'currency': 'GHS',
     'buyerId': user.uid,
     'buyerEmail': user.email ?? '${user.uid}@lawhubb.local',
-    'sellerId': (pdf['uploadedBy'] ?? pdf['sellerId'] ?? '').toString(),
+    'sellerId': sellerId,
     'paystackReference': paystackReference,
     'provider': 'paystack',
     'status': 'success',
     'isPaid': true,
     'paymentStatus': 'paid',
+    'payoutStatus': sellerId.isEmpty ? 'unassigned' : 'pending',
     'createdAt': FieldValue.serverTimestamp(),
     'payoutNumber': '+233558466487',
   });
+
+  // Track seller earnings so lawyers can see sales on the platform.
+  if (sellerId.isNotEmpty) {
+    await FirebaseFirestore.instance.collection('Users').doc(sellerId).set({
+      'librarySalesCount': FieldValue.increment(1),
+      'librarySalesRevenue': FieldValue.increment(sellerAmount),
+      'librarySalesUpdatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
   final bid = pdf['id']?.toString();
   if (bid != null) onBookPurchased?.call(bid);
 }
@@ -136,6 +158,65 @@ Future<bool> promptLibraryBookPurchase(
     return false;
   }
   if (!context.mounted) return false;
+
+  final title = (pdf['title'] ?? 'Book').toString();
+  final author = (pdf['author'] ?? '').toString();
+  final proceed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: Colors.grey[900],
+      title: const Text(
+        'Purchase book',
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (author.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text('by $author',
+                style: TextStyle(color: Colors.grey[400], fontSize: 13)),
+          ],
+          const SizedBox(height: 12),
+          Text(
+            'GHS ${price.toStringAsFixed(2)}',
+            style: const TextStyle(
+              color: Colors.tealAccent,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Pay securely with Paystack (Mobile Money or Card). Access unlocks immediately after payment.',
+            style: TextStyle(color: Colors.grey[400], fontSize: 13),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text('Cancel', style: TextStyle(color: Colors.grey[400])),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          style: FilledButton.styleFrom(backgroundColor: Colors.teal),
+          child: const Text('Pay with Paystack'),
+        ),
+      ],
+    ),
+  );
+  if (proceed != true || !context.mounted) return false;
+
   final reference = await Navigator.push<String>(
     context,
     MaterialPageRoute(
@@ -143,7 +224,7 @@ Future<bool> promptLibraryBookPurchase(
         publicKey: pk,
         email: email,
         amountGhs: price,
-        bookTitle: (pdf['title'] ?? 'Book').toString(),
+        bookTitle: title,
       ),
     ),
   );
@@ -155,6 +236,14 @@ Future<bool> promptLibraryBookPurchase(
     user,
     onBookPurchased: onBookPurchased,
   );
+  if (context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Payment successful. Your book is unlocked.'),
+        backgroundColor: Colors.teal,
+      ),
+    );
+  }
   return true;
 }
 

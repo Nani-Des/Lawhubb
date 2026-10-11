@@ -39,13 +39,13 @@ class FeatureCardsSection extends StatelessWidget {
           const SizedBox(height: 12),
           _FeatureCard(
             icon: Icons.menu_book_outlined,
-            title: 'Law Insights',
-            subtitle: 'Access legal resources and documents',
+            title: 'Bookshop',
+            subtitle: 'Browse, buy and read legal books',
             gradient: LinearGradient(
               colors: [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)],
             ),
             onTap: () {
-              pushAppRoute(context, LibraryPage());
+              pushAppRoute(context, const LibraryPage());
             },
           ),
           const SizedBox(height: 12),
@@ -127,7 +127,7 @@ class _FeatureCard extends StatelessWidget {
                     title,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

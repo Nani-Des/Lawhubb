@@ -7,6 +7,7 @@ import 'package:hive/hive.dart';
 import 'package:nhap/l10n/app_localizations.dart';
 
 import 'library_book_gate.dart';
+import 'library_catalog.dart';
 import 'pdf_reader_page.dart';
 import 'upload_pdf.dart';
 
@@ -21,9 +22,12 @@ class _LibraryPageState extends State<LibraryPage> {
   List<Map<String, dynamic>> filtered = [];
   bool loading = true;
   final TextEditingController searchController = TextEditingController();
+  String _selectedCategory = 'All';
+  String _selectedFileType = 'All';
 
   Set<String> _purchasedBookIds = {};
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _purchaseSub;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _librarySub;
   StreamSubscription<User?>? _authSub;
 
   late Box archiveBox;
@@ -37,7 +41,7 @@ class _LibraryPageState extends State<LibraryPage> {
   void initState() {
     super.initState();
     _initBoxes();
-    _fetchPDFs();
+    _listenLibrary();
     _listenPurchases();
     _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
       if (user == null) {
@@ -77,8 +81,49 @@ class _LibraryPageState extends State<LibraryPage> {
   void dispose() {
     _authSub?.cancel();
     _purchaseSub?.cancel();
+    _librarySub?.cancel();
     searchController.dispose();
     super.dispose();
+  }
+
+  void _listenLibrary() {
+    _librarySub?.cancel();
+    _librarySub = FirebaseFirestore.instance
+        .collection('library')
+        .orderBy('timestamp', descending: true)
+        .snapshots(includeMetadataChanges: true)
+        .listen((snapshot) {
+      pdfs = snapshot.docs.map((d) => {...d.data(), 'id': d.id}).toList();
+      _applyFilters();
+      if (mounted) setState(() => loading = false);
+    }, onError: (_) {
+      if (mounted) setState(() => loading = false);
+    });
+  }
+
+  /// Combined text + category + file-type filtering.
+  void _applyFilters() {
+    final q = searchController.text.trim().toLowerCase();
+    filtered = pdfs.where((p) {
+      final title = (p['title'] ?? '').toString().toLowerCase();
+      final author = (p['author'] ?? '').toString().toLowerCase();
+      final cat = (p['category'] ?? '').toString();
+      final fileType = (p['fileType'] ?? '').toString().toLowerCase();
+
+      final matchesText = q.isEmpty ||
+          title.contains(q) ||
+          author.contains(q) ||
+          cat.toLowerCase().contains(q) ||
+          fileType.contains(q);
+
+      final matchesCategory = _selectedCategory == 'All' ||
+          cat.trim().toLowerCase() == _selectedCategory.toLowerCase();
+
+      final matchesType = _selectedFileType == 'All' ||
+          fileType == _selectedFileType.toLowerCase();
+
+      return matchesText && matchesCategory && matchesType;
+    }).toList();
   }
 
   Map<String, dynamic>? _findPdfForLibraryDoc(Map<String, dynamic> partial) {
@@ -114,14 +159,27 @@ class _LibraryPageState extends State<LibraryPage> {
     setState(() {});
   }
 
-  Future<void> _fetchPDFs() async {
-    final snapshot = await FirebaseFirestore.instance
-        .collection('library')
-        .orderBy('timestamp', descending: true)
-        .get();
-    pdfs = snapshot.docs.map((d) => {...d.data(), 'id': d.id}).toList();
-    filtered = pdfs;
-    setState(() => loading = false);
+  Future<void> _fetchPDFs({bool fromServer = false}) async {
+    if (mounted) setState(() => loading = true);
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('library')
+          .orderBy('timestamp', descending: true)
+          .get(
+            fromServer
+                ? const GetOptions(source: Source.server)
+                : const GetOptions(),
+          );
+      pdfs = snapshot.docs.map((d) => {...d.data(), 'id': d.id}).toList();
+      _applyFilters();
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  Future<void> _refreshBookshop() async {
+    await _fetchPDFs(fromServer: true);
+    _listenPurchases();
   }
 
   Future<bool> _isLawyer() async {
@@ -163,16 +221,8 @@ class _LibraryPageState extends State<LibraryPage> {
     );
   }
 
-  void _search(String q) {
-    q = q.toLowerCase();
-    setState(() {
-      filtered = pdfs.where((p) {
-        final title = (p['title'] ?? '').toString().toLowerCase();
-        final author = (p['author'] ?? '').toString().toLowerCase();
-        final cat = (p['category'] ?? '').toString().toLowerCase();
-        return title.contains(q) || author.contains(q) || cat.contains(q);
-      }).toList();
-    });
+  void _search(String _) {
+    setState(_applyFilters);
   }
 
   List<Map<String, dynamic>> get continueList {
@@ -315,6 +365,19 @@ class _LibraryPageState extends State<LibraryPage> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
+              if ((pdf['category'] ?? '').toString().isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  pdf['category'].toString(),
+                  style: TextStyle(
+                    color: Colors.tealAccent.withValues(alpha: 0.85),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
               const Spacer(),
               if (progress > 0)
                 Padding(
@@ -508,10 +571,10 @@ class _LibraryPageState extends State<LibraryPage> {
             ),
             const SizedBox(width: 12),
             Text(
-              AppLocalizations.of(context)?.lawInsights ?? 'Law Insights',
+              AppLocalizations.of(context)?.legalResources ?? 'Bookshop',
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 20,
+                fontSize: 16,
                 fontWeight: FontWeight.w700,
                 letterSpacing: -0.3,
               ),
@@ -520,6 +583,11 @@ class _LibraryPageState extends State<LibraryPage> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            tooltip: 'Refresh',
+            onPressed: _refreshBookshop,
+          ),
+          IconButton(
             icon: const Icon(Icons.upload_file, color: Colors.white),
             onPressed: () async {
               final isLawyer = await _isLawyer();
@@ -527,9 +595,13 @@ class _LibraryPageState extends State<LibraryPage> {
                 _showAccessDeniedDialog();
                 return;
               }
-              await Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const UploadPDFPage()));
-              await _fetchPDFs();
+              final uploaded = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const UploadPDFPage()),
+              );
+              if (uploaded == true) {
+                await _refreshBookshop();
+              }
             },
           ),
           IconButton(
@@ -545,137 +617,285 @@ class _LibraryPageState extends State<LibraryPage> {
           const SizedBox(width: 8),
         ],
       ),
-      body: loading
+      body: loading && pdfs.isEmpty
           ? const Center(child: CircularProgressIndicator(color: Colors.white))
-          : Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          : RefreshIndicator(
+              onRefresh: _refreshBookshop,
+              color: Colors.tealAccent,
+              backgroundColor: Colors.grey[900],
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildStatChip(
-                              AppLocalizations.of(context)
-                                      ?.books(pdfs.length.toString()) ??
-                                  '${pdfs.length} Books',
-                              Icons.library_books),
-                          _buildStatChip(
-                              AppLocalizations.of(context)
-                                      ?.streak(streakDays.toString()) ??
-                                  'Streak ${streakDays}d',
-                              Icons.local_fire_department),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _buildStatChip(
+                                  AppLocalizations.of(context)
+                                          ?.books(pdfs.length.toString()) ??
+                                      '${pdfs.length} Books',
+                                  Icons.library_books),
+                              _buildStatChip(
+                                  AppLocalizations.of(context)
+                                          ?.streak(streakDays.toString()) ??
+                                      'Streak ${streakDays}d',
+                                  Icons.local_fire_department),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: searchController,
+                            onChanged: _search,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              hintText: 'Search by title, author, category…',
+                              hintStyle: TextStyle(color: Colors.grey[600]),
+                              filled: true,
+                              fillColor: Colors.grey[900],
+                              prefixIcon:
+                                  Icon(Icons.search, color: Colors.grey[600]),
+                              suffixIcon: searchController.text.isEmpty
+                                  ? null
+                                  : IconButton(
+                                      icon: Icon(Icons.clear,
+                                          color: Colors.grey[500]),
+                                      onPressed: () {
+                                        searchController.clear();
+                                        _search('');
+                                      },
+                                    ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    BorderSide(color: Colors.grey[800]!),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    BorderSide(color: Colors.grey[800]!),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                    color: Colors.tealAccent),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 14),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Category',
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            height: 36,
+                            child: ListView(
+                              scrollDirection: Axis.horizontal,
+                              children: kLibraryCategories.map((c) {
+                                final selected = _selectedCategory == c;
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: ChoiceChip(
+                                    label: Text(c),
+                                    selected: selected,
+                                    onSelected: (_) {
+                                      setState(() {
+                                        _selectedCategory = c;
+                                        _applyFilters();
+                                      });
+                                    },
+                                    selectedColor: Colors.tealAccent,
+                                    backgroundColor: Colors.grey[900],
+                                    labelStyle: TextStyle(
+                                      color: selected
+                                          ? Colors.black
+                                          : Colors.white70,
+                                      fontSize: 12,
+                                      fontWeight: selected
+                                          ? FontWeight.w700
+                                          : FontWeight.w500,
+                                    ),
+                                    side: BorderSide(
+                                      color: selected
+                                          ? Colors.tealAccent
+                                          : Colors.grey[800]!,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Book type',
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            height: 36,
+                            child: ListView(
+                              scrollDirection: Axis.horizontal,
+                              children: kLibraryFileTypes.map((t) {
+                                final selected = _selectedFileType == t;
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: ChoiceChip(
+                                    label: Text(t),
+                                    selected: selected,
+                                    onSelected: (_) {
+                                      setState(() {
+                                        _selectedFileType = t;
+                                        _applyFilters();
+                                      });
+                                    },
+                                    selectedColor: Colors.tealAccent,
+                                    backgroundColor: Colors.grey[900],
+                                    labelStyle: TextStyle(
+                                      color: selected
+                                          ? Colors.black
+                                          : Colors.white70,
+                                      fontSize: 12,
+                                      fontWeight: selected
+                                          ? FontWeight.w700
+                                          : FontWeight.w500,
+                                    ),
+                                    side: BorderSide(
+                                      color: selected
+                                          ? Colors.tealAccent
+                                          : Colors.grey[800]!,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: searchController,
-                        onChanged: _search,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          hintText:
-                              AppLocalizations.of(context)?.searchDocuments ??
-                                  'Search title, author, category...',
-                          hintStyle: TextStyle(color: Colors.grey[600]),
-                          filled: true,
-                          fillColor: Colors.grey[900],
-                          prefixIcon:
-                              Icon(Icons.search, color: Colors.grey[600]),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey[800]!),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey[800]!),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey[700]!),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 14),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (continueList.isNotEmpty) ...[
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          AppLocalizations.of(context)?.continueReading ??
-                              'Continue Reading',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                        Text(
-                          AppLocalizations.of(context)
-                                  ?.items(continueList.length.toString()) ??
-                              '${continueList.length} items',
-                          style: TextStyle(
-                            color: Colors.grey[500],
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
                     ),
                   ),
-                  _continueStrip(),
-                  const SizedBox(height: 16),
+                  if (continueList.isNotEmpty) ...[
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              AppLocalizations.of(context)?.continueReading ??
+                                  'Continue Reading',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            Text(
+                              '${continueList.length} items',
+                              style: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SliverToBoxAdapter(child: _continueStrip()),
+                  ],
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)?.allDocuments ??
+                                'All Books',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            '${filtered.length} found',
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (filtered.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.search_off,
+                                  size: 56, color: Colors.grey[600]),
+                              const SizedBox(height: 12),
+                              Text(
+                                'No books match your search',
+                                style: TextStyle(
+                                  color: Colors.grey[400],
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Try another title, author, category, or book type.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                      sliver: SliverGrid(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 14,
+                          crossAxisSpacing: 14,
+                          childAspectRatio: 0.62,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, i) => _bookCard(filtered[i]),
+                          childCount: filtered.length,
+                        ),
+                      ),
+                    ),
                 ],
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        AppLocalizations.of(context)?.allDocuments ??
-                            'All Documents',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-                      Text(
-                        AppLocalizations.of(context)
-                                ?.items(filtered.length.toString()) ??
-                            '${filtered.length} items',
-                        style: TextStyle(
-                          color: Colors.grey[500],
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: GridView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
-                            childAspectRatio: 0.7),
-                    itemCount: filtered.length,
-                    itemBuilder: (context, i) => _bookCard(filtered[i]),
-                  ),
-                ),
-              ],
+              ),
             ),
     );
   }
